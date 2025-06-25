@@ -1,6 +1,7 @@
 const Product = require('../models/product.model');
 
-//API: Trả về tất cả sản phẩm
+//FEATURE: SHOW IMAGES
+//API: Returns all productS
 exports.getAllProducts = async (req, res) => {
   try {
     const products = await Product.find();
@@ -10,7 +11,7 @@ exports.getAllProducts = async (req, res) => {
   }
 };
 
-// API: Trả về n sản phẩm trên 1 trang (phân trang)
+// API: Return n products per page
 exports.getProductsPaginated = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
