@@ -34,4 +34,20 @@ exports.getProductsPaginated = async (req, res) => {
   }
 };
 
+//FEATURE: SEARCH PRODUCT
+//API: Search products by name
+exports.searchProducts = async (req, res) => {
+  try {
+    const { q } = req.query; 
 
+    const regex = new RegExp(q, 'i');
+
+    const products = await Product.find({
+      name: regex
+    });
+
+    res.status(200).json(products);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
