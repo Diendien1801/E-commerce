@@ -7,3 +7,7 @@ app.use("/api/users", userRoutes);
 
 app.use(crawlRoute);
 module.exports = app;
+
+//Product
+const productRoutes = require('./routes/product.route');
+app.use('/api/products', productRoutes);
