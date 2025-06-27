@@ -1,4 +1,4 @@
-const Product = require('../models/product.model');
+const Product = require("../models/product.model");
 
 //FEATURE: SHOW IMAGES
 //API: Returns all productS
@@ -7,7 +7,11 @@ exports.getAllProducts = async (req, res) => {
     const products = await Product.find();
     res.status(200).json(products);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      error: "Lỗi lấy danh sách sản phẩm",
+      detail: err.toString(),
+      stack: err.stack,
+    });
   }
 };
 
@@ -19,9 +23,7 @@ exports.getProductsPaginated = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const total = await Product.countDocuments();
-    const products = await Product.find()
-      .skip(skip)
-      .limit(limit);
+    const products = await Product.find().skip(skip).limit(limit);
 
     res.status(200).json({
       page,
@@ -30,10 +32,13 @@ exports.getProductsPaginated = async (req, res) => {
       products,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      error: "Lỗi phân trang sản phẩm",
+      detail: err.toString(),
+      stack: err.stack,
+    });
   }
 };
-
 
 //FEATURE: FILTER PRODUCTS
 // API: Filter products (price low to high, price high to low, newest)
@@ -43,40 +48,64 @@ exports.filterProducts = async (req, res) => {
     let sortOption = {};
 
     switch (sort) {
-      // price low to high
-      case 'price_asc':
+      case "price_asc":
         sortOption = { price: 1 };
         break;
-      // price high to low
-      case 'price_desc':
+      case "price_desc":
         sortOption = { price: -1 };
         break;
-      // newest products
-      case 'newest':
+      case "newest":
         sortOption = { createdAt: -1 };
         break;
-      //default
       default:
         sortOption = {};
     }
 
     const products = await Product.find().sort(sortOption);
-
+    res.status(200).json(products);
+  } catch (err) {
+    res.status(500).json({
+      error: "Lỗi lọc sản phẩm",
+      detail: err.toString(),
+      stack: err.stack,
+    });
+  }
+};
 //FEATURE: SEARCH PRODUCT
 //API: Search products by name
 exports.searchProducts = async (req, res) => {
   try {
-    const { q } = req.query; 
+    const { q } = req.query;
 
-    const regex = new RegExp(q, 'i');
+    const regex = new RegExp(q, "i");
 
     const products = await Product.find({
-      name: regex
+      title: regex,
     });
-
 
     res.status(200).json(products);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      error: "Lỗi tìm kiếm sản phẩm",
+      detail: err.toString(),
+      stack: err.stack,
+    });
+  }
+};
+
+//FEATURE: VIEW PRODUCT DETAILS
+//API: View product details by ID
+exports.getProductById = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product)
+      return res.status(404).json({ error: "Không tìm thấy sản phẩm" });
+    res.status(200).json(product);
+  } catch (err) {
+    res.status(500).json({
+      error: "Lỗi lấy chi tiết sản phẩm",
+      detail: err.toString(),
+      stack: err.stack,
+    });
   }
 };
