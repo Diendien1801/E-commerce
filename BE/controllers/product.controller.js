@@ -34,6 +34,7 @@ exports.getProductsPaginated = async (req, res) => {
   }
 };
 
+
 //FEATURE: FILTER PRODUCTS
 // API: Filter products (price low to high, price high to low, newest)
 exports.filterProducts = async (req, res) => {
@@ -60,6 +61,20 @@ exports.filterProducts = async (req, res) => {
     }
 
     const products = await Product.find().sort(sortOption);
+
+//FEATURE: SEARCH PRODUCT
+//API: Search products by name
+exports.searchProducts = async (req, res) => {
+  try {
+    const { q } = req.query; 
+
+    const regex = new RegExp(q, 'i');
+
+    const products = await Product.find({
+      name: regex
+    });
+
+
     res.status(200).json(products);
   } catch (err) {
     res.status(500).json({ error: err.message });
