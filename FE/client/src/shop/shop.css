@@ -1,0 +1,125 @@
+.shop-container {
+  display: flex;
+  min-height: 70vh;
+  max-width: 1300px;
+  margin: 2.5rem auto 2rem auto;
+  gap: 2.5rem;
+}
+
+.shop-categories {
+  width: 220px;
+  background: #f8f4ef;
+  border-radius: 10px;
+  padding: 2rem 1.2rem 1.2rem 1.2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  height: fit-content;
+}
+.shop-categories h3 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: #b71c1c;
+}
+.shop-categories ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.shop-categories li {
+  padding: 0.5rem 0.7rem;
+  margin-bottom: 0.3rem;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #333;
+  transition: background 0.2s, color 0.2s;
+}
+.shop-categories li.active, .shop-categories li:hover {
+  background: #eac6a4;
+  color: #e53935;
+}
+
+.shop-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.shop-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+.shop-filter-bar button {
+  padding: 0.3rem 1.1rem;
+  font-size: 1rem;
+  background: #f5f5f5;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 0.3rem;
+  transition: background 0.2s, color 0.2s;
+}
+.shop-filter-bar button.active, .shop-filter-bar button:hover {
+  background: #e53935;
+  color: #fff;
+  border-color: #e53935;
+}
+
+.shop-product-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: flex-start;
+}
+.shop-product-card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  padding: 1rem;
+  width: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: box-shadow 0.2s;
+}
+.shop-product-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+}
+.shop-product-card img {
+  width: 160px;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 0.7rem;
+  background: #f5f5f5;
+}
+.shop-product-name {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-bottom: 0.3rem;
+  text-align: center;
+}
+.shop-product-price {
+  color: #e53935;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+.shop-pagination {
+  display: flex;
+  gap: 0.5rem;
+  margin: 2rem 0 0 0;
+  justify-content: center;
+}
+.shop-pagination button {
+  padding: 0.4rem 1rem;
+  font-size: 1rem;
+  background: #f5f5f5;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.shop-pagination button.active, .shop-pagination button:hover {
+  background: #e53935;
+  color: #fff;
+  border-color: #e53935;
+}
