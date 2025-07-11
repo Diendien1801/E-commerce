@@ -9,7 +9,8 @@ const userSchema = new mongoose.Schema({
       /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i,
       "Invalid URL format for avatar"
     ]
-  }
+  },
+  password: {type: String, required: true}
 });
 
 module.exports = mongoose.model("User", userSchema);
