@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/navbar/navbar';
 import Footer from '../components/footer/footer';
 import Banner from '../components/banner/banner';
+
+import ProductCard from '../components/product-card/card';
+
 import './home.css';
 
 const Home = () => {
@@ -37,7 +40,13 @@ const Home = () => {
                             <h2>Available</h2>
                             <button className="show-all-btn" onClick ={() => navigate('../shop/')}>Show All Products &gt;</button>
                         </div>
-                  
+
+                        <div className="product-list">
+                            {available.map(p => (
+                                <ProductCard product={p} key={p._id} />
+                            ))}
+                        </div>
+
                     </section>
                     {/* <section className="product-section">
                         <h2>Trending</h2>

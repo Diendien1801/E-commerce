@@ -1,5 +1,6 @@
 import Home from './home/page';
 import {createBrowserRouter, RouterProvider} from 'react-router-dom';
+
 import Shop from './shop/page';
 import ViewProduct from './view-product/page';
 import './App.css';
