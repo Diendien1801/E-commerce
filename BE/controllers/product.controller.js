@@ -109,3 +109,51 @@ exports.getProductById = async (req, res) => {
     });
   }
 };
+exports.filterAndPaginateProducts = async (req, res) => {
+  try {
+    const { sort, page = 1, limit = 10, q } = req.query;
+    let sortOption = {};
+    let filter = {};
+
+    // Lọc theo tên sản phẩm nếu có q
+    if (q) {
+      filter.title = new RegExp(q, "i");
+    }
+
+    // Sắp xếp
+    switch (sort) {
+      case "price_asc":
+        sortOption = { price: 1 };
+        break;
+      case "price_desc":
+        sortOption = { price: -1 };
+        break;
+      case "newest":
+        sortOption = { createdAt: -1 };
+        break;
+      default:
+        sortOption = {};
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const total = await Product.countDocuments(filter);
+    const products = await Product.find(filter)
+      .sort(sortOption)
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    res.status(200).json({
+      page: parseInt(page),
+      limit: parseInt(limit),
+      total,
+      products,
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: "Lỗi lọc và phân trang sản phẩm",
+      detail: err.toString(),
+      stack: err.stack,
+    });
+  }
+};

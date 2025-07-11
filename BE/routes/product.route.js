@@ -4,8 +4,9 @@ const productController = require("../controllers/product.controller");
 
 // Show product images
 router.get("/", productController.getAllProducts); // Return all products
-router.get("/paginated", productController.getProductsPaginated); // Return paginated products
+router.get("/filter-paginated", productController.filterAndPaginateProducts);
 
+router.get("/paginated", productController.getProductsPaginated); // Return paginated products
 // Search products
 router.get("/search", productController.searchProducts);
 
@@ -14,5 +15,8 @@ router.get("/filter", productController.filterProducts);
 
 // View product details 
 router.get("/:id", productController.getProductById);
+
+
+//paginate filter products
 
 module.exports = router;
