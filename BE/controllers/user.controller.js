@@ -3,7 +3,12 @@ const bcrypt = require("bcryptjs");
 
 exports.createUser = async (req, res) => {
   try {
-    const user = await User.create(req.body);
+    const data = { ...req.body };
+    if (data.password) {
+      const salt = await bcrypt.genSalt(10);
+      data.password = await bcrypt.hash(data.password, salt);
+    }
+    const user = await User.create(data);
     res.status(201).json(user);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -19,7 +24,7 @@ exports.changeAvatar = async (req, res) => {
       return res.status(400).json({ error: "Avatar URL is required." });
     }
 
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.body._id);
     if (!user) {
       return res.status(404).json({ error: "User not found." });
     }
@@ -42,11 +47,11 @@ exports.changeAvatar = async (req, res) => {
 exports.changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.body._id);
     
     // Check if the current password is correct
     const isMatch = await bcrypt.compare(currentPassword, user.password);
-    if (!isMatch) return res.status(400).json({ error: "Mật khẩu hiện tại không đúng" });
+    if (!isMatch) return res.status(400).json({ error: "The current password is incorrect." });
 
     // Hash the new password
     const salt = await bcrypt.genSalt(10);
@@ -55,7 +60,7 @@ exports.changePassword = async (req, res) => {
     // Save the updated user
     await user.save();
 
-    res.json({ message: "Mật khẩu đã được cập nhật" });
+    res.json({ message: "The password has been updated." });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
