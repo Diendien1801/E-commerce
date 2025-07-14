@@ -1,37 +1,16 @@
 require("dotenv").config();
-const { Builder, By, until } = require("selenium-webdriver");
-const createCsvWriter = require("csv-writer").createObjectCsvWriter;
+const { Builder, By } = require("selenium-webdriver");
 const path = require("path");
 const mongoose = require("mongoose");
 const Product = require("../models/product.model");
 
-
 const categories = [
-  // {
-  //   name: "CD",
-  //   url: "https://store.hangdiathoidai.com/collections/bang-dia-nhac-cd-dvd",
-  // },
-  // {
-  //   name: "VINYL",
-  //   url: "https://store.hangdiathoidai.com/collections/dia-than-vinyl",
-  // },
   {
     name: "CASSETTE",
     url: "https://store.hangdiathoidai.com/collections/bang-cassette",
   },
+  // Thêm các category khác nếu cần
 ];
-
-const csvWriter = createCsvWriter({
-  path: path.join(__dirname, "products.csv"),
-  header: [
-    { id: "title", title: "Title" },
-    { id: "price", title: "Price" },
-    { id: "imageUrl", title: "ImageUrl" },
-    { id: "productUrl", title: "ProductUrl" },
-    { id: "source", title: "Source" },
-    { id: "category", title: "Category" },
-  ],
-});
 
 async function crawlAllCategories() {
   await mongoose.connect(
@@ -43,66 +22,185 @@ async function crawlAllCategories() {
   );
   const driver = await new Builder().forBrowser("chrome").build();
   const crawledSet = new Set();
-  const products = [];
+
   try {
     for (const category of categories) {
       let page = 1;
       while (true) {
-        const pageUrl = `${category.url}?page=${page}`;
-        console.log(`Đang crawl: ${pageUrl}`);
-        await driver.get(pageUrl);
-        await driver
-          .wait(until.elementsLocated(By.css(".product-meta")), 10000)
-          .catch(() => {});
-        await driver.executeScript(
-          "window.scrollTo(0, document.body.scrollHeight);"
-        );
-        await driver.sleep(3000);
+        await driver.get(`${category.url}?page=${page}`);
+        await driver.sleep(2000);
+
+        // Lấy hết link chi tiết sản phẩm trên trang này
         const productElements = await driver.findElements(
-          By.css(".grid__item")
+          By.css(".product-container")
         );
         if (productElements.length === 0) break;
-        let foundNew = false;
+
+        // Lưu lại link chi tiết và element thumbnail để lấy ảnh fallback nếu cần
+        let productLinks = [];
         for (const productEl of productElements) {
           try {
-            const nameEl = await productEl.findElement(
-              By.css(".product-name a")
+            const thumbLinkEl = await productEl.findElement(
+              By.css(".product-image > .product-thumbnail > a")
             );
-            const title = await nameEl.getText();
-            const productUrl = await nameEl.getAttribute("href");
+            let productUrl = await thumbLinkEl.getAttribute("href");
+            if (productUrl && productUrl.startsWith("/")) {
+              productUrl = "https://store.hangdiathoidai.com" + productUrl;
+            }
+            // Lấy luôn thumbnail src để fallback nếu cần
+            let thumbImgSrc = "";
+            try {
+              const thumbImgEl = await productEl.findElement(
+                By.css(".product-thumbnail img")
+              );
+              thumbImgSrc = await thumbImgEl.getAttribute("src");
+              if (thumbImgSrc.startsWith("//"))
+                thumbImgSrc = "https:" + thumbImgSrc;
+            } catch {
+              thumbImgSrc = "";
+            }
+            // Lấy title để tạo uniqueKey
+            let title = "";
+            try {
+              const titleEl = await productEl.findElement(
+                By.css(".product-meta .product-name a")
+              );
+              title = await titleEl.getText();
+            } catch {
+              title = "";
+            }
+            // Lấy price để tạo uniqueKey
             let price = "";
             try {
               price = await productEl
                 .findElement(By.css(".product-price span span"))
                 .getText();
             } catch {
-              price = await productEl
-                .findElement(By.css(".product-price span"))
-                .getText();
+              try {
+                price = await productEl
+                  .findElement(By.css(".product-price span"))
+                  .getText();
+              } catch {
+                price = "";
+              }
             }
             price = price.trim();
-            let imageUrl = await productEl
-              .findElement(By.css(".product-image img.product-featured-image"))
-              .getAttribute("src");
-            if (imageUrl.startsWith("//")) {
-              imageUrl = "https:" + imageUrl;
+            if (price.toLowerCase().includes("bán hết")) {
+              price = "";
             }
+            productLinks.push({ productUrl, thumbImgSrc, title, price });
+          } catch {
+            continue;
+          }
+        }
+
+        let foundNew = false;
+        for (const { productUrl, thumbImgSrc, title, price } of productLinks) {
+          try {
+            // Kiểm tra productUrl trước khi get
+            if (!productUrl || typeof productUrl !== "string") {
+              console.warn(
+                "⚠️ Bỏ qua sản phẩm vì productUrl không hợp lệ:",
+                productUrl
+              );
+              continue;
+            }
+
+            // --- Crawl chi tiết sản phẩm ---
+            await driver.get(productUrl);
+            await driver.sleep(1500);
+
+            // Lấy imageUrl: chỉ lấy ảnh nhỏ trong carousel, nếu không có thì fallback sang thumbnail
+            let imageUrl = [];
+            try {
+              const thumbImgs = await driver.findElements(
+                By.css(".product-single__thumbnails img")
+              );
+              for (const imgEl of thumbImgs) {
+                let src = await imgEl.getAttribute("src");
+                if (src.startsWith("//")) src = "https:" + src;
+                imageUrl.push(src);
+              }
+              // Nếu không có carousel, fallback sang 1 ảnh thumbnail đã lấy ở trang list
+              if (imageUrl.length === 0 && thumbImgSrc) {
+                imageUrl.push(thumbImgSrc);
+              }
+            } catch {
+              if (thumbImgSrc) {
+                imageUrl = [thumbImgSrc];
+              } else {
+                imageUrl = [];
+              }
+            }
+
+            // Lấy relatedCriteria (tên các sản phẩm liên quan)
+            let relatedCriteria = [];
+            try {
+              const relatedEls = await driver.findElements(
+                By.css(".related-products .product-meta .product-name a")
+              );
+              for (const el of relatedEls) {
+                const text = await el.getText();
+                relatedCriteria.push(text);
+              }
+            } catch {
+              relatedCriteria = [];
+            }
+
+            // Tìm các sản phẩm liên quan trong DB để lấy ObjectId
+            let related = [];
+            if (relatedCriteria.length > 0) {
+              related = await Product.find(
+                { title: { $in: relatedCriteria } },
+                "_id"
+              ).then((docs) => docs.map((doc) => doc._id));
+            }
+
+            // Lấy status (ví dụ: kiểm tra có chữ "Hết hàng" không)
+            let status = "available";
+            try {
+              const soldOutEl = await driver.findElement(By.css(".sold-out"));
+              const soldOutText = await soldOutEl.getText();
+              if (
+                soldOutText &&
+                soldOutText.toLowerCase().includes("hết hàng")
+              ) {
+                status = "out_of_stock";
+              }
+            } catch {
+              // Không tìm thấy phần tử sold-out, giữ status là "available"
+            }
+            // Lấy description từ tab mô tả sản phẩm
+            let description = "";
+            try {
+              const descEl = await driver.findElement(
+                By.css("#product-detail .product-description")
+              );
+              description = await descEl.getText(); // <-- chỉ lấy nội dung text
+            } catch {
+              description = "";
+            }
+            // Quay lại trang list để tiếp tục crawl sản phẩm tiếp theo
+            await driver.navigate().back();
+            await driver.sleep(1000);
+
             const uniqueKey = `${title}|${price}|${category.name}`;
             if (crawledSet.has(uniqueKey)) continue;
             crawledSet.add(uniqueKey);
             foundNew = true;
+
             const productData = {
               title,
               price,
+              description, // Nếu muốn crawl mô tả, thêm logic ở đây
               imageUrl,
-              productUrl,
-              source: "hangdiathoidai.com",
-              category: category.name,
+              idCategory: null, // Nếu có idCategory thì lấy, nếu không thì để null
+              related,
+              status,
             };
-            products.push(productData);
-            // Lưu vào MongoDB (upsert theo productUrl và category)
+
             await Product.updateOne(
-              { productUrl, category: category.name },
+              { title, price, status },
               { $set: productData },
               { upsert: true }
             );
@@ -116,15 +214,11 @@ async function crawlAllCategories() {
         page++;
       }
     }
-    await csvWriter.writeRecords(products);
-    console.log(
-      `\nĐã lưu ${products.length} sản phẩm vào file products.csv và MongoDB`
-    );
   } catch (error) {
-    console.error("❌ Lỗi crawl:", error.message);
+    console.error("Lỗi crawl:", error);
   } finally {
     await driver.quit();
-    mongoose.connection.close();
+    await mongoose.disconnect();
   }
 }
 

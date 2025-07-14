@@ -3,9 +3,20 @@ const mongoose = require("mongoose");
 const productSchema = new mongoose.Schema({
   title: String,
   price: String,
-  imageUrl: String,
-  productUrl: String,
-  source: String,
+  description: String,
+  imageUrl: [String],
+  idCategory: mongoose.Schema.Types.ObjectId,
+  related: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+    },
+  ],
+  status: {
+    type: String,
+    enum: ["available", "out_of_stock"],
+    default: "available",
+  },
 });
 
 module.exports = mongoose.model("Product", productSchema);
