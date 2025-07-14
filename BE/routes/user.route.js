@@ -4,4 +4,7 @@ const userController = require("../controllers/user.controller");
 
 router.post("/", userController.createUser);
 
+router.post("/uploadAvatar", userController.uploadUserAvatar);
+
+
 module.exports = router;
