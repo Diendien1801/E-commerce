@@ -3,12 +3,7 @@ const bcrypt = require("bcryptjs");
 
 exports.createUser = async (req, res) => {
   try {
-    const data = { ...req.body };
-    if (data.password) {
-      const salt = await bcrypt.genSalt(10);
-      data.password = await bcrypt.hash(data.password, salt);
-    }
-    const user = await User.create(data);
+    const user = await User.create(req.body);
     res.status(201).json(user);
   } catch (err) {
     res.status(400).json({ error: err.message });
