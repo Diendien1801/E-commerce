@@ -4,6 +4,8 @@ const userSchema = new mongoose.Schema({
   name: String,
   email: { type: String, unique: true },
   //new
+  password: {type: String, required: true},
+   //new
   avatar: {
     type: String,
     match: [
@@ -11,9 +13,7 @@ const userSchema = new mongoose.Schema({
       "Invalid URL format for avatar"
     ],
     default: null
-  },
-  //new
-  password: {type: String, required: true}
+  }
 });
 
 module.exports = mongoose.model("User", userSchema);
