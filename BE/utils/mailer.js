@@ -14,11 +14,11 @@ const transporter = nodemailer.createTransport({
 async function sendVerificationEmail(user) {
   const verifyUrl = `${process.env.BASE_URL}/api/auth/verify?token=${user.verificationToken}`;
   const mailOptions = {
-    from: process.env.SMTP_FROM,
+    from: `"Rung Ring" <${process.env.SMTP_USER}>`,
     to: user.email,
     subject: 'Email Verification',
-    html: `<p>Hello ${user.name},</p>
-           <p>Please verify your email by clicking the link below:</p>
+    html: `<p>Dear ${user.name},</p>
+           <p>Thank you for registering an account with us. To complete your registration, please verify your email address by clicking the button below:</p>
            <a href="${verifyUrl}">Verify Email</a>`,
   };
   await transporter.sendMail(mailOptions);
