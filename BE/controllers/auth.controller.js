@@ -1,6 +1,7 @@
 const User = require('../models/user.model');
 const jwt = require('jsonwebtoken');
-const { sendVerificationEmail } = require('../utils/mailer');
+const crypto = require('crypto');
+const { sendVerificationEmail, sendResetPasswordEmail } = require('../utils/mailer');
 require('dotenv').config();
 
 // User registration (name, pass and email)
@@ -70,6 +71,51 @@ exports.loginWithEmail = async (req, res) => {
       message: 'Login successful',
       data: { token }
     });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server error', data: err.message });
+  }
+};
+
+// Request password reset
+exports.requestPasswordReset = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(200).json({ success: true, message: 'If that email is registered, you will receive a reset link shortly.' });
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = Date.now() + 3600000;
+    await user.save();
+
+    await sendResetPasswordEmail(user);
+
+    res.status(200).json({ success: true, message: 'Password reset link sent to your email.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server error', data: err.message });
+  }
+};
+
+// Reset password
+exports.resetPassword = async (req, res) => {
+  const { token, newPassword } = req.body;
+  try {
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+    if (!user) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired token' });
+    }
+
+    user.password = newPassword;             
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.status(200).json({ success: true, message: 'Password has been reset successfully.' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server error', data: err.message });
   }
