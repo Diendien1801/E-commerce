@@ -25,3 +25,24 @@ async function sendVerificationEmail(user) {
 }
 
 module.exports = { sendVerificationEmail };
+
+async function sendResetPasswordEmail(user) {
+  const resetUrl = `${process.env.BASE_URL}/reset-password?token=${user.resetPasswordToken}`;
+
+  const mailOptions = {
+    from: `"Rung Ring" <${process.env.SMTP_USER}>`,
+    to: user.email,
+    subject: 'Password Reset Request',
+    html: `
+      <p>Dear ${user.name},</p>
+      <p>We received a request to reset your account password. Please click the link below to proceed:</p>
+      <a href="${resetUrl}">Reset Password</a>
+      <p>This link will expire in one hour for your security.</p>
+      <p>If you did not request a password reset, please disregard this email or contact our support team.</p>
+    `
+  };
+
+  await transporter.sendMail(mailOptions);
+}
+
+module.exports = { sendResetPasswordEmail };
