@@ -8,10 +8,10 @@ router.post("/", userController.createUser);
 router.post("/uploadAvatar", userController.uploadUserAvatar);
 
 // Thêm sản phẩm vào danh sách yêu thích
-router.post("/favorite", favoriteController.addFavorite);
+router.post("/favorite", userController.addFavorite);
 
 // Bỏ sản phẩm khỏi danh sách yêu thích
-router.delete("/favorite", favoriteController.removeFavorite);
+router.delete("/favorite", userController.removeFavorite);
 
 router.get("/favorite/:userID", userController.getFavoritesByUser);
 
