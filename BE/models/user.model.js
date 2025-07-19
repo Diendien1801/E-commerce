@@ -11,6 +11,7 @@ const userSchema = new mongoose.Schema({
   // ... các trường khác nếu cần
 
   email: { type: String, unique: true },
+
   password: {type: String, required: true},
   isVerified: { type: Boolean, default: false },
   verificationToken: { type: String, default: () => uuidv4() },
@@ -28,6 +29,18 @@ userSchema.pre('save', async function(next) {
     next();
   } catch (err) {
     next(err);
+
+  //new
+  password: {type: String, required: true},
+   //new
+  avatar: {
+    type: String,
+    match: [
+      /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i,
+      "Invalid URL format for avatar"
+    ],
+    default: null
+
   }
 });
 
