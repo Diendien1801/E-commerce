@@ -1,5 +1,5 @@
 # Ignore node_modules
-Be/node_modules/
+BE/node_modules/
 
 # Ignore environment variables
-Be/.env
+BE/.env
