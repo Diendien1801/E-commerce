@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-app.use(cors({ origin: "http://localhost:3000" }));
+app.use(cors({ origin: "https://localhost:3000" }));
 const userRoutes = require("./routes/user.route"); // user
 const crawlRoute = require("./routes/crawl.route");// crawl data
 const productRoutes = require("./routes/product.route"); // product

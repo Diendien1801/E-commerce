@@ -1,0 +1,122 @@
+.auth-container {
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 0 2rem 0;
+}
+.auth-box {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  padding: 2.5rem 2rem 2rem 2rem;
+  max-width: 350px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.auth-title {
+  font-size: 1.25rem;
+  color: #222;
+  margin-bottom: 2rem;
+  font-weight: bold;
+}
+.auth-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 0.92rem;
+}
+.auth-input {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  margin-bottom: 1.1rem;
+  border: 1.5px solid #ccc;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  background: #f9f9f9;
+  outline: none;
+  transition: border 0.2s;
+}
+.auth-input::placeholder {
+  font-size: 0.82rem;
+  color: #bbb;
+}
+.label-bold {
+  font-size: 0.92rem;
+}
+.auth-input:focus {
+  border-color: #1976d2;
+}
+.auth-btn {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  background: #9E3736;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 0.7rem;
+  transition: background 0.2s;
+}
+.auth-btn:hover {
+  background: #7c2c29;
+}
+.auth-google-btn {
+  background: #fff;
+  color: #222;
+  border: 1.5px solid #1976d2;
+  margin-bottom: 1rem;
+}
+.auth-google-btn:hover {
+  background: #e3f2fd;
+}
+.auth-facebook-btn {
+  background: #1877f2;
+  color: #fff;
+  border: none;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.auth-facebook-btn:hover {
+  background: #145db2;
+}
+.auth-divider {
+  width: 100%;
+  text-align: center;
+  color: #888;
+  margin: 0 0 0.7rem 0;
+  font-size: 1rem;
+  font-size: 0.92rem;
+}
+.auth-divider span {
+  opacity: 0.6;
+}
+.auth-divider span[style*='background'] {
+  background: #ccc;
+  opacity: 0.4;
+}
+.auth-switch {
+  margin-top: 0.5rem;
+  color: #444;
+  font-size: 0.82rem;
+}
+.auth-link {
+  color: #1976d2;
+  text-decoration: none;
+  font-weight: 500;
+  margin-left: 2px;
+  font-size: 0.82rem;
+}
+.auth-link:hover {
+  text-decoration: underline;
+}
+.auth-box, .auth-title, .auth-form, .auth-divider, .auth-switch, .auth-link, .label-bold {
+  font-family: 'Roboto', Arial, Helvetica, sans-serif;
+}

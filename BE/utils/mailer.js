@@ -24,10 +24,10 @@ async function sendVerificationEmail(user) {
   await transporter.sendMail(mailOptions);
 }
 
-module.exports = { sendVerificationEmail };
+
 
 async function sendResetPasswordEmail(user) {
-  const resetUrl = `${process.env.BASE_URL}/reset-password?token=${user.resetPasswordToken}`;
+  const resetUrl = `https://localhost:3000/reset?token=${user.resetPasswordToken}`;
 
   const mailOptions = {
     from: `"Rung Ring" <${process.env.SMTP_USER}>`,
@@ -45,4 +45,6 @@ async function sendResetPasswordEmail(user) {
   await transporter.sendMail(mailOptions);
 }
 
-module.exports = { sendResetPasswordEmail };
+module.exports = { sendResetPasswordEmail,
+  sendVerificationEmail
+ };

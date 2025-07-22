@@ -1,0 +1,41 @@
+.auth-input {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  margin-bottom: 1.1rem;
+  border: 1.5px solid #ccc;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-family: 'Roboto', Arial, Helvetica, sans-serif;
+  background: #f9f9f9;
+  outline: none;
+  transition: border 0.2s;
+}
+
+.auth-btn {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  background: #9E3736;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-family: 'Roboto', Arial, Helvetica, sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  margin-bottom: 0.7rem;
+  transition: background 0.2s;
+}
+
+.auth-box, .auth-title, .auth-form, .auth-divider, .auth-switch, .auth-link, .label-bold {
+  font-family: 'Roboto', Arial, Helvetica, sans-serif;
+  font-size: 0.82rem;
+}
+
+.auth-title {
+  font-size: 1.1rem;
+}
+
+.label-bold {
+  font-size: 0.82rem;
+  font-weight: 600;
+}

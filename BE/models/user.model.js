@@ -6,7 +6,13 @@ const userSchema = new mongoose.Schema(
   {
     name: String,
     email: { type: String, unique: true },
-    password: { type: String, required: true },
+    password: {
+      type: String,
+      required: function () {
+        // Password chỉ bắt buộc nếu không có facebookId
+        return !this.facebookId;
+      },
+    },
     avatar: {
       type: String,
       match: [
@@ -15,7 +21,7 @@ const userSchema = new mongoose.Schema(
       ],
       default: null,
     },
-    facebookId: String, // Thêm trường này
+    facebookId: String,
     isVerified: { type: Boolean, default: false },
     verificationToken: { type: String, default: () => uuidv4() },
     resetPasswordToken: String,
@@ -26,7 +32,8 @@ const userSchema = new mongoose.Schema(
 
 // Hash password before saving
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+  // Chỉ hash password nếu có password và password đã được modify
+  if (!this.password || !this.isModified("password")) return next();
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
@@ -38,6 +45,7 @@ userSchema.pre("save", async function (next) {
 
 // Compare plain text password with hashed
 userSchema.methods.comparePassword = function (candidatePassword) {
+  if (!this.password) return false; // Không có password thì return false
   return bcrypt.compare(candidatePassword, this.password);
 };
 

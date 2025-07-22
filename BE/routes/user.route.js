@@ -4,7 +4,7 @@ const userController = require("../controllers/user.controller");
 
 router.post("/", userController.createUser);
 
-
+router.get('/:id', userController.getUserById);
 router.post("/uploadAvatar", userController.uploadUserAvatar);
 
 // Thêm sản phẩm vào danh sách yêu thích

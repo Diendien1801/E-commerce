@@ -167,4 +167,18 @@ exports.changePassword = async (req, res) => {
     });
   }
 };
+// Get user by ID
+exports.getUserById = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    res.status(200).json({ success: true, data: user });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error", data: err.message });
+  }
+};
+
 
