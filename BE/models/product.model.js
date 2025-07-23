@@ -5,7 +5,7 @@ const productSchema = new mongoose.Schema({
   price: String,
   description: String,
   imageUrl: [String],
-  idCategory: mongoose.Schema.Types.ObjectId,
+  idCategory: Number,
   related: [
     {
       type: mongoose.Schema.Types.ObjectId,
