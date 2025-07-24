@@ -2,6 +2,7 @@ const Order = require("../models/order.model");
 const Payment = require("../models/payment.model");
 const Product = require("../models/product.model");
 const Categories = require("../models/categories.model");
+const User = require("../models/user.model");
 // API: Lấy số lượng đơn hàng theo trạng thái
 exports.getOrdersByStatus = async (req, res) => {
   try {
@@ -935,6 +936,83 @@ exports.compareRevenue = async (req, res) => {
       success: false,
       error: "Lỗi so sánh doanh thu theo kỳ",
       detail: error.message
+    });
+  }
+};
+
+
+// API: Trả về thông tin và số lượng người dùng chưa mua hàng (phân trang)
+exports.getUsersWithNoOrders = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, includeDeleted = false } = req.query;
+
+    // Convert sang number
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    // Lấy danh sách tất cả user IDs từ bảng Order
+    const userIdsWithOrders = await Order.distinct("idUser");
+
+    // Build filter cho User
+    let userFilter = {
+      _id: { $nin: userIdsWithOrders }, // Loại trừ users đã có đơn hàng
+    };
+
+    // Nếu không bao gồm user đã xóa
+    if (!includeDeleted) {
+      userFilter.isDeleted = { $ne: true };
+    }
+
+    // Lấy users chưa mua hàng với phân trang
+    const usersWithNoOrders = await User.find(userFilter)
+      .select("email fullName phoneNumber avatar createdAt isDeleted status")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNumber)
+      .lean();
+
+    // Đếm tổng số users chưa mua hàng
+    const totalUsersWithNoOrders = await User.countDocuments(userFilter);
+    const totalPages = Math.ceil(totalUsersWithNoOrders / limitNumber);
+
+    // Thống kê chi tiết
+    const totalUsers = await User.countDocuments(
+      includeDeleted ? {} : { isDeleted: { $ne: true } }
+    );
+    const totalUsersWithOrders = userIdsWithOrders.length;
+    const percentageWithNoOrders =
+      totalUsers > 0
+        ? Math.round((totalUsersWithNoOrders / totalUsers) * 100)
+        : 0;
+
+    
+
+    res.status(200).json({
+      success: true,
+      data: {
+        users: usersWithNoOrders,
+        pagination: {
+          currentPage: pageNumber,
+          totalPages: totalPages,
+          totalUsers: totalUsersWithNoOrders,
+          limit: limitNumber,
+          
+        },
+        statistics: {
+          totalUsersWithNoOrders,
+          totalUsersWithOrders,
+          totalUsers,
+          
+        },
+       
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: "Lỗi lấy thông tin người dùng chưa mua hàng",
+      detail: error.message,
     });
   }
 };
