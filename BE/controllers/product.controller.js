@@ -157,3 +157,91 @@ exports.filterAndPaginateProducts = async (req, res) => {
     });
   }
 };
+
+// API: Lấy sản phẩm theo idCategory với phân trang và sort
+exports.getProductsByCategory = async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+    const { 
+      page = 1, 
+      limit = 10, 
+      sort = 'newest'
+    } = req.query;
+
+    // Convert sang number
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
+    const skip = (pageNumber - 1) * limitNumber;
+    const categoryIdNumber = parseInt(categoryId);
+
+    // Build filter object
+    let filter = {};
+
+    // Filter theo idCategory - logic theo pattern bạn mô tả
+    if (categoryIdNumber >= 100) {
+      // Nếu categoryId >= 100 thì tìm chính xác (ví dụ: 201 -> 201)
+      filter.idCategory = categoryIdNumber;
+    } else {
+      // Nếu categoryId < 100 thì tìm pattern (ví dụ: 1 -> 10x, 2 -> 20x)
+      const startPattern = categoryIdNumber * 100;
+      const endPattern = startPattern + 99;
+      filter.idCategory = { 
+        $gte: startPattern, 
+        $lte: endPattern 
+      };
+    }
+
+    // Sort options (chỉ 3 loại)
+    let sortOption = {};
+    switch (sort) {
+      case 'price_asc':
+        sortOption = { price: 1 };
+        break;
+      case 'price_desc':
+        sortOption = { price: -1 };
+        break;
+      case 'newest':
+      default:
+        sortOption = { createdAt: -1 };
+        break;
+    }
+
+    // Execute queries
+    const [products, totalProducts] = await Promise.all([
+      Product.find(filter)
+        .sort(sortOption)
+        .skip(skip)
+        .limit(limitNumber),
+      Product.countDocuments(filter)
+    ]);
+
+    // Calculate pagination info
+    const totalPages = Math.ceil(totalProducts / limitNumber);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        products,
+        pagination: {
+          currentPage: pageNumber,
+          totalPages,
+          totalProducts,
+          limit: limitNumber,
+          hasNextPage: pageNumber < totalPages,
+          hasPrevPage: pageNumber > 1
+        },
+        filters: {
+          categoryId: categoryIdNumber,
+          sort
+        }
+      }
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: "Lỗi lấy sản phẩm theo danh mục",
+      detail: error.message
+    });
+  }
+};

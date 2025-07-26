@@ -16,6 +16,9 @@ router.get("/filter", productController.filterProducts);
 // View product details 
 router.get("/:id", productController.getProductById);
 
+// Get products by category
+// GET http://localhost:5000/api/products/category/:categoryId
+router.get("/category/:categoryId", productController.getProductsByCategory);
 
 //paginate filter products
 
