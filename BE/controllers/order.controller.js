@@ -1,5 +1,6 @@
 const Order = require('../models/order.model');
 
+// ORDER MANAGEMENT CONTROLLER
 // Return all orders
 exports.getAllOrders = async (req, res) => {
   try {
@@ -32,5 +33,41 @@ exports.getOrdersByStatus = async (req, res) => {
   } catch (err) {
     console.error('getOrdersByStatus error:', err);
     return res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// Get a single order by its idOrder
+exports.getOrderById = async (req, res) => {
+  try {
+    const { idOr } = req.params;
+    const order = await Order.findOne({ idOrder: idOr });
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found', data: null });
+    }
+    return res.status(200).json({ success: true, message: 'Order retrieved successfully', data: order });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Server error', data: null });
+  }
+};
+
+// Get paginated orders
+exports.getOrdersPaginated = async (req, res) => {
+  try {
+    // Parse page & limit from query string (defaults: page=1, limit=10)
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const skip = (page - 1) * limit;
+
+    // Total number of orders
+    const total = await Order.countDocuments();
+    // Fetch paginated orders
+    const orders = await Order.find()
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 }); // latest first
+
+    return res.status(200).json({success: true, message: 'Orders retrieved successfully', data: {page, limit, total, orders},});
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Server error', data: null });
   }
 };
