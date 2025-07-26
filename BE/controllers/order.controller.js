@@ -14,7 +14,7 @@ exports.getAllOrders = async (req, res) => {
 // Return orders by status
 exports.getOrdersByStatus = async (req, res) => {
   const { status } = req.params;
-  const validStatuses = ['pending', 'picking', 'shipping', 'completed', 'returned', 'canceled'];
+  const validStatuses = ['pending', 'picking', 'shipping', 'delivered', 'completed', 'returned', 'canceled'];
 
   if (!validStatuses.includes(status)) {
     return res.status(400).json({success: false, message: `Invalid status. Allowed values: ${validStatuses.join(', ')}.`});
