@@ -9,7 +9,7 @@ router.get('/orders', orderController.getAllOrders);
 router.get('/orders/status/:status', orderController.getOrdersByStatus);
 
 // Get a single order by its idOrder
-router.get('/orders/id/:idOrder', orderController.getOrderById);
+router.get('/orders/id/:id', orderController.getOrderById);
 
 // Get paginated orders
 router.get('/orders/paginated', orderController.getOrdersPaginated);

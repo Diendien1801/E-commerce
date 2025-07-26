@@ -39,8 +39,7 @@ exports.getOrdersByStatus = async (req, res) => {
 // Get a single order by its idOrder
 exports.getOrderById = async (req, res) => {
   try {
-    const { idOr } = req.params;
-    const order = await Order.findOne({ idOrder: idOr });
+    const order = await Order.findById(req.params.id)
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found', data: null });
     }
