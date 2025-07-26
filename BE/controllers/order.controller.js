@@ -14,15 +14,21 @@ exports.getAllOrders = async (req, res) => {
 // Return orders by status
 exports.getOrdersByStatus = async (req, res) => {
   const { status } = req.params;
-  // validate status
-  const validStatuses = ['pending', 'complete', 'canceled'];
+  const validStatuses = ['pending', 'picking', 'shipping', 'completed', 'returned', 'canceled'];
+
   if (!validStatuses.includes(status)) {
-    return res.status(400).json({ success: false, message: `Invalid status. Allowed values: ${validStatuses.join(', ')}.` });
+    return res.status(400).json({success: false, message: `Invalid status. Allowed values: ${validStatuses.join(', ')}.`});
   }
 
   try {
     const orders = await Order.find({ status });
+
+    if (orders.length === 0) {
+      return res.status(200).json({success: true, message: `No orders found with status "${status}".`, data: []});
+    }
+
     return res.status(200).json({ success: true, data: orders });
+
   } catch (err) {
     console.error('getOrdersByStatus error:', err);
     return res.status(500).json({ success: false, message: 'Server error' });
