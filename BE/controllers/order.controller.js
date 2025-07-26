@@ -97,3 +97,106 @@ exports.createOrder = async (req, res) => {
     return res.status(500).json({ status: 'error', message: err.name === 'ValidationError' ? err.message : 'Internal server error', data: null });
   }
 };
+
+// STATUS TRANSITIONS
+// Approve order: pending -> picking
+exports.approveOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found', data: null });
+
+    if (order.status !== 'pending') {
+      return res.status(400).json({ success: false, message: `Cannot approve order when status is: ${order.status}`, data: null });
+    }
+    order.status = 'picking';
+    await order.save();
+    return res.status(200).json({ success: true, message: 'Order approved successfully', data: order });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Server error', data: null });
+  }
+};
+
+// Cancel order: pending or picking -> canceled
+exports.cancelOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found', data: null });
+
+    if (!['pending', 'picking'].includes(order.status)) {
+      return res.status(400).json({ success: false, message: `Cannot cancel order when status is: ${order.status}`, data: null });
+    }
+    order.status = 'canceled';
+    await order.save();
+    return res.status(200).json({ success: true, message: 'Order canceled successfully', data: order });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Server error', data: null });
+  }
+};
+
+// Ship order: picking -> shipping
+exports.shipOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found', data: null });
+
+    if (order.status !== 'picking') {
+      return res.status(400).json({ success: false, message: `Cannot ship order when status is: ${order.status}`, data: null });
+    }
+    order.status = 'shipping';
+    await order.save();
+    return res.status(200).json({ success: true, message: 'Order shipped successfully', data: order });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Server error', data: null });
+  }
+};
+
+// Deliver order: shipping -> delivered
+exports.deliverOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found', data: null });
+
+    if (order.status !== 'shipping') {
+      return res.status(400).json({ success: false, message: `Cannot confirm delivery when status is: ${order.status}`, data: null });
+    }
+    order.status = 'delivered';
+    await order.save();
+    return res.status(200).json({ success: true, message: 'Order delivered successfully', data: order });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Server error', data: null });
+  }
+};
+
+// Return order: shipping or delivered -> returned
+exports.returnOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found', data: null });
+
+    if (!['shipping', 'delivered'].includes(order.status)) {
+      return res.status(400).json({ success: false, message: `Cannot return order when status is: ${order.status}`, data: null });
+    }
+    order.status = 'returned';
+    await order.save();
+    return res.status(200).json({ success: true, message: 'Order returned successfully', data: order });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Server error', data: null });
+  }
+};
+
+// Complete order: delivered -> completed
+exports.completeOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found', data: null });
+
+    if (order.status !== 'delivered') {
+      return res.status(400).json({ success: false, message: `Cannot complete order when status is: ${order.status}`, data: null });
+    }
+    order.status = 'completed';
+    await order.save();
+    return res.status(200).json({ success: true, message: 'Order completed successfully', data: order });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Server error', data: null });
+  }
+};

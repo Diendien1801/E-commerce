@@ -17,4 +17,12 @@ router.get('/orders/paginated', orderController.getOrdersPaginated);
 // Create new order
 router.post('/orders', orderController.createOrder);
 
+// Status transition
+router.patch('/orders/:id/approve', orderController.approveOrder);
+router.patch('/orders/:id/cancel', orderController.cancelOrder);
+router.patch('/orders/:id/ship', orderController.shipOrder);
+router.patch('/orders/:id/deliver', orderController.deliverOrder);
+router.patch('/orders/:id/return', orderController.returnOrder);
+router.patch('/orders/:id/complete', orderController.completeOrder);
+
 module.exports = router;
