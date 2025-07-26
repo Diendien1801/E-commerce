@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const {getAllOrders, getOrdersByStatus} = require('../controllers/order.controller');
+const orderController = require('../controllers/order.controller');
 
 // Get all orders
-router.get('/orders', getAllOrders);
+router.get('/orders', orderController.getAllOrders);
 
-// Get orders by status
-router.get('/orders/:status', getOrdersByStatus);
+// Get orders by status (validate status)
+router.get('/orders/status/:status', orderController.getOrdersByStatus);
 
 module.exports = router;
