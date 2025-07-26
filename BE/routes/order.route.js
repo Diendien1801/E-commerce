@@ -14,4 +14,7 @@ router.get('/orders/id/:idOrder', orderController.getOrderById);
 // Get paginated orders
 router.get('/orders/paginated', orderController.getOrdersPaginated);
 
+// Create new order
+router.post('/orders', orderController.createOrder);
+
 module.exports = router;

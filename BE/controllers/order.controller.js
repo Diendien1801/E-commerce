@@ -71,3 +71,29 @@ exports.getOrdersPaginated = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Server error', data: null });
   }
 };
+
+// Create a new order
+exports.createOrder = async (req, res) => {
+  try {
+    const {
+      idOrder,
+      idUser,
+      items,
+      status,
+      paymentMethod,
+      shippingAddress
+    } = req.body;
+
+    if (!idOrder || !idUser || !items || !paymentMethod || !shippingAddress) { // check for required fields
+      return res.status(400).json({ status: 'error', message: 'Missing required fields', data: null });
+    }
+
+    const order = new Order({ idOrder, idUser, items, status, paymentMethod, shippingAddress }); // create order object
+    await order.save(); // save to database
+
+    return res.status(201).json({ status: 'success', message: 'Order created successfully', data: order });
+  } catch (err) {
+    console.error('Error creating order:', err); // log error
+    return res.status(500).json({ status: 'error', message: err.name === 'ValidationError' ? err.message : 'Internal server error', data: null });
+  }
+};
