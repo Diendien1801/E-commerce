@@ -1,20 +1,38 @@
 const Order = require('../models/order.model');
+const User = require('../models/user.model');
 
-// ORDER MANAGEMENT CONTROLLER
+// Helper: get user role by ID
+async function getUserRole(userId) {
+  const user = await User.findById(userId);
+  if (!user) throw new Error('User not found');
+  return user.role;
+}
+
 // Return all orders
 exports.getAllOrders = async (req, res) => {
   try {
-    const orders = await Order.find();
+    const { userId } = req.body;
+    const role = await getUserRole(userId);
+    const filter = {};
+
+    if (role === 'user') {
+      filter.idUser = userId;
+    }
+
+    const orders = await Order.find(filter);
     return res.status(200).json({ success: true, data: orders });
   } catch (err) {
     console.error('getAllOrders error:', err);
-    return res.status(500).json({ success: false, message: 'Server error' });
+    const statusCode = err.message === 'User not found' ? 404 : 500;
+    const msg = err.message === 'User not found' ? 'User not found' : 'Server error';
+    return res.status(statusCode).json({ success: false, message: msg });
   }
 };
 
 // Return orders by status
 exports.getOrdersByStatus = async (req, res) => {
   const { status } = req.params;
+  const { userId } = req.body;
   const validStatuses = ['pending', 'picking', 'shipping', 'delivered', 'completed', 'returned', 'canceled'];
 
   if (!validStatuses.includes(status)) {
@@ -22,52 +40,81 @@ exports.getOrdersByStatus = async (req, res) => {
   }
 
   try {
-    const orders = await Order.find({ status });
+    const role = await getUserRole(userId);
+    const filter = { status };
 
+    if (role === 'user') {
+      filter.idUser = userId;
+    }
+
+    const orders = await Order.find(filter);
     if (orders.length === 0) {
-      return res.status(200).json({success: true, message: `No orders found with status "${status}".`, data: []});
+      return res.status(200).json({success: true, message: `No orders found with status "${status}" for this user.`, data: []});
     }
 
     return res.status(200).json({ success: true, data: orders });
-
   } catch (err) {
     console.error('getOrdersByStatus error:', err);
-    return res.status(500).json({ success: false, message: 'Server error' });
+    const statusCode = err.message === 'User not found' ? 404 : 500;
+    const msg = err.message === 'User not found' ? 'User not found' : 'Server error';
+    return res.status(statusCode).json({ success: false, message: msg });
   }
 };
 
 // Get a single order by its idOrder
 exports.getOrderById = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id)
+    const { userId } = req.body;
+    const role = await getUserRole(userId);
+    const order = await Order.findById(req.params.id);
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found', data: null });
     }
+
+    if (role === 'user' && order.idUser !== userId) {
+      return res.status(403).json({ success: false, message: 'Access denied', data: null });
+    }
+
     return res.status(200).json({ success: true, message: 'Order retrieved successfully', data: order });
-  } catch (error) {
-    return res.status(500).json({ success: false, message: 'Server error', data: null });
+  } catch (err) {
+    console.error('getOrderById error:', err);
+    const statusCode = err.message === 'User not found' ? 404 : 500;
+    const msg = err.message === 'User not found' ? 'User not found' : 'Server error';
+    return res.status(statusCode).json({ success: false, message: msg, data: null });
   }
 };
 
 // Get paginated orders
 exports.getOrdersPaginated = async (req, res) => {
   try {
-    // Parse page & limit from query string (defaults: page=1, limit=10)
+    const { userId } = req.body;
+    const role = await getUserRole(userId);
+
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
     const skip = (page - 1) * limit;
 
-    // Total number of orders
-    const total = await Order.countDocuments();
-    // Fetch paginated orders
-    const orders = await Order.find()
+    const filter = {};
+    if (role === 'user') {
+      filter.idUser = userId;
+    }
+
+    const total = await Order.countDocuments(filter);
+    const orders = await Order.find(filter)
       .skip(skip)
       .limit(limit)
-      .sort({ createdAt: -1 }); // latest first
+      .sort({ createdAt: -1 });
 
-    return res.status(200).json({success: true, message: 'Orders retrieved successfully', data: {page, limit, total, orders},});
-  } catch (error) {
-    return res.status(500).json({ success: false, message: 'Server error', data: null });
+    return res.status(200).json({
+      success: true,
+      message: 'Orders retrieved successfully',
+      data: { page, limit, total, orders }
+    });
+  } catch (err) {
+    console.error('getOrdersPaginated error:', err);
+    const statusCode = err.message === 'User not found' ? 404 : 500;
+    const msg = err.message === 'User not found' ? 'User not found' : 'Server error';
+    return res.status(statusCode).json({ success: false, message: msg, data: null });
   }
 };
 
