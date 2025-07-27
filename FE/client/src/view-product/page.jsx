@@ -1,11 +1,13 @@
 import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Navbar from '../components/navbar/navbar';
 import Footer from '../components/footer/footer';
 import { useAuth } from '../components/context/authcontext';
 import './view-product.css';
 
 const ViewProduct = () => {
+    const { t, i18n } = useTranslation();
     const { id } = useParams();
     const [product, setProduct] = useState(null);
     const [favLoading, setFavLoading] = useState(false);
@@ -25,7 +27,7 @@ const ViewProduct = () => {
         setFavSuccess('');
         const userId = user?._id || user?.userId || user?.id;
         if (!userId) {
-            setFavError('You must be logged in to add favorites.');
+            setFavError(t('mustLoginToFavorite', 'You must be logged in to add favorites.'));
             setFavLoading(false);
             return;
         }
@@ -39,17 +41,17 @@ const ViewProduct = () => {
             });
             const data = await res.json();
             if (res.ok && data.success !== false) {
-                setFavSuccess('Added to favorites!');
+                setFavSuccess(t('addedToFavorites', 'Added to favorites!'));
             } else {
-                setFavError(data.message || 'Failed to add to favorites');
+                setFavError(data.message || t('failedToAddFavorite', 'Failed to add to favorites'));
             }
         } catch {
-            setFavError('Server error');
+            setFavError(t('serverError', 'Server error'));
         }
         setFavLoading(false);
     };
 
-    if (!product) return <div>Loading...</div>;
+    if (!product) return <div>{t('loading', 'Loading...')}</div>;
 
     return (
         <div>
@@ -68,7 +70,7 @@ const ViewProduct = () => {
                             onClick={handleAddFavorite}
                             disabled={favLoading}
                         >
-                            {favLoading ? 'Adding...' : 'Add to favorite'}
+                            {favLoading ? t('adding', 'Adding...') : t('addToFavorite', 'Add to favorite')}
                         </button>
                         {favError && <div style={{ color: 'red', marginTop: '0.5rem' }}>{favError}</div>}
                         {favSuccess && <div style={{ color: 'green', marginTop: '0.5rem' }}>{favSuccess}</div>}

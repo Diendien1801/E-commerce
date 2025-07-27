@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../components/context/authcontext';
 import Navbar from '../../components/navbar/navbar';
@@ -26,7 +27,7 @@ const Login = () => {
     const [form, setForm] = useState({ email: '', password: '' });
     const [error, setError] = useState('');
     const navigate = useNavigate();
-
+    const { t, i18n } = useTranslation();
     const { login } = useAuth();
 
     useEffect(() => {
@@ -81,13 +82,13 @@ const Login = () => {
                     }
                 }
                 login(token, userInfo);
-                alert('Login successful!');
+                alert(t('loginSuccessful'));
                 navigate('/');
             } else {
-                setError(data.message || 'Login failed');
+                setError(data.message || t('loginFailed'));
             }
         } catch (err) {
-            setError('Server error. Please try again later.');
+            setError(t('serverErrorTryAgain'));
         }
     };
 
@@ -96,18 +97,18 @@ const Login = () => {
             <Navbar />
             <div className="auth-container">
                 <div className="auth-box">
-                    <h2 className="auth-title" style={{ marginBottom: '0.7rem' }}>Sign In</h2>
+                    <h2 className="auth-title" style={{ marginBottom: '0.7rem' }}>{t('signIn')}</h2>
                     <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '1.2rem', textAlign: 'center' }}>
-                        Enter your email and password.
+                        {t('enterEmailPassword')}
                     </div>
                     <form className="auth-form" onSubmit={handleSubmit}>
                         <div style={{ width: '100%', marginBottom: '0.2rem' }}>
-                            <label htmlFor="email" className="label-bold" style={{ color: '#444', marginBottom: '0.1rem', display: 'block', textAlign: 'left', fontSize: '0.82rem', fontWeight: 600 }}>Email</label>
+                            <label htmlFor="email" className="label-bold" style={{ color: '#444', marginBottom: '0.1rem', display: 'block', textAlign: 'left', fontSize: '0.82rem', fontWeight: 600 }}>{t('email')}</label>
                             <input
                                 id="email"
                                 type="email"
                                 name="email"
-                                placeholder="example@email.com"
+                                placeholder={t('emailPlaceholder')}
                                 className="auth-input"
                                 value={form.email}
                                 onChange={handleChange}
@@ -115,12 +116,12 @@ const Login = () => {
                             />
                         </div>
                         <div style={{ width: '100%', marginBottom: '0.2rem' }}>
-                            <label htmlFor="password" className="label-bold" style={{ color: '#444', marginBottom: '0.1rem', display: 'block', textAlign: 'left', fontSize: '0.82rem', fontWeight: 600 }}>Password</label>
+                            <label htmlFor="password" className="label-bold" style={{ color: '#444', marginBottom: '0.1rem', display: 'block', textAlign: 'left', fontSize: '0.82rem', fontWeight: 600 }}>{t('password')}</label>
                             <input
                                 id="password"
                                 type="password"
                                 name="password"
-                                placeholder="password123"
+                                placeholder={t('passwordPlaceholder')}
                                 className="auth-input"
                                 value={form.password}
                                 onChange={handleChange}
@@ -128,10 +129,10 @@ const Login = () => {
                             />
                         </div>
                         {error && <div style={{ color: 'red', marginBottom: '1rem' }}>{error}</div>}
-                        <button type="submit" className="auth-btn">Login</button>
+                        <button type="submit" className="auth-btn">{t('login')}</button>
                         <div className="auth-divider" style={{ display: 'flex', alignItems: 'center', width: '100%', margin: '0 0 0.7rem 0' }}>
                             <span style={{ flex: 1, height: '1px', background: '#ccc', marginRight: '8px' }}></span>
-                            <span style={{ fontSize: '0.85rem', color: '#888', fontWeight: 500 }}>or</span>
+                            <span style={{ fontSize: '0.85rem', color: '#888', fontWeight: 500 }}>{t('or')}</span>
                             <span style={{ flex: 1, height: '1px', background: '#ccc', marginLeft: '8px' }}></span>
                         </div>
                         <button
@@ -160,24 +161,24 @@ const Login = () => {
                                         }
                                         login(data.data.token, userInfo);
                                         navigate('/');
-                                        alert('Facebook login successful!');
+                                        alert(t('facebookLoginSuccessful'));
                                         navigate('/');
                                     } else {
-                                        setError(data.message || 'Facebook login failed');
+                                        setError(data.message || t('facebookLoginFailed'));
                                     }
                                 } catch (err) {
-                                    setError('Facebook login error');
+                                    setError(t('facebookLoginError'));
                                 }
                             }}
                         >
                             <img src={facebook} alt="Facebook" style={{height: '18px', verticalAlign: 'middle', marginRight: '8px'}} />
-                            <span style={{fontSize: '0.82rem', verticalAlign: 'middle'}}>Sign in with Facebook</span>
+                            <span style={{fontSize: '0.82rem', verticalAlign: 'middle'}}>{t('signInWithFacebook')}</span>
                         </button>
                         <div className="auth-switch">
-                            Don't have an account? <Link to="/register" className="auth-link">Sign Up</Link>
+                            {t('dontHaveAccount')} <Link to="/register" className="auth-link">{t('signUp')}</Link>
                         </div>
                         <div className="auth-switch" style={{ marginTop: '0.5rem', textAlign: 'center' }}>
-                            <Link to="/forgot-password" className="auth-link">Forgot Password?</Link>
+                            <Link to="/forgot-password" className="auth-link">{t('forgotPassword')}</Link>
                         </div>
                     </form>
                 </div>
