@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../components/context/authcontext';
 import Navbar from '../components/navbar/navbar';
 import Footer from '../components/footer/footer';
 import ProductCard from '../components/product-card/card';
 
 function Favourite() {
+  const { t } = useTranslation();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -68,7 +70,7 @@ function Favourite() {
       <Navbar />
       <div style={{ maxWidth: '900px', margin: '2.5rem auto', padding: '0 1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 600, margin: 0 }}>Favourite Products</h2>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 600, margin: 0 }}>{t('favouriteProducts', 'Favourite Products')}</h2>
           <button
             className="edit-fav-btn"
             style={{
@@ -83,15 +85,15 @@ function Favourite() {
             }}
             onClick={handleEditToggle}
           >
-            {editing ? 'Editing' : 'Edit'}
+            {editing ? t('editing', 'Editing') : t('edit', 'Edit')}
           </button>
         </div>
         {loading ? (
-          <div>Loading...</div>
+          <div>{t('loading', 'Loading...')}</div>
         ) : error ? (
           <div style={{ color: 'red' }}>{error}</div>
         ) : products.length === 0 ? (
-          <div style={{ color: '#888' }}>No favourite products found.</div>
+          <div style={{ color: '#888' }}>{t('noFavouriteProducts', 'No favourite products found.')}</div>
         ) : (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem' }}>
             {products.map(product => (
@@ -123,7 +125,7 @@ function Favourite() {
                     }}
                     onClick={() => handleDelete(product.favId)}
                   >
-                    Delete?
+                    {t('deleteConfirm', 'Delete?')}
                   </div>
                 )}
               </div>

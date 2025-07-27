@@ -4,6 +4,7 @@ import './navbar.css';
 import logo from './logo.png';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const Navbar = () => {
     const [search, setSearch] = useState("");
@@ -45,6 +46,7 @@ const Navbar = () => {
         setTimeout(() => setShowResults(false), 150); 
     };
 
+    const { t, i18n } = useTranslation();
     return (
         <div className="navbar-container">
             <div className="header">
@@ -53,7 +55,7 @@ const Navbar = () => {
                         <Link to="/login" style={{ textDecoration: 'none' }}>
                             <button className="login-btn">
                                 <i className="bi bi-person-circle login-icon"></i>
-                                Login
+                                {t('login')}
                             </button>
                         </Link>
                     ) : (
@@ -61,11 +63,11 @@ const Navbar = () => {
                             <button className="login-btn" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
                                 onClick={() => setShowDropdown(v => !v)}>
                                 <i className="bi bi-person-circle login-icon"></i>
-                                Manage account
+                                {t('manageAccount')}
                                 <span style={{ fontSize: '1.1em'}}>&#9662;</span>
                             </button>
                             {showDropdown && (
-                                <div style={{ position: 'absolute', top: '110%', right: 0, background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.12)', borderRadius: '8px', minWidth: '160px', zIndex: 10 }}>
+                                <div style={{ position: 'absolute', top: '110%', right: '25px', background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.12)', borderRadius: '8px', minWidth: '160px', zIndex: 10 }}>
                                     {userId && (
                                         <Link
                                             to={"/profile/" + userId}
@@ -82,7 +84,7 @@ const Navbar = () => {
                                             onMouseOver={e => e.currentTarget.style.background = '#f5f5f5'}
                                             onMouseOut={e => e.currentTarget.style.background = '#fff'}
                                         >
-                                            Profile
+                                            {t('profile')}
                                         </Link>
                                     )}
                                     <Link
@@ -99,7 +101,7 @@ const Navbar = () => {
                                         onMouseOver={e => e.currentTarget.style.background = '#f5f5f5'}
                                         onMouseOut={e => e.currentTarget.style.background = '#fff'}
                                     >
-                                        Favourite Products
+                                        {t('favouriteProducts')}
                                     </Link>
                                     <Link
                                         to="/order"
@@ -115,7 +117,7 @@ const Navbar = () => {
                                         onMouseOver={e => e.currentTarget.style.background = '#f5f5f5'}
                                         onMouseOut={e => e.currentTarget.style.background = '#fff'}
                                     >
-                                        Order History
+                                        {t('orderHistory')}
                                     </Link>
                                     <Link
                                         to="/"
@@ -137,7 +139,7 @@ const Navbar = () => {
                                         onMouseOver={e => e.currentTarget.style.background = '#f5f5f5'}
                                         onMouseOut={e => e.currentTarget.style.background = '#fff'}
                                     >
-                                        Log out
+                                        {t('logout')}
                                     </Link>
                                 </div>
                             )}
@@ -151,66 +153,76 @@ const Navbar = () => {
                 </div>
                 <div className="header-col header-cart">
                     <button className="cart-btn">
-                        <i className="bi bi-cart2 cart-icon"></i> Cart
+                        <i className="bi bi-cart2 cart-icon"></i> {t('cart')}
                     </button>
                 </div>
             </div>
             <hr style={{ margin: 0, border: 0, borderTop: '2px solid #111' }} />
             <nav className="navbar">
-                <div className="navbar-flex">
-                    <a href="/" className="nav-col nav-button">HOME</a>
-                    <a href="/shop" className="nav-col nav-button">SHOP</a>
-                    <a href="/contact" className="nav-col nav-button">CONTACT</a>
-                    <button className="crawl-btn">Crawl</button>
-                    <div className="nav-col nav-search" style={{ position: 'relative' }}>
-                        <input
-                            type="text"
-                            className="search-input"
-                            placeholder="Search"
-                            value={search}
-                            onChange={handleSearch}
-                            onFocus={() => search && setShowResults(true)}
-                            onBlur={handleBlur}
-                        />
-                        <i className="bi bi-search search-icon" style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: '#888', pointerEvents: 'none', fontSize: '1.1em' }}></i>
-                        {showResults && (
-                            <div className="search-dropdown">
-                                {loading ? (
-                                    <div className="search-loading" style={{ padding: '10px', color: '#888' }}>Loading...</div>
-                                ) : error ? (
-                                    <div className="search-error" style={{ padding: '10px', color: 'red' }}>{error}</div>
-                                ) : searchResults.length > 0 ? (
-                                    searchResults.map((item) => (
-                                        <a
-                                            key={item._id}
-                                            href={`/view-product/${item._id}`}
-                                            className="search-result-item"
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '10px',
-                                                padding: '10px',
-                                                borderBottom: '1px solid #f0f0f0',
-                                                color: '#222',
-                                                textDecoration: 'none',
-                                                background: '#fff',
-                                            }}
-                                        >
-                                            {item.imageUrl && (
-                                                <img
-                                                    src={item.imageUrl}
-                                                    alt={item.title}
-                                                    style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }}
-                                                />
-                                            )}
-                                            <span>{item.title}</span>
-                                        </a>
-                                    ))
-                                ) : search.trim() ? (
-                                    <div className="search-empty" style={{ padding: '10px', color: '#888' }}>No results found.</div>
-                                ) : null}
-                            </div>
-                        )}
+                <div className="navbar-flex navbar-flex-custom">
+                    <div className="nav-left-cluster">
+                        <a href="/" className="nav-col nav-button">{t('home')}</a>
+                        <a href="/shop" className="nav-col nav-button">{t('shop')}</a>
+                        <a href="/contact" className="nav-col nav-button">{t('contact')}</a>
+                        <button className="crawl-btn">{t('crawl')}</button>
+                    </div>
+                    <div className="nav-right-cluster">
+                        <button
+                            className="lang-switch-btn"
+                            onClick={() => i18n.changeLanguage(i18n.language === 'vi' ? 'en' : 'vi')}
+                        >
+                            {i18n.language === 'vi' ? (
+                                <>
+                                    <svg width="20" height="15" viewBox="0 0 32 24" style={{ verticalAlign: 'middle', marginRight: 6 }} xmlns="http://www.w3.org/2000/svg"><g clipPath="url(#clip0_270_67379)"><rect width="32" height="24" fill="white"/><path fillRule="evenodd" clipRule="evenodd" d="M0 0H32V24H0V0Z" fill="#F7FCFF"/><path fillRule="evenodd" clipRule="evenodd" d="M0 0V24H32V0H0Z" fill="#E31D1C"/><mask id="mask0_270_67379" style={{maskType:'luminance'}} maskUnits="userSpaceOnUse" x="0" y="0" width="32" height="24"><path fillRule="evenodd" clipRule="evenodd" d="M0 0V24H32V0H0Z" fill="white"/></mask><g mask="url(#mask0_270_67379)"><path fillRule="evenodd" clipRule="evenodd" d="M16.0619 15.98L10.9111 19.2549L12.6388 13.5219L8.96483 9.77622L14.03 9.66557L16.271 4.00574L18.313 9.74033L23.3661 9.82853L19.5688 13.6429L21.342 19.0968L16.0619 15.98Z" fill="#FFD221"/></g></g><defs><clipPath id="clip0_270_67379"><rect width="32" height="24" fill="white"/></clipPath></defs></svg>
+                                    VI
+                                </>
+                            ) : (
+                                <>
+                                    <svg width="20" height="15" viewBox="0 0 32 24" style={{ verticalAlign: 'middle', marginRight: 6 }} xmlns="http://www.w3.org/2000/svg"><g clipPath="url(#clip0_270_67366)"><rect width="32" height="24" fill="white"/><path fillRule="evenodd" clipRule="evenodd" d="M0 0V24H32V0H0Z" fill="#2E42A5"/><mask id="mask0_270_67366" style={{maskType:'luminance'}} maskUnits="userSpaceOnUse" x="0" y="0" width="32" height="24"><path fillRule="evenodd" clipRule="evenodd" d="M0 0V24H32V0H0Z" fill="white"/></mask><g mask="url(#mask0_270_67366)"><path d="M-3.56311 22.2854L3.47858 25.2635L32.1598 3.23787L35.8741 -1.18761L28.3441 -2.18297L16.6457 7.3085L7.22968 13.7035L-3.56311 22.2854Z" fill="white"/><path d="M-2.59912 24.3719L0.988295 26.1001L34.5403 -1.59881H29.5032L-2.59912 24.3719Z" fill="#F50100"/><path d="M35.5631 22.2854L28.5214 25.2635L-0.159817 3.23787L-3.87415 -1.18761L3.65593 -2.18297L15.3543 7.3085L24.7703 13.7035L35.5631 22.2854Z" fill="white"/><path d="M35.3229 23.7829L31.7355 25.5111L17.4487 13.6518L13.2129 12.3267L-4.23151 -1.17246H0.805637L18.2403 12.0063L22.8713 13.5952L35.3229 23.7829Z" fill="#F50100"/><mask id="path-7-inside-1_270_67366" fill="white"><path fillRule="evenodd" clipRule="evenodd" d="M19.7778 -2H12.2222V8H-1.97247V16H12.2222V26H19.7778V16H34.0275V8H19.7778V-2Z"/></mask><path fillRule="evenodd" clipRule="evenodd" d="M19.7778 -2H12.2222V8H-1.97247V16H12.2222V26H19.7778V16H34.0275V8H19.7778V-2Z" fill="#F50100"/><path d="M12.2222 -2V-4H10.2222V-2H12.2222ZM19.7778 -2H21.7778V-4H19.7778V-2ZM12.2222 8V10H14.2222V8H12.2222ZM-1.97247 8V6H-3.97247V8H-1.97247ZM-1.97247 16H-3.97247V18H-1.97247V16ZM12.2222 16H14.2222V14H12.2222V16ZM12.2222 26H10.2222V28H12.2222V26ZM19.7778 26V28H21.7778V26H19.7778ZM19.7778 16V14H17.7778V16H19.7778ZM34.0275 16V18H36.0275V16H34.0275ZM34.0275 8H36.0275V6H34.0275V8ZM19.7778 8H17.7778V10H19.7778V8ZM12.2222 0H19.7778V-4H12.2222V0ZM14.2222 8V-2H10.2222V8H14.2222ZM-1.97247 10H12.2222V6H-1.97247V10ZM0.0275269 16V8H-3.97247V16H0.0275269ZM12.2222 14H-1.97247V18H12.2222V14ZM14.2222 26V16H10.2222V26H14.2222ZM19.7778 24H12.2222V28H19.7778V24ZM17.7778 16V26H21.7778V16H17.7778ZM34.0275 14H19.7778V18H34.0275V14ZM32.0275 8V16H36.0275V8H32.0275ZM19.7778 10H34.0275V6H19.7778V10ZM17.7778 -2V8H21.7778V-2H17.7778Z" fill="white" mask="url(#path-7-inside-1_270_67366)"/></g></g><defs><clipPath id="clip0_270_67366"><rect width="32" height="24" fill="white"/></clipPath></defs></svg>
+                                    EN
+                                </>
+                            )}
+                        </button>
+                        <div className="nav-col nav-search nav-search-custom">
+                            <input
+                                type="text"
+                                className="search-input search-input-custom"
+                                placeholder={t('search')}
+                                value={search}
+                                onChange={handleSearch}
+                                onFocus={() => search && setShowResults(true)}
+                                onBlur={handleBlur}
+                            />
+                            <i className="bi bi-search search-icon search-icon-custom"></i>
+                            {showResults && (
+                                <div className="search-dropdown search-dropdown-custom">
+                                    {loading ? (
+                                        <div className="search-loading" style={{ padding: '10px', color: '#888' }}>{t('loading')}</div>
+                                    ) : error ? (
+                                        <div className="search-error" style={{ padding: '10px', color: 'red' }}>{t('searchError')}</div>
+                                    ) : searchResults.length > 0 ? (
+                                        searchResults.map((item) => (
+                                            <a
+                                                key={item._id}
+                                                href={`/view-product/${item._id}`}
+                                                className="search-result-item"
+                                            >
+                                                {item.imageUrl && (
+                                                    <img
+                                                        src={item.imageUrl}
+                                                        alt={item.title}
+                                                        className="search-result-img"
+                                                    />
+                                                )}
+                                                <span>{item.title}</span>
+                                            </a>
+                                        ))
+                                    ) : search.trim() ? (
+                                        <div className="search-empty" style={{ padding: '10px', color: '#888' }}>{t('noResults')}</div>
+                                    ) : null}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </nav>

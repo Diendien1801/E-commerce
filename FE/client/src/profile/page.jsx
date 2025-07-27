@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../components/context/authcontext';
 import Navbar from '../components/navbar/navbar';
@@ -6,6 +7,7 @@ import Footer from '../components/footer/footer';
 import './profile.css';
 
 const Profile = () => {
+    const { t, i18n } = useTranslation();
     const fileInputRef = useRef(null);
     const { id } = useParams();
     const { user: loggedInUser } = useAuth();
@@ -56,7 +58,7 @@ const Profile = () => {
             const cloudData = await cloudRes.json();
 
             if (!cloudData.secure_url) {
-                throw new Error('Upload to Cloudinary failed');
+                throw new Error(t('uploadCloudinaryFailed', 'Upload to Cloudinary failed'));
             }
 
             const avatarUrl = cloudData.secure_url;
@@ -82,9 +84,9 @@ const Profile = () => {
             const changeData = await changeRes.json();
             if (!changeData.success) throw new Error(changeData.message);
             setUser(prev => ({ ...prev, avatar: avatarUrl }));
-            alert('Profile picture successfully updated!');
+            alert(t('profilePicUpdated', 'Profile picture successfully updated!'));
         } catch (err) {
-            alert('Error: ' + err.message);
+            alert(t('error', 'Error') + ': ' + err.message);
         }
         
     };
@@ -95,7 +97,7 @@ const Profile = () => {
             <Navbar />
             <div className="profile-main">
                 <div className="profile-title-row">
-                    <h2 className="profile-title">Profile</h2>
+                    <h2 className="profile-title">{t('profile', 'Profile')}</h2>
                 </div>
                 <hr className="profile-divider" />
                 <div className="profile-row">
@@ -106,26 +108,26 @@ const Profile = () => {
                              onMouseLeave={e => e.currentTarget.querySelector('.change-pic-overlay').style.opacity = 0}>
                             <img src={user && user.avatar ? user.avatar : "/profile-placeholder.png"} alt="Profile" className="profile-pic" />
                             <div className="change-pic-overlay">
-                                Change profile picture
+                                {t('changeProfilePic', 'Change profile picture')}
                             </div>
                             <input type="file" accept="image/*" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileChange} />
                         </div>
                     </div>
                     <div className="profile-info-col">
                         <div className="profile-info"> 
-                            <strong>Name:</strong> {user ? user.name : 'Name'}
+                            <strong>{t('name', 'Name')}:</strong> {user ? user.name : t('name', 'Name')}
                         </div>
                         {user && user.email && (
-                            <div className="profile-info"><strong>Email:</strong> {user.email}</div>
+                            <div className="profile-info"><strong>{t('email', 'Email')}:</strong> {user.email}</div>
                         )}
                         <div style={{ marginTop: '0.7rem', textAlign: 'left' }}>
                             <a href="/change-password" className="profile-edit-btn" style={{ padding: '0.32rem 0.8rem', fontSize: '0.92rem', background: '#9E3736', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 500, textDecoration: 'none', display: 'inline-block' }}>
-                                Change Password
+                                {t('changePassword', 'Change Password')}
                             </a>
                         </div>
                     </div>
                 </div>
-                {loading && <div style={{ textAlign: 'center', marginTop: '2rem', color: '#888' }}>Loading profile...</div>}
+                {loading && <div style={{ textAlign: 'center', marginTop: '2rem', color: '#888' }}>{t('loading', 'Loading...')}</div>}
             </div>
             <Footer />
         </div>
