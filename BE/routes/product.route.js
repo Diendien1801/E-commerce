@@ -16,7 +16,4 @@ router.get("/filter", productController.filterProducts);
 // View product details 
 router.get("/:id", productController.getProductById);
 
-
-//paginate filter products
-
 module.exports = router;
