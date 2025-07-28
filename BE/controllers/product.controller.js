@@ -1,7 +1,7 @@
 const Product = require("../models/product.model");
 
 // Helper: Base filter to exclude deleted products
-const baseFilter = { status: { $ne: 'deleted' } };
+const baseFilter = { isDeleted: { $ne: true } };
 
 // Default collation for Vietnamese alphabetical order
 const viCollation = { locale: 'vi', strength: 1 };

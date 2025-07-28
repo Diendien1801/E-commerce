@@ -408,3 +408,29 @@ exports.completeOrder = async (req, res) => {
       .json({ success: false, message: "Server error", data: null });
   }
 };
+
+
+
+// Get orders by user ID
+exports.getOrdersByUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    // Tìm orders theo userId
+    const orders = await Order.find({ idUser: userId })
+      .sort({ createdAt: -1 }); // Sắp xếp mới nhất trước
+    
+    res.status(200).json({
+      success: true,
+      message: "Orders retrieved successfully",
+      data: orders
+    });
+    
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      data: null
+    });
+  }
+};

@@ -2,7 +2,6 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const { v4: uuidv4 } = require("uuid");
 
-
 const userSchema = new mongoose.Schema(
   {
     name: String,
@@ -70,30 +69,16 @@ const userSchema = new mongoose.Schema(
       // Địa chỉ đầy đủ dạng string để dễ tìm kiếm
       fullAddress: { type: String, trim: true },
     },
-   
-    
-    
+
     // Trạng thái tài khoản
     status: {
       type: String,
       enum: ["active", "inactive", "suspended"],
       default: "active",
     },
-    
-   
-   
-    
-    
   },
   {
     timestamps: true,
-    // Tạo index cho tìm kiếm
-    index: {
-      email: 1,
-      phoneNumber: 1,
-      fullName: "text",
-      "address.fullAddress": "text",
-    },
   }
 );
 
@@ -115,7 +100,7 @@ userSchema.pre("save", async function (next) {
   } catch (err) {
     next(err);
   }
-
+});
 
 // Tự động tạo fullAddress khi có thay đổi address
 userSchema.pre("save", function (next) {
@@ -149,8 +134,6 @@ userSchema.methods.getPublicProfile = function () {
     avatar: this.avatar,
     dateOfBirth: this.dateOfBirth,
     gender: this.gender,
-    occupation: this.occupation,
-    musicPreferences: this.musicPreferences,
     createdAt: this.createdAt,
   };
 };

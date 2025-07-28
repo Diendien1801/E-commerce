@@ -230,7 +230,7 @@ exports.getAllUsers = async (req, res) => {
     // Lấy users với phân trang
     const users = await User.find(filter)
       .select(
-        "email fullName phoneNumber avatar isDeleted deletedAt createdAt status"
+        "email name phoneNumber avatar isDeleted deletedAt createdAt status"
       )
       .sort(sortOptions)
       .skip(skip)

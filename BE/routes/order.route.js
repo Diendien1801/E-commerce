@@ -15,13 +15,13 @@ router.get('/orders/status/:status', orderController.getOrdersByStatus);
 
 
 // Get orders by user ID
-router.get("/user/:userId", orderController.getOrdersByUserId);
+//router.get("/user/:userId", orderController.getOrdersByUserId);
 
 // Get orders with filters
-router.get("/user/:userId/filter", orderController.getOrdersWithFilters);
+//router.get("/user/:userId/filter", orderController.getOrdersWithFilters);
 
 // Get order detail by order ID
-router.get("/detail/:orderId", orderController.getOrderDetailById);
+//router.get("/detail/:orderId", orderController.getOrderDetailById);
 // Get a single order by its idOrder
 router.get('/orders/id/:id', orderController.getOrderById);
 

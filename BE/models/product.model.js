@@ -14,8 +14,12 @@ const productSchema = new mongoose.Schema({
   ],
   status: {
     type: String,
-    enum: ["available", "out_of_stock", "deleted"], //new: "deleted"
+    enum: ["available", "out_of_stock"], 
     default: "available",
+  },
+  isDeleted: {
+    type: Boolean,
+    default: false,
   },
   //new
   quantity: { type: Number, default: 0, min: [0, 'Quantity cannot be negative'] },
