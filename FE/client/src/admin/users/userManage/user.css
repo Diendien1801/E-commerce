@@ -1,0 +1,20 @@
+.users-pagination {
+  display: flex;
+  gap: 0.5rem;
+  margin: 2rem 0 0 0;
+  justify-content: center;
+}
+.users-pagination button {
+  padding: 0.4rem 1rem;
+  font-size: 1rem;
+  background: #f5f5f5;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.users-pagination button.active, .users-pagination button:hover {
+  background: #e53935;
+  color: #fff;
+  border-color: #e53935;
+}

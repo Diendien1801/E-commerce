@@ -14,9 +14,14 @@ import Favourite from './favourite/page';
 import './App.css';
 import OrderPage from './order/page';
 import ResetPasswordUI from './authentication/reset-ui/page';
+
+import UserManagement from './admin/users/userManage/page';
+import UserDetail from './admin/users/userDetails/page';
+import DashboardPage from './admin/status/page';=======
 import ProductManagement from './admin/products/page';
 import ProductDetail from './admin/product-detail/page';
 import AddProduct from './admin/create-product/page';
+
 
 
 function App() {
@@ -70,6 +75,18 @@ function App() {
       element: <ResetPasswordUI />
     },
     {
+
+      path: '/admin/users',
+      element: <UserManagement /> 
+    },
+    {
+      path: '/admin/users/:userId',
+      element: <UserDetail />
+    },
+    {
+      path: '/admin/status',
+      element: <DashboardPage />
+
       path: '/admin/products',
       element: <ProductManagement/>
     },
@@ -80,6 +97,7 @@ function App() {
     {
       path: '/admin/create-product',
       element: <AddProduct />
+
     }
 
   ]);
