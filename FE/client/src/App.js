@@ -1,6 +1,6 @@
 import './i18n';
 import { AuthProvider } from './components/context/authcontext';
-import Home from './home/page';
+// import Home from './home/page';
 import {createBrowserRouter, RouterProvider} from 'react-router-dom';
 import Login from './authentication/login/page';
 import Shop from './shop/page';
@@ -14,14 +14,17 @@ import Favourite from './favourite/page';
 import './App.css';
 import OrderPage from './order/page';
 import ResetPasswordUI from './authentication/reset-ui/page';
+import ProductManagement from './admin/products/page';
+import ProductDetail from './admin/product-detail/page';
+import AddProduct from './admin/create-product/page';
 
 
 function App() {
   const router = createBrowserRouter([
-    { 
-      path: '/',
-      element: <Home />
-    },
+    // { 
+    //   path: '/',
+    //   element: <Home />
+    // },
     {
       path: '/view-product/:id',
       element: <ViewProduct />
@@ -65,6 +68,18 @@ function App() {
     {
       path: '/reset',
       element: <ResetPasswordUI />
+    },
+    {
+      path: '/admin/products',
+      element: <ProductManagement/>
+    },
+    {
+      path: '/admin/products/:id',
+      element: <ProductDetail />
+    },
+    {
+      path: '/admin/create-product',
+      element: <AddProduct />
     }
 
   ]);
