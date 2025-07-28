@@ -13,7 +13,9 @@ import Favourite from './favourite/page';
 import './App.css';
 import OrderPage from './order/page';
 import ResetPasswordUI from './authentication/reset-ui/page';
-
+import UserManagement from './admin/users/userManage/page';
+import UserDetail from './admin/users/userDetails/page';
+import DashboardPage from './admin/status/page';
 
 function App() {
   const router = createBrowserRouter([
@@ -64,6 +66,18 @@ function App() {
     {
       path: '/reset',
       element: <ResetPasswordUI />
+    },
+    {
+      path: '/admin/users',
+      element: <UserManagement /> 
+    },
+    {
+      path: '/admin/users/:userId',
+      element: <UserDetail />
+    },
+    {
+      path: '/admin/status',
+      element: <DashboardPage />
     }
 
   ]);
