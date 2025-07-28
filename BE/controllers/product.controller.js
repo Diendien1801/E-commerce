@@ -1,17 +1,21 @@
 const Product = require("../models/product.model");
 
-//FEATURE: SHOW IMAGES
-//API: Returns all productS
+// Helper: Base filter to exclude deleted products
+const baseFilter = { status: { $ne: 'deleted' } };
+
+// Default collation for Vietnamese alphabetical order
+const viCollation = { locale: 'vi', strength: 1 };
+
+// FEATURE: SHOW IMAGES
+// API: Returns all products
 exports.getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find();
-    res.status(200).json(products);
+    const products = await Product.find(baseFilter)
+      .collation(viCollation)
+      .sort({ title: 1 });
+    return res.status(200).json({ status: 200, success: true, message: 'All products retrieved successfully', data: products });
   } catch (err) {
-    res.status(500).json({
-      error: "Lỗi lấy danh sách sản phẩm",
-      detail: err.toString(),
-      stack: err.stack,
-    });
+    return res.status(500).json({ status: 500, success: false, message: 'Error retrieving products: ' + err.toString(), data: null });
   }
 };
 
@@ -22,139 +26,234 @@ exports.getProductsPaginated = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const total = await Product.countDocuments();
-    const products = await Product.find().skip(skip).limit(limit);
+    const total = await Product.countDocuments(baseFilter);
+    const products = await Product.find(baseFilter)
+      .collation(viCollation)
+      .sort({ title: 1 })
+      .skip(skip)
+      .limit(limit);
 
-    res.status(200).json({
-      page,
-      limit,
-      total,
-      products,
-    });
+    return res.status(200).json({ status: 200, success: true, message: 'Products paginated successfully', data: { page, limit, total, products } });
   } catch (err) {
-    res.status(500).json({
-      error: "Lỗi phân trang sản phẩm",
-      detail: err.toString(),
-      stack: err.stack,
-    });
+    return res.status(500).json({ status: 500, success: false, message: 'Error paginating products: ' + err.toString(), data: null });
   }
 };
 
-//FEATURE: FILTER PRODUCTS
+// FEATURE: FILTER PRODUCTS
 // API: Filter products (price low to high, price high to low, newest)
 exports.filterProducts = async (req, res) => {
   try {
     const { sort } = req.query;
-    let sortOption = {};
-
+    let sortOption;
     switch (sort) {
-      case "price_asc":
-        sortOption = { price: 1 };
+      case 'price_asc':
+        sortOption = { price: 1, title: 1 };
         break;
-      case "price_desc":
-        sortOption = { price: -1 };
+      case 'price_desc':
+        sortOption = { price: -1, title: 1 };
         break;
-      case "newest":
-        sortOption = { createdAt: -1 };
+      case 'newest':
+        sortOption = { createdAt: -1, title: 1 };
         break;
       default:
-        sortOption = {};
+        sortOption = { title: 1 };
     }
-
-    const products = await Product.find().sort(sortOption);
-    res.status(200).json(products);
+    const products = await Product.find(baseFilter)
+      .collation(viCollation)
+      .sort(sortOption);
+    return res.status(200).json({ status: 200, success: true, message: 'Products filtered successfully', data: products });
   } catch (err) {
-    res.status(500).json({
-      error: "Lỗi lọc sản phẩm",
-      detail: err.toString(),
-      stack: err.stack,
-    });
+    return res.status(500).json({ status: 500, success: false, message: 'Error filtering products: ' + err.toString(), data: null });
   }
 };
-//FEATURE: SEARCH PRODUCT
-//API: Search products by name
+
+// FEATURE: SEARCH PRODUCT
+// API: Search products by name
 exports.searchProducts = async (req, res) => {
   try {
     const { q } = req.query;
-
-    const regex = new RegExp(q, "i");
-
-    const products = await Product.find({
-      title: regex,
-    });
-
-    res.status(200).json(products);
+    const regex = new RegExp(q, 'i');
+    const filter = { ...baseFilter, title: regex };
+    const products = await Product.find(filter)
+      .collation(viCollation)
+      .sort({ title: 1 });
+    return res.status(200).json({ status: 200, success: true, message: 'Search results retrieved successfully', data: products });
   } catch (err) {
-    res.status(500).json({
-      error: "Lỗi tìm kiếm sản phẩm",
-      detail: err.toString(),
-      stack: err.stack,
-    });
+    return res.status(500).json({ status: 500, success: false, message: 'Error searching products: ' + err.toString(), data: null });
   }
 };
 
-//FEATURE: VIEW PRODUCT DETAILS
-//API: View product details by ID
+// FEATURE: VIEW PRODUCT DETAILS
+// API: View product details by ID
 exports.getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
-    if (!product)
-      return res.status(404).json({ error: "Không tìm thấy sản phẩm" });
-    res.status(200).json(product);
+    const product = await Product.findOne({ _id: req.params.id, ...baseFilter });
+    if (!product) return res.status(404).json({ status: 404, success: false, message: 'Product not found', data: null });
+    return res.status(200).json({ status: 200, success: true, message: 'Product details retrieved successfully', data: product });
   } catch (err) {
-    res.status(500).json({
-      error: "Lỗi lấy chi tiết sản phẩm",
-      detail: err.toString(),
-      stack: err.stack,
-    });
+    return res.status(500).json({ status: 500, success: false, message: 'Error retrieving product details: ' + err.toString(), data: null });
   }
 };
+
+// FEATURE: FILTER AND PAGINATE PRODUCTS
+// API: Combined filter, sort, search, and pagination
 exports.filterAndPaginateProducts = async (req, res) => {
   try {
     const { sort, page = 1, limit = 10, q } = req.query;
-    let sortOption = {};
-    let filter = {};
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
 
-    // Lọc theo tên sản phẩm nếu có q
-    if (q) {
-      filter.title = new RegExp(q, "i");
-    }
+    // Build filter
+    const filter = { ...baseFilter };
+    if (q) filter.title = new RegExp(q, 'i');
 
-    // Sắp xếp
+    // Build sort options
+    let sortOption;
     switch (sort) {
-      case "price_asc":
-        sortOption = { price: 1 };
+      case 'price_asc':
+        sortOption = { price: 1, title: 1 };
         break;
-      case "price_desc":
-        sortOption = { price: -1 };
+      case 'price_desc':
+        sortOption = { price: -1, title: 1 };
         break;
-      case "newest":
-        sortOption = { createdAt: -1 };
+      case 'newest':
+        sortOption = { createdAt: -1, title: 1 };
         break;
       default:
-        sortOption = {};
+        sortOption = { title: 1 };
     }
-
-    const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const total = await Product.countDocuments(filter);
     const products = await Product.find(filter)
+      .collation(viCollation)
       .sort(sortOption)
       .skip(skip)
-      .limit(parseInt(limit));
+      .limit(limitNum);
 
-    res.status(200).json({
-      page: parseInt(page),
-      limit: parseInt(limit),
-      total,
-      products,
-    });
+    return res.status(200).json({ status: 200, success: true, message: 'Products filtered and paginated successfully', data: { page: pageNum, limit: limitNum, total, products } });
   } catch (err) {
-    res.status(500).json({
-      error: "Lỗi lọc và phân trang sản phẩm",
-      detail: err.toString(),
-      stack: err.stack,
-    });
+    return res.status(500).json({ status: 500, success: false, message: 'Error filtering and paginating products: ' + err.toString(), data: null });
+  }
+};
+
+//ADMIN
+// Create a new product
+exports.createProduct = async (req, res) => {
+  try {
+    const { title, price, description, imageUrl, idCategory, related, status, quantity } = req.body;
+    const newProduct = new Product({ title, price, description, imageUrl, idCategory, related, status, quantity });
+    const saved = await newProduct.save();
+    return res.status(201).json({ status: 201, success: true, message: 'Product created successfully', data: saved });
+  } catch (err) {
+    console.error('createProduct error:', err);
+    // Handle validation errors
+    if (err.name === 'ValidationError') {
+      return res.status(400).json({ status: 400, success: false, message: err.message, data: null });
+    }
+    return res.status(500).json({ status: 500, success: false, message: 'Server error while creating product', data: null });
+  }
+};
+
+
+// Update an existing product by ID
+exports.updateProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+    const updated = await Product.findByIdAndUpdate(
+      id,
+      updates,
+      { new: true, runValidators: true, context: 'query' }
+    );
+    if (!updated) {
+      return res.status(404).json({ status: 404, success: false, message: 'Product not found', data: null });
+    }
+    return res.status(200).json({ status: 200, success: true, message: 'Product updated successfully', data: updated });
+  } catch (err) {
+    console.error('updateProduct error:', err);
+    // If validation error
+    if (err.name === 'ValidationError') {
+      return res.status(400).json({ status: 400, success: false, message: err.message, data: null });
+    }
+    return res.status(500).json({ status: 500, success: false, message: 'Server error while updating product', data: null });
+  }
+};
+
+// "Delete" a product by setting its status to 'deleted'
+exports.deleteProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ status: 404, success: false, message: 'Product not found', data: null });
+    }
+    product.status = 'deleted';
+    const saved = await product.save();
+    return res.status(200).json({ status: 200, success: true, message: 'Product deleted (status set to deleted)', data: saved });
+  } catch (err) {
+    console.error('deleteProduct error:', err);
+    return res.status(500).json({ status: 500, success: false, message: 'Server error while deleting product', data: null });
+  }
+};
+
+//ADMIN
+// Create a new product
+exports.createProduct = async (req, res) => {
+  try {
+    const { title, price, description, imageUrl, idCategory, related, status, quantity } = req.body;
+    const newProduct = new Product({ title, price, description, imageUrl, idCategory, related, status, quantity });
+    const saved = await newProduct.save();
+    return res.status(201).json({ status: 201, success: true, message: 'Product created successfully', data: saved });
+  } catch (err) {
+    console.error('createProduct error:', err);
+    // Handle validation errors
+    if (err.name === 'ValidationError') {
+      return res.status(400).json({ status: 400, success: false, message: err.message, data: null });
+    }
+    return res.status(500).json({ status: 500, success: false, message: 'Server error while creating product', data: null });
+  }
+};
+
+
+// Update an existing product by ID
+exports.updateProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+    const updated = await Product.findByIdAndUpdate(
+      id,
+      updates,
+      { new: true, runValidators: true, context: 'query' }
+    );
+    if (!updated) {
+      return res.status(404).json({ status: 404, success: false, message: 'Product not found', data: null });
+    }
+    return res.status(200).json({ status: 200, success: true, message: 'Product updated successfully', data: updated });
+  } catch (err) {
+    console.error('updateProduct error:', err);
+    // If validation error
+    if (err.name === 'ValidationError') {
+      return res.status(400).json({ status: 400, success: false, message: err.message, data: null });
+    }
+    return res.status(500).json({ status: 500, success: false, message: 'Server error while updating product', data: null });
+  }
+};
+
+// "Delete" a product by setting its status to 'deleted'
+exports.deleteProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ status: 404, success: false, message: 'Product not found', data: null });
+    }
+    product.status = 'deleted';
+    const saved = await product.save();
+    return res.status(200).json({ status: 200, success: true, message: 'Product deleted (status set to deleted)', data: saved });
+  } catch (err) {
+    console.error('deleteProduct error:', err);
+    return res.status(500).json({ status: 500, success: false, message: 'Server error while deleting product', data: null });
   }
 };
 

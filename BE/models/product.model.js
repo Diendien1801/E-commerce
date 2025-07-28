@@ -14,9 +14,14 @@ const productSchema = new mongoose.Schema({
   ],
   status: {
     type: String,
-    enum: ["available", "out_of_stock"],
+    enum: ["available", "out_of_stock", "deleted"], //new: "deleted"
     default: "available",
   },
+  //new
+  quantity: { type: Number, default: 0, min: [0, 'Quantity cannot be negative'] },
+},
+{
+  timestamps: true // Automatically manage createdAt and updatedAt fields (filter)
 });
 
 module.exports = mongoose.model("Product", productSchema);

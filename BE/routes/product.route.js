@@ -13,13 +13,23 @@ router.get("/search", productController.searchProducts);
 // Filter products
 router.get("/filter", productController.filterProducts);
 
+//CRUD operations for products
 // View product details 
 router.get("/:id", productController.getProductById);
+
 
 // Get products by category
 // GET http://localhost:5000/api/products/category/:categoryId
 router.get("/category/:categoryId", productController.getProductsByCategory);
 
-//paginate filter products
+// Create a new product
+router.post('/', productController.createProduct);
+
+
+// Update an existing product
+router.put('/:id', productController.updateProduct);
+
+// Delete a product (soft delete)
+router.delete('/:id', productController.deleteProduct);
 
 module.exports = router;
