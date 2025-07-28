@@ -1,41 +1,49 @@
 const Order = require("../models/order.model");
-const Payment = require("../models/payment.model");
 const User = require("../models/user.model");
-const Product = require("../models/product.model");
-const mongoose = require("mongoose"); // Thêm import này
 
-// Helper function để tìm sản phẩm
-const findProductByAnyId = async (productId) => {
-  // Kiểm tra nếu là ObjectId hợp lệ
-  if (mongoose.Types.ObjectId.isValid(productId) && productId.length === 24) {
-    const product = await Product.findById(productId).select(
-      "title imageUrl price status categoryName"
-    );
-    if (product) return product;
-  }
-
-  // Nếu không phải ObjectId, tìm theo các field khác
-  return await Product.findOne({
-    $or: [{ title: productId }, { productCode: productId }, { sku: productId }],
-  }).select("title imageUrl price status categoryName");
-};
+// Helper: get user role by ID
+async function getUserRole(userId) {
+  const user = await User.findById(userId);
+  if (!user) throw new Error("User not found");
+  return user.role;
+}
 
 // Return all orders
 exports.getAllOrders = async (req, res) => {
   try {
-    const orders = await Order.find();
+    const { userId } = req.body;
+    const role = await getUserRole(userId);
+    const filter = {};
+
+    if (role === "user") {
+      filter.idUser = userId;
+    }
+
+    const orders = await Order.find(filter);
     return res.status(200).json({ success: true, data: orders });
   } catch (err) {
     console.error("getAllOrders error:", err);
-    return res.status(500).json({ success: false, message: "Server error" });
+    const statusCode = err.message === "User not found" ? 404 : 500;
+    const msg =
+      err.message === "User not found" ? "User not found" : "Server error";
+    return res.status(statusCode).json({ success: false, message: msg });
   }
 };
 
 // Return orders by status
 exports.getOrdersByStatus = async (req, res) => {
   const { status } = req.params;
-  // validate status
-  const validStatuses = ["pending", "complete", "canceled"];
+  const { userId } = req.body;
+  const validStatuses = [
+    "pending",
+    "picking",
+    "shipping",
+    "delivered",
+    "completed",
+    "returned",
+    "canceled",
+  ];
+
   if (!validStatuses.includes(status)) {
     return res
       .status(400)
@@ -46,246 +54,357 @@ exports.getOrdersByStatus = async (req, res) => {
   }
 
   try {
-    const orders = await Order.find({ status });
+    const role = await getUserRole(userId);
+    const filter = { status };
+
+    if (role === "user") {
+      filter.idUser = userId;
+    }
+
+    const orders = await Order.find(filter);
+    if (orders.length === 0) {
+      return res
+        .status(200)
+        .json({
+          success: true,
+          message: `No orders found with status "${status}" for this user.`,
+          data: [],
+        });
+    }
+
     return res.status(200).json({ success: true, data: orders });
   } catch (err) {
     console.error("getOrdersByStatus error:", err);
-    return res.status(500).json({ success: false, message: "Server error" });
+    const statusCode = err.message === "User not found" ? 404 : 500;
+    const msg =
+      err.message === "User not found" ? "User not found" : "Server error";
+    return res.status(statusCode).json({ success: false, message: msg });
   }
 };
 
-// API: Get orders by user ID with payment info
-exports.getOrdersByUserId = async (req, res) => {
+// Get a single order by its idOrder
+exports.getOrderById = async (req, res) => {
   try {
-    const { userId } = req.params;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const { userId } = req.body;
+    const role = await getUserRole(userId);
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found", data: null });
+    }
+
+    if (role === "user" && order.idUser !== userId) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Access denied", data: null });
+    }
+
+    return res
+      .status(200)
+      .json({
+        success: true,
+        message: "Order retrieved successfully",
+        data: order,
+      });
+  } catch (err) {
+    console.error("getOrderById error:", err);
+    const statusCode = err.message === "User not found" ? 404 : 500;
+    const msg =
+      err.message === "User not found" ? "User not found" : "Server error";
+    return res
+      .status(statusCode)
+      .json({ success: false, message: msg, data: null });
+  }
+};
+
+// Get paginated orders
+exports.getOrdersPaginated = async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const role = await getUserRole(userId);
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
     const skip = (page - 1) * limit;
 
-    // Lấy orders của user
-    const orders = await Order.find({ idUser: userId })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-
-    if (orders.length === 0) {
-      return res.status(200).json({
-        success: true,
-        data: {
-          page,
-          limit,
-          total: 0,
-          totalPages: 0,
-          orders: [],
-        },
-      });
-    }
-
-    // Lấy payment info cho từng order
-    const ordersWithPayment = await Promise.all(
-      orders.map(async (order) => {
-        // Tìm payment theo orderId
-        const payment = await Payment.findOne({ orderId: order.idOrder });
-
-        // Lấy thông tin chi tiết sản phẩm - SỬA PHẦN NÀY
-        const itemsWithDetails = await Promise.all(
-          order.items.map(async (item) => {
-            const product = await findProductByAnyId(item.productID); // Dùng helper function
-            return {
-              ...item.toObject(),
-              productDetails: product,
-            };
-          })
-        );
-
-        return {
-          ...order.toObject(),
-          items: itemsWithDetails,
-          paymentInfo: payment
-            ? {
-                paymentId: payment.id, // Sửa từ paymentId thành id
-                amount: payment.amount,
-                currency: payment.currency,
-                status: payment.status,
-                method: payment.method,
-                transactionId: payment.transactionId,
-                paidAt: payment.paidAt,
-                createdAt: payment.createdAt,
-              }
-            : null,
-        };
-      })
-    );
-
-    const total = await Order.countDocuments({ idUser: userId });
-
-    res.status(200).json({
-      success: true,
-      data: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-        userId,
-        orders: ordersWithPayment,
-      },
-    });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      error: "Lỗi lấy đơn hàng theo user",
-      detail: err.toString(),
-    });
-  }
-};
-
-// API: Get order detail by order ID with full info
-exports.getOrderDetailById = async (req, res) => {
-  try {
-    const { orderId } = req.params;
-
-    // Lấy order
-    const order = await Order.findOne({ idOrder: orderId });
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        error: "Không tìm thấy đơn hàng",
-      });
-    }
-
-    // Lấy user info - SỬA PHẦN NÀY
-    let user = null;
-    if (
-      mongoose.Types.ObjectId.isValid(order.idUser) &&
-      order.idUser.length === 24
-    ) {
-      user = await User.findById(order.idUser).select("name email avatar");
-    } else {
-      // Tìm user theo field khác nếu idUser không phải ObjectId
-      user = await User.findOne({
-        $or: [{ userId: order.idUser }, { email: order.idUser }],
-      }).select("name email avatar");
-    }
-
-    // Lấy payment info
-    const payment = await Payment.findOne({ orderId: orderId });
-
-    // Lấy chi tiết sản phẩm - SỬA PHẦN NÀY
-    const itemsWithDetails = await Promise.all(
-      order.items.map(async (item) => {
-        const product = await findProductByAnyId(item.productID); // Dùng helper function
-        return {
-          ...item.toObject(),
-          productDetails: product,
-        };
-      })
-    );
-
-    // Tính tổng tiền
-    const subtotal = order.items.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
-    const shippingFee = subtotal > 500000 ? 0 : 30000; // Free ship từ 500k
-    const total = subtotal + shippingFee;
-
-    res.status(200).json({
-      success: true,
-      data: {
-        order: {
-          ...order.toObject(),
-          items: itemsWithDetails,
-        },
-        userInfo: user,
-        paymentInfo: payment,
-        summary: {
-          subtotal,
-          shippingFee,
-          total,
-          itemCount: order.items.reduce((sum, item) => sum + item.quantity, 0),
-        },
-      },
-    });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      error: "Lỗi lấy chi tiết đơn hàng",
-      detail: err.toString(),
-    });
-  }
-};
-
-// API: Get orders with filters
-exports.getOrdersWithFilters = async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const {
-      status,
-      paymentStatus,
-      page = 1,
-      limit = 10,
-      startDate,
-      endDate,
-    } = req.query;
-
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-
-    // Build filter
-    let filter = { idUser: userId };
-
-    if (status) {
-      filter.status = status;
-    }
-
-    if (startDate || endDate) {
-      filter.createdAt = {};
-      if (startDate) filter.createdAt.$gte = new Date(startDate);
-      if (endDate) filter.createdAt.$lte = new Date(endDate);
-    }
-
-    // Lấy orders
-    const orders = await Order.find(filter)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit));
-
-    // Lấy payments và filter theo status nếu có
-    let ordersWithPayment = await Promise.all(
-      orders.map(async (order) => {
-        const payment = await Payment.findOne({ orderId: order.idOrder });
-        return {
-          ...order.toObject(),
-          paymentInfo: payment,
-        };
-      })
-    );
-
-    // Filter theo payment status nếu có
-    if (paymentStatus) {
-      ordersWithPayment = ordersWithPayment.filter(
-        (order) =>
-          order.paymentInfo && order.paymentInfo.status === paymentStatus
-      );
+    const filter = {};
+    if (role === "user") {
+      filter.idUser = userId;
     }
 
     const total = await Order.countDocuments(filter);
+    const orders = await Order.find(filter)
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      data: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total,
-        totalPages: Math.ceil(total / parseInt(limit)),
-        filters: { status, paymentStatus, startDate, endDate },
-        orders: ordersWithPayment,
-      },
+      message: "Orders retrieved successfully",
+      data: { page, limit, total, orders },
     });
   } catch (err) {
-    res.status(500).json({
-      success: false,
-      error: "Lỗi lấy đơn hàng với bộ lọc",
-      detail: err.toString(),
-    });
+    console.error("getOrdersPaginated error:", err);
+    const statusCode = err.message === "User not found" ? 404 : 500;
+    const msg =
+      err.message === "User not found" ? "User not found" : "Server error";
+    return res
+      .status(statusCode)
+      .json({ success: false, message: msg, data: null });
+  }
+};
+
+// Create a new order
+exports.createOrder = async (req, res) => {
+  try {
+    const { idOrder, idUser, items, status, paymentMethod, shippingAddress } =
+      req.body;
+
+    if (!idOrder || !idUser || !items || !paymentMethod || !shippingAddress) {
+      // check for required fields
+      return res
+        .status(400)
+        .json({
+          status: "error",
+          message: "Missing required fields",
+          data: null,
+        });
+    }
+
+    const order = new Order({
+      idOrder,
+      idUser,
+      items,
+      status,
+      paymentMethod,
+      shippingAddress,
+    }); // create order object
+    await order.save(); // save to database
+
+    return res
+      .status(201)
+      .json({
+        status: "success",
+        message: "Order created successfully",
+        data: order,
+      });
+  } catch (err) {
+    console.error("Error creating order:", err); // log error
+    return res
+      .status(500)
+      .json({
+        status: "error",
+        message:
+          err.name === "ValidationError"
+            ? err.message
+            : "Internal server error",
+        data: null,
+      });
+  }
+};
+
+// STATUS TRANSITIONS
+// Approve order: pending -> picking
+exports.approveOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order)
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found", data: null });
+
+    if (order.status !== "pending") {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: `Cannot approve order when status is: ${order.status}`,
+          data: null,
+        });
+    }
+    order.status = "picking";
+    await order.save();
+    return res
+      .status(200)
+      .json({
+        success: true,
+        message: "Order approved successfully",
+        data: order,
+      });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error", data: null });
+  }
+};
+
+// Cancel order: pending or picking -> canceled
+exports.cancelOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order)
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found", data: null });
+
+    if (!["pending", "picking"].includes(order.status)) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: `Cannot cancel order when status is: ${order.status}`,
+          data: null,
+        });
+    }
+    order.status = "canceled";
+    await order.save();
+    return res
+      .status(200)
+      .json({
+        success: true,
+        message: "Order canceled successfully",
+        data: order,
+      });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error", data: null });
+  }
+};
+
+// Ship order: picking -> shipping
+exports.shipOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order)
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found", data: null });
+
+    if (order.status !== "picking") {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: `Cannot ship order when status is: ${order.status}`,
+          data: null,
+        });
+    }
+    order.status = "shipping";
+    await order.save();
+    return res
+      .status(200)
+      .json({
+        success: true,
+        message: "Order shipped successfully",
+        data: order,
+      });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error", data: null });
+  }
+};
+
+// Deliver order: shipping -> delivered
+exports.deliverOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order)
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found", data: null });
+
+    if (order.status !== "shipping") {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: `Cannot confirm delivery when status is: ${order.status}`,
+          data: null,
+        });
+    }
+    order.status = "delivered";
+    await order.save();
+    return res
+      .status(200)
+      .json({
+        success: true,
+        message: "Order delivered successfully",
+        data: order,
+      });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error", data: null });
+  }
+};
+
+// Return order: shipping or delivered -> returned
+exports.returnOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order)
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found", data: null });
+
+    if (!["shipping", "delivered"].includes(order.status)) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: `Cannot return order when status is: ${order.status}`,
+          data: null,
+        });
+    }
+    order.status = "returned";
+    await order.save();
+    return res
+      .status(200)
+      .json({
+        success: true,
+        message: "Order returned successfully",
+        data: order,
+      });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error", data: null });
+  }
+};
+
+// Complete order: delivered -> completed
+exports.completeOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order)
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found", data: null });
+
+    if (order.status !== "delivered") {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: `Cannot complete order when status is: ${order.status}`,
+          data: null,
+        });
+    }
+    order.status = "completed";
+    await order.save();
+    return res
+      .status(200)
+      .json({
+        success: true,
+        message: "Order completed successfully",
+        data: order,
+      });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error", data: null });
   }
 };

@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const { v4: uuidv4 } = require("uuid");
 
+
 const userSchema = new mongoose.Schema(
   {
     name: String,
@@ -114,7 +115,7 @@ userSchema.pre("save", async function (next) {
   } catch (err) {
     next(err);
   }
-});
+
 
 // Tự động tạo fullAddress khi có thay đổi address
 userSchema.pre("save", function (next) {
