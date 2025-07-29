@@ -1,8 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import banner1 from'./banner1.png';
-import banner2 from './banner2.png';
-import banner3 from './banner3.png'; 
+// import banner1 from'./banner1.png';
+// import banner2 from './banner2.png';
+// import banner3 from './banner3.png'; 
 import './banner.css';
+
+const banner1 = 'https://theme.hstatic.net/1000304920/1001307865/14/slide_logo_3.jpg?v=466';
+const banner2 = 'https://theme.hstatic.net/1000304920/1001307865/14/slide_logo_4.jpg?v=466';
+const banner3 = 'https://theme.hstatic.net/1000304920/1001307865/14/slide_logo_2.jpg?v=466';
 
 const bannerImages = [
   banner1,
