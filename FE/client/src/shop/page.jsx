@@ -25,9 +25,9 @@ const Shop = () => {
                 return res.json();
             })
             .then(data => {
-                setProducts(Array.isArray(data.products) ? data.products : []);
-                if (typeof data.total === 'number' && typeof data.limit === 'number') {
-                setTotalPages(Math.ceil(data.total / data.limit));
+                setProducts(Array.isArray(data.data.products) ? data.data.products : []);
+                if (typeof data.data.total === 'number' && typeof data.data.limit === 'number') {
+                setTotalPages(Math.ceil(data.data.total / data.data.limit));
                 } else {
                     setTotalPages(1);
                 }
