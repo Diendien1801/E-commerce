@@ -87,11 +87,47 @@ exports.searchProducts = async (req, res) => {
 // API: View product details by ID
 exports.getProductById = async (req, res) => {
   try {
-    const product = await Product.findOne({ _id: req.params.id, ...baseFilter });
-    if (!product) return res.status(404).json({ status: 404, success: false, message: 'Product not found', data: null });
-    return res.status(200).json({ status: 200, success: true, message: 'Product details retrieved successfully', data: product });
+    const Inventory = require("../models/inventory.model");
+
+    const product = await Product.findOne({
+      _id: req.params.id,
+      ...baseFilter,
+    });
+    if (!product) {
+      return res.status(404).json({
+        status: 404,
+        success: false,
+        message: "Product not found",
+        data: null,
+      });
+    }
+
+    // Lấy thông tin tồn kho
+    const inventory = await Inventory.findOne({ productId: product._id });
+
+    // Thêm thông tin tồn kho vào product data
+    const productWithInventory = {
+      ...product.toObject(),
+      inventory: {
+        currentStock: inventory ? inventory.quantity : 0,
+        warehouseId: inventory ? inventory.warehouseId : null,
+        lastUpdated: inventory ? inventory.updatedAt : null,
+      },
+    };
+
+    return res.status(200).json({
+      status: 200,
+      success: true,
+      message: "Product details retrieved successfully",
+      data: productWithInventory,
+    });
   } catch (err) {
-    return res.status(500).json({ status: 500, success: false, message: 'Error retrieving product details: ' + err.toString(), data: null });
+    return res.status(500).json({
+      status: 500,
+      success: false,
+      message: "Error retrieving product details: " + err.toString(),
+      data: null,
+    });
   }
 };
 

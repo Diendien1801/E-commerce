@@ -10,7 +10,15 @@ router.get("/orders/status", analysisController.getOrdersByStatus);
 
 // Thống kê phân tích chi tiết theo status và thời gian
 // GET http://localhost:5000/api/analysis/orders/analytics?startDate=2024-01-01&endDate=2024-12-31
+
 router.get("/orders/analytics", analysisController.getOrdersAnalytics);
+// Tổng đơn hàng đã hủy
+// GET http://localhost:5000/api/analysis/orders/total-canceled?year=2024
+router.get("/orders/total-canceled", analysisController.getTotalCanceledOrders);
+
+// Tổng đơn hàng đã hoàn thành
+// GET http://localhost:5000/api/analysis/orders/total-completed?year=2024
+router.get("/orders/total-completed", analysisController.getTotalCompletedOrders);
 
 
 // Thống kê tổng quan dashboard
@@ -25,11 +33,17 @@ router.get("/products/categories", analysisController.getProductsByCategory);
 // GET http://localhost:5000/api/analysis/products/top-selling
 router.get("/products/top-selling", analysisController.getTopSellingProducts);
 
+// Số lượng sản phẩm theo danh mục (Stack Chart)
+// GET http://localhost:5000/api/analysis/products/categories
+router.get("/products/categories", analysisController.getProductsByCategory);
 
-// ====== Chưa dùng được ======
-// Sản phẩm tồn kho thấp 
-// GET http://localhost:5000/api/analysis/products/low-stock
-// router.get("/products/low-stock", analysisController.getLowStockProducts);
+
+
+// Top 10 sản phẩm tồn kho nhiều nhất
+// GET http://localhost:5000/api/analysis/products/top-stock?limit=10
+router.get("/products/top-stock", analysisController.getTopStockProducts);
+
+
 // =============================
 
 
@@ -48,3 +62,12 @@ router.get("/revenue/by-time", analysisController.getRevenueByTime);
 // GET http://localhost:5000/api/analysis/users/no-orders?page=1&limit=10
 router.get("/users/no-orders", analysisController.getUsersWithNoOrders);
 module.exports = router;
+
+// Get count of users who never purchased
+// GET localhost:5000/api/analysis/never-purchased/count
+router.get("/never-purchased/count", analysisController.getUsersNeverPurchasedCount);
+
+
+// Get user registration statistics by time
+// GET localhost:5000/api/analysis/registration-stats?period=month&year=2024
+router.get("/registration-stats", analysisController.getUserRegistrationByTime);

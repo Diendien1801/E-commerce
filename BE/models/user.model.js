@@ -37,6 +37,7 @@ const userSchema = new mongoose.Schema(
     // ========== THÔNG TIN CÁ NHÂN ==========
     phoneNumber: {
       type: String,
+      default: null,
       match: [/^[0-9]{10,11}$/, "Số điện thoại không hợp lệ"],
       sparse: true, // Cho phép null nhưng unique nếu có giá trị
     },

@@ -1016,3 +1016,460 @@ exports.getUsersWithNoOrders = async (req, res) => {
     });
   }
 };
+
+// Get count of users who never made a purchase
+exports.getUsersNeverPurchasedCount = async (req, res) => {
+  try {
+    const Order = require("../models/order.model");
+    
+    // Lấy danh sách userID đã từng đặt hàng
+    const userIdsWithOrders = await Order.distinct("idUser");
+    
+    // Đếm số user chưa từng mua (không có trong danh sách userID đã đặt hàng)
+    const neverPurchasedCount = await User.countDocuments({
+      _id: { $nin: userIdsWithOrders },
+      isDeleted: { $ne: true } // Chỉ đếm user chưa bị xóa
+    });
+    
+    res.status(200).json({
+      success: true,
+      message: "Users never purchased count retrieved successfully",
+      data: {
+        count: neverPurchasedCount
+      }
+    });
+    
+  } catch (error) {
+    console.error("Error getting users never purchased count:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      data: null,
+      detail: error.message
+    });
+  }
+};
+
+// Get user registration count by time period (year/month)
+exports.getUserRegistrationByTime = async (req, res) => {
+  try {
+    const { period = "month", year, month } = req.query;
+    
+    let matchStage = {
+      isDeleted: { $ne: true } // Chỉ tính user chưa bị xóa
+    };
+    
+    // Thêm filter theo năm nếu có
+    if (year) {
+      const startOfYear = new Date(parseInt(year), 0, 1);
+      const endOfYear = new Date(parseInt(year) + 1, 0, 1);
+      matchStage.createdAt = {
+        $gte: startOfYear,
+        $lt: endOfYear
+      };
+    }
+    
+    // Thêm filter theo tháng nếu có
+    if (month && year) {
+      const startOfMonth = new Date(parseInt(year), parseInt(month) - 1, 1);
+      const endOfMonth = new Date(parseInt(year), parseInt(month), 1);
+      matchStage.createdAt = {
+        $gte: startOfMonth,
+        $lt: endOfMonth
+      };
+    }
+    
+    let groupStage;
+    let sortStage;
+    
+    if (period === "year") {
+      // Group theo năm
+      groupStage = {
+        _id: { $year: "$createdAt" },
+        count: { $sum: 1 },
+        year: { $first: { $year: "$createdAt" } }
+      };
+      sortStage = { year: 1 };
+    } else {
+      // Group theo tháng
+      groupStage = {
+        _id: {
+          year: { $year: "$createdAt" },
+          month: { $month: "$createdAt" }
+        },
+        count: { $sum: 1 },
+        year: { $first: { $year: "$createdAt" } },
+        month: { $first: { $month: "$createdAt" } }
+      };
+      sortStage = { year: 1, month: 1 };
+    }
+    
+    const registrationData = await User.aggregate([
+      { $match: matchStage },
+      { $group: groupStage },
+      { $sort: sortStage }
+    ]);
+    
+    // Format response data
+    const formattedData = registrationData.map(item => {
+      if (period === "year") {
+        return {
+          year: item.year,
+          count: item.count,
+          period: `${item.year}`
+        };
+      } else {
+        return {
+          year: item.year,
+          month: item.month,
+          count: item.count,
+          period: `${item.year}-${String(item.month).padStart(2, '0')}`
+        };
+      }
+    });
+    
+    // Tính tổng
+    const totalRegistrations = formattedData.reduce((sum, item) => sum + item.count, 0);
+    
+    res.status(200).json({
+      success: true,
+      message: `User registrations by ${period} retrieved successfully`,
+      data: {
+        period: period,
+        totalRegistrations: totalRegistrations,
+        registrations: formattedData
+      }
+    });
+    
+  } catch (error) {
+    console.error("Error getting user registrations by time:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      data: null,
+      detail: error.message
+    });
+  }
+};
+
+// Get products count by category for stack chart
+exports.getProductsByCategory = async (req, res) => {
+  try {
+    const Product = require("../models/product.model");
+    const Category = require("../models/categories.model");
+    
+    // Aggregate để đếm sản phẩm theo idCategory
+    const productsByCategory = await Product.aggregate([
+      {
+        $group: {
+          _id: "$idCategory",
+          productCount: { $sum: 1 }
+        }
+      },
+      {
+        $lookup: {
+          from: "categories", // Tên collection của Category
+          localField: "_id",
+          foreignField: "idCategory", 
+          as: "categoryInfo"
+        }
+      },
+      {
+        $project: {
+          idCategory: "$_id",
+          productCount: 1,
+          categoryName: { 
+            $arrayElemAt: ["$categoryInfo.nameCategory", 0] 
+          },
+          parentID: { 
+            $arrayElemAt: ["$categoryInfo.parentID", 0] 
+          }
+        }
+      },
+      {
+        $sort: { idCategory: 1 }
+      }
+    ]);
+    
+    // Tính tổng số sản phẩm
+    const totalProducts = productsByCategory.reduce((sum, cat) => sum + cat.productCount, 0);
+    
+    // Group theo parent category để tạo stack chart data
+    const parentCategories = {};
+    
+    for (const item of productsByCategory) {
+      const parentId = item.parentID || 'other';
+      
+      if (!parentCategories[parentId]) {
+        // Lấy thông tin parent category
+        let parentName = 'Other';
+        if (item.parentID) {
+          const parent = await Category.findOne({ idCategory: item.parentID });
+          parentName = parent ? parent.nameCategory : `Parent ${item.parentID}`;
+        }
+        
+        parentCategories[parentId] = {
+          parentID: item.parentID,
+          parentName: parentName,
+          totalProducts: 0,
+          categories: []
+        };
+      }
+      
+      parentCategories[parentId].totalProducts += item.productCount;
+      parentCategories[parentId].categories.push({
+        idCategory: item.idCategory,
+        categoryName: item.categoryName || `Category ${item.idCategory}`,
+        productCount: item.productCount
+      });
+    }
+    
+    // Chuyển đổi thành array và sắp xếp
+    const stackChartData = Object.values(parentCategories).map(parent => ({
+      ...parent,
+      categories: parent.categories.sort((a, b) => a.idCategory - b.idCategory)
+    })).sort((a, b) => (a.parentID || 999) - (b.parentID || 999));
+    
+    // Data cho simple chart (nếu frontend cần)
+    const simpleChartData = productsByCategory.map(item => ({
+      idCategory: item.idCategory,
+      categoryName: item.categoryName || `Category ${item.idCategory}`,
+      productCount: item.productCount,
+      percentage: Math.round((item.productCount / totalProducts) * 100)
+    }));
+    
+    res.status(200).json({
+      success: true,
+      message: "Products by category retrieved successfully",
+      data: {
+        totalProducts: totalProducts,
+        stackChart: stackChartData,
+        simpleChart: simpleChartData,
+        summary: {
+          totalCategories: productsByCategory.length,
+          totalParentCategories: Object.keys(parentCategories).length
+        }
+      }
+    });
+    
+  } catch (error) {
+    console.error("Error getting products by category:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      data: null,
+      detail: error.message
+    });
+  }
+};
+
+// Get top 10 products with highest stock
+exports.getTopStockProducts = async (req, res) => {
+  try {
+    const Inventory = require("../models/inventory.model");
+    const Product = require("../models/product.model");
+    
+    const limit = parseInt(req.query.limit) || 10;
+    
+    // Lấy top products với tồn kho cao nhất
+    const topStockProducts = await Inventory.aggregate([
+      {
+        $match: {
+          quantity: { $gt: 0 } // Chỉ lấy sản phẩm có tồn kho > 0
+        }
+      },
+      {
+        $lookup: {
+          from: "products",
+          localField: "productId",
+          foreignField: "_id",
+          as: "productInfo"
+        }
+      },
+      {
+        $unwind: "$productInfo"
+      },
+      {
+        $match: {
+          "productInfo.isDeleted": { $ne: true } // Chỉ lấy sản phẩm chưa bị xóa
+        }
+      },
+      {
+        $project: {
+          title: "$productInfo.title",
+          price: "$productInfo.price",
+          currentStock: "$quantity",
+          productImage: { $arrayElemAt: ["$productInfo.imageUrl", 0] },
+          status: "$productInfo.status",
+          idCategory: "$productInfo.idCategory"
+        }
+      },
+      {
+        $sort: { currentStock: -1 } // Sắp xếp theo số lượng giảm dần
+      },
+      {
+        $limit: limit
+      }
+    ]);
+    
+    // Tính tổng tồn kho của top products
+    const totalStockValue = topStockProducts.reduce((sum, product) => sum + product.currentStock, 0);
+    
+    res.status(200).json({
+      success: true,
+      message: `Top ${limit} highest stock products retrieved successfully`,
+      data: {
+        totalProducts: topStockProducts.length,
+        totalStockValue: totalStockValue,
+        products: topStockProducts
+      }
+    });
+    
+  } catch (error) {
+    console.error("Error getting top stock products:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      data: null,
+      detail: error.message
+    });
+  }
+};
+
+// Get total canceled orders count
+exports.getTotalCanceledOrders = async (req, res) => {
+  try {
+    const Order = require("../models/order.model");
+    
+    const { year, startDate, endDate } = req.query;
+    
+    let matchStage = {
+      status: "canceled"
+    };
+    
+    // Filter theo thời gian nếu có
+    if (startDate && endDate) {
+      matchStage.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      };
+    } else if (year) {
+      const startOfYear = new Date(parseInt(year), 0, 1);
+      const endOfYear = new Date(parseInt(year) + 1, 0, 1);
+      matchStage.createdAt = {
+        $gte: startOfYear,
+        $lt: endOfYear
+      };
+    }
+    
+    const canceledCount = await Order.countDocuments(matchStage);
+    
+    // Tính tổng giá trị đơn hàng bị hủy
+    const canceledValue = await Order.aggregate([
+      { $match: matchStage },
+      {
+        $group: {
+          _id: null,
+          totalAmount: {
+            $sum: {
+              $reduce: {
+                input: "$items",
+                initialValue: 0,
+                in: { $add: ["$$value", { $multiply: ["$$this.quantity", "$$this.price"] }] }
+              }
+            }
+          }
+        }
+      }
+    ]);
+    
+    const totalCanceledAmount = canceledValue.length > 0 ? canceledValue[0].totalAmount : 0;
+    
+    res.status(200).json({
+      success: true,
+      message: "Total canceled orders retrieved successfully",
+      data: {
+        totalCanceledOrders: canceledCount,
+        totalCanceledAmount: totalCanceledAmount
+      }
+    });
+    
+  } catch (error) {
+    console.error("Error getting total canceled orders:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      data: null,
+      detail: error.message
+    });
+  }
+};
+
+// Get total completed orders count
+exports.getTotalCompletedOrders = async (req, res) => {
+  try {
+    const Order = require("../models/order.model");
+    
+    const { year, startDate, endDate } = req.query;
+    
+    let matchStage = {
+      status: "completed"
+    };
+    
+    // Filter theo thời gian nếu có
+    if (startDate && endDate) {
+      matchStage.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      };
+    } else if (year) {
+      const startOfYear = new Date(parseInt(year), 0, 1);
+      const endOfYear = new Date(parseInt(year) + 1, 0, 1);
+      matchStage.createdAt = {
+        $gte: startOfYear,
+        $lt: endOfYear
+      };
+    }
+    
+    const completedCount = await Order.countDocuments(matchStage);
+    
+    // Tính tổng giá trị đơn hàng hoàn thành
+    const completedValue = await Order.aggregate([
+      { $match: matchStage },
+      {
+        $group: {
+          _id: null,
+          totalAmount: {
+            $sum: {
+              $reduce: {
+                input: "$items",
+                initialValue: 0,
+                in: { $add: ["$$value", { $multiply: ["$$this.quantity", "$$this.price"] }] }
+              }
+            }
+          }
+        }
+      }
+    ]);
+    
+    const totalCompletedAmount = completedValue.length > 0 ? completedValue[0].totalAmount : 0;
+    
+    res.status(200).json({
+      success: true,
+      message: "Total completed orders retrieved successfully",
+      data: {
+        totalCompletedOrders: completedCount,
+        totalCompletedAmount: totalCompletedAmount
+      }
+    });
+    
+  } catch (error) {
+    console.error("Error getting total completed orders:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      data: null,
+      detail: error.message
+    });
+  }
+};

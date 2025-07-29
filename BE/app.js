@@ -14,8 +14,10 @@ const authFBRoute = require("./routes/authenticationFB.route"); // Facebook auth
 const authRoutes = require('./routes/auth.route'); //authentication
 const analysisRoutes = require("./routes/analysis.route");
 const userManagementRoutes = require("./routes/userManagement.route"); // user management
+const categoriesRoutes = require("./routes/categories.route"); // categories
 app.use(express.json());
 
+app.use("/api/categories", categoriesRoutes); // categories
 app.use("/api/userManagement", userManagementRoutes); // user management
 app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
