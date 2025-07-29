@@ -68,38 +68,32 @@ exports.loginWithEmail = async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
-    if (!user) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid credentials", data: null });
-    }
+    if (!user) return res.status(400).json({ success: false, message: 'Email not registered. Please sign up.', data: null }); // Email not found
+
     if (!user.isVerified) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Email not verified", data: null });
+      // Email not verified: resend verification email
+      try {
+        await sendVerificationEmail(user);
+        return res.status(401).json({ success: false, message: 'Email not verified! Verification email sent, please check your email.', data: null }); // Notify verification email sent
+      } catch (mailErr) {
+        console.error('sendVerificationEmail error:', mailErr);
+        return res.status(500).json({ success: false, message: 'Unable to send verification email. Please try again later.', data: null }); // Email send failure
+      }
     }
 
     const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid credentials", data: null });
-    }
+    if (!isMatch) return res.status(400).json({ success: false, message: 'Invalid credentials', data: null }); // Password mismatch
 
     const payload = { id: user._id, email: user.email };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-    res
-      .status(200)
-      .json({ success: true, message: "Login successful", data: { token } });
+    return res.status(200).json({ success: true, message: 'Login successful', data: { token } }); // Successful login
   } catch (err) {
-    res
-      .status(500)
-      .json({ success: false, message: "Server error", data: err.message });
+    console.error('loginWithEmail error:', err);
+    return res.status(500).json({ success: false, message: 'Server error during login', data: err.message }); // Server error
   }
 };
+
 
 // Request password reset
 exports.requestPasswordReset = async (req, res) => {
