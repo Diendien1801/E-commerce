@@ -15,7 +15,7 @@ router.get("/orders/analytics", analysisController.getOrdersAnalytics);
 
 // Thống kê tổng quan dashboard
 // GET http://localhost:5000/api/analysis/dashboard
-router.get("/dashboard", analysisController.getDashboardStats);
+//router.get("/dashboard", analysisController.getDashboardStats);
 
 // =================================== SẢN PHẨM ===================================
 // Số lượng sản phẩm theo danh mục
@@ -41,7 +41,7 @@ router.get("/products/top-selling", analysisController.getTopSellingProducts);
 router.get("/revenue/by-time", analysisController.getRevenueByTime);
 // API: So sánh doanh thu theo kỳ
 // GET http://localhost:5000/api/analysis/revenue/compare?compareType=month&currentPeriod=2024-07&previousPeriod=2024-06
-router.get("/revenue/compare", analysisController.compareRevenue);
+//router.get("/revenue/compare", analysisController.compareRevenue);
 
 // =================================== NGƯỜI DÙNG ===================================
 // API: Trả về thông tin và số lượng người dùng chưa mua hàng (phân trang)
