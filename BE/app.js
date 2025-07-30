@@ -15,8 +15,10 @@ const authRoutes = require('./routes/auth.route'); //authentication
 const analysisRoutes = require("./routes/analysis.route");
 const userManagementRoutes = require("./routes/userManagement.route"); // user management
 const categoriesRoutes = require("./routes/categories.route"); // categories
+const cartRoutes = require("./routes/cart.route"); // cart
 app.use(express.json());
 
+app.use("/api/cart", cartRoutes); // cart
 app.use("/api/categories", categoriesRoutes); // categories
 app.use("/api/userManagement", userManagementRoutes); // user management
 app.use("/api/users", userRoutes);
