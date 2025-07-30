@@ -145,9 +145,15 @@ exports.removeFromCart = async (req, res) => {
 };
 
 // API 3: Lấy thông tin giỏ hàng của 1 người dùng
+// API 3: Lấy thông tin giỏ hàng của 1 người dùng với phân trang
 exports.getCartByUserId = async (req, res) => {
   try {
     const { userId } = req.params;
+    
+    // Pagination parameters
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const skip = (page - 1) * limit;
 
     let cart = await Cart.findOne({ userId })
       .populate("items.productId", "title price imageUrl status isDeleted")
@@ -162,12 +168,23 @@ exports.getCartByUserId = async (req, res) => {
         success: true,
         message: "Empty cart created",
         data: {
-          cart: cart,
+          cart: {
+            ...cart.toObject(),
+            items: []
+          },
           summary: {
             totalItems: 0,
             totalAmount: 0,
             itemCount: 0,
           },
+          pagination: {
+            currentPage: page,
+            totalPages: 0,
+            totalItems: 0,
+            itemsPerPage: limit,
+            hasNextPage: false,
+            hasPrevPage: false
+          }
         },
       });
     }
@@ -183,19 +200,44 @@ exports.getCartByUserId = async (req, res) => {
       await cart.save();
     }
 
-    // Tính toán summary
+    // Tổng số items trong cart
+    const totalItems = cart.items.length;
+    
+    // Pagination cho items
+    const paginatedItems = cart.items.slice(skip, skip + limit);
+    
+    // Calculate pagination info
+    const totalPages = Math.ceil(totalItems / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+
+    // Tính toán summary (dựa trên tất cả items, không chỉ items được phân trang)
     const summary = {
       totalItems: cart.totalItems,
       totalAmount: cart.totalAmount,
-      itemCount: cart.items.length,
+      itemCount: totalItems,
+    };
+
+    // Tạo cart object với items đã phân trang
+    const cartWithPaginatedItems = {
+      ...cart.toObject(),
+      items: paginatedItems
     };
 
     res.status(200).json({
       success: true,
       message: "Cart retrieved successfully",
       data: {
-        cart: cart,
+        cart: cartWithPaginatedItems,
         summary: summary,
+        pagination: {
+          currentPage: page,
+          totalPages: totalPages,
+          totalItems: totalItems,
+          itemsPerPage: limit,
+          hasNextPage: hasNextPage,
+          hasPrevPage: hasPrevPage
+        }
       },
     });
   } catch (error) {
