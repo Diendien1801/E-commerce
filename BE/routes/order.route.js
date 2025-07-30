@@ -7,15 +7,18 @@ const {getAllOrders, getOrdersByStatus} = require('../controllers/order.controll
 const orderController = require('../controllers/order.controller');
 
 
-// Get all orders
+// Get all orders  pagination, sorting, filtering
+// GET localhost:5000/api/orders
 router.get('/orders', orderController.getAllOrders);
 
-// Get orders by status (validate status)
+// Get orders by status (validate status) pagination, sorting, filtering
+// GET localhost:5000/api/orders/status/:status
 router.get('/orders/status/:status', orderController.getOrdersByStatus);
 
 
-// Get orders by user ID
-//router.get("/user/:userId", orderController.getOrdersByUserId);
+// Get orders by user ID pagination, sorting, filtering
+// GET localhost:5000/api/orders/user/6888ecdffb44b885381dd9e2
+router.get("/orders/user/:userId", orderController.getOrdersByUserId);
 
 // Get orders with filters
 //router.get("/user/:userId/filter", orderController.getOrdersWithFilters);
