@@ -8,80 +8,174 @@ async function getUserRole(userId) {
   return user.role;
 }
 
-// Return all orders
+
+// Return all orders with pagination 
 exports.getAllOrders = async (req, res) => {
   try {
-    const { userId } = req.body;
-    const role = await getUserRole(userId);
+    // Pagination parameters
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const skip = (page - 1) * limit;
+
+    // Sorting parameters
+    const sortBy = req.query.sortBy || "createdAt";
+    const sortOrder = req.query.sortOrder === "asc" ? 1 : -1;
+
+    // Filter parameters
+    const { status, startDate, endDate, userId } = req.query;
+
     const filter = {};
 
-    if (role === "user") {
+    // Filter by specific user if provided
+    if (userId) {
       filter.idUser = userId;
     }
 
-    const orders = await Order.find(filter);
-    return res.status(200).json({ success: true, data: orders });
+    // Status filtering
+    if (status) {
+      filter.status = status;
+    }
+
+    // Date range filtering
+    if (startDate || endDate) {
+      filter.createdAt = {};
+      if (startDate) {
+        filter.createdAt.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        filter.createdAt.$lte = new Date(endDate);
+      }
+    }
+
+    // Count total documents
+    const total = await Order.countDocuments(filter);
+
+    // Find orders with pagination
+    const orders = await Order.find(filter)
+      .sort({ [sortBy]: sortOrder })
+      .skip(skip)
+      .limit(limit);
+
+    // Calculate pagination info
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+
+    return res.status(200).json({
+      success: true,
+      message: "Orders retrieved successfully",
+      data: {
+        orders: orders,
+        pagination: {
+          currentPage: page,
+          totalPages: totalPages,
+          totalOrders: total,
+          ordersPerPage: limit,
+          hasNextPage: hasNextPage,
+          hasPrevPage: hasPrevPage,
+        },
+      },
+    });
   } catch (err) {
     console.error("getAllOrders error:", err);
-    const statusCode = err.message === "User not found" ? 404 : 500;
-    const msg =
-      err.message === "User not found" ? "User not found" : "Server error";
-    return res.status(statusCode).json({ success: false, message: msg });
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      data: null,
+    });
   }
 };
 
-// Return orders by status
+// Return orders by status with pagination 
 exports.getOrdersByStatus = async (req, res) => {
-  const { status } = req.params;
-  const { userId } = req.body;
-  const validStatuses = [
-    "pending",
-    "picking",
-    "shipping",
-    "delivered",
-    "completed",
-    "returned",
-    "canceled",
-  ];
+  try {
+    const { status } = req.params;
+    
+    const validStatuses = [
+      "pending",
+      "picking", 
+      "shipping",
+      "delivered",
+      "completed",
+      "returned",
+      "canceled",
+    ];
 
-  if (!validStatuses.includes(status)) {
-    return res
-      .status(400)
-      .json({
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
         success: false,
         message: `Invalid status. Allowed values: ${validStatuses.join(", ")}.`,
       });
-  }
+    }
 
-  try {
-    const role = await getUserRole(userId);
+    // Pagination parameters
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const skip = (page - 1) * limit;
+    
+    // Sorting parameters
+    const sortBy = req.query.sortBy || 'createdAt';
+    const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1;
+
     const filter = { status };
 
-    if (role === "user") {
-      filter.idUser = userId;
-    }
+    // Count total documents
+    const total = await Order.countDocuments(filter);
+    
+    // Find orders with pagination
+    const orders = await Order.find(filter)
+      .sort({ [sortBy]: sortOrder })
+      .skip(skip)
+      .limit(limit);
 
-    const orders = await Order.find(filter);
+    // Calculate pagination info
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+
     if (orders.length === 0) {
-      return res
-        .status(200)
-        .json({
-          success: true,
-          message: `No orders found with status "${status}" for this user.`,
-          data: [],
-        });
+      return res.status(200).json({
+        success: true,
+        message: `No orders found with status "${status}".`,
+        data: {
+          orders: [],
+          pagination: {
+            currentPage: page,
+            totalPages: 0,
+            totalOrders: 0,
+            ordersPerPage: limit,
+            hasNextPage: false,
+            hasPrevPage: false
+          }
+        }
+      });
     }
 
-    return res.status(200).json({ success: true, data: orders });
+    return res.status(200).json({
+      success: true,
+      message: `Orders with status "${status}" retrieved successfully`,
+      data: {
+        orders: orders,
+        pagination: {
+          currentPage: page,
+          totalPages: totalPages,
+          totalOrders: total,
+          ordersPerPage: limit,
+          hasNextPage: hasNextPage,
+          hasPrevPage: hasPrevPage
+        }
+      }
+    });
+    
   } catch (err) {
     console.error("getOrdersByStatus error:", err);
-    const statusCode = err.message === "User not found" ? 404 : 500;
-    const msg =
-      err.message === "User not found" ? "User not found" : "Server error";
-    return res.status(statusCode).json({ success: false, message: msg });
+    return res.status(500).json({ 
+      success: false, 
+      message: "Server error",
+      data: null 
+    });
   }
 };
-
 // Get a single order by its idOrder
 exports.getOrderById = async (req, res) => {
   try {
@@ -411,22 +505,74 @@ exports.completeOrder = async (req, res) => {
 
 
 
-// Get orders by user ID
+
+// Get orders by user ID with pagination
 exports.getOrdersByUserId = async (req, res) => {
   try {
     const { userId } = req.params;
     
-    // Tìm orders theo userId
-    const orders = await Order.find({ idUser: userId })
-      .sort({ createdAt: -1 }); // Sắp xếp mới nhất trước
+    // Pagination parameters
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const skip = (page - 1) * limit;
+    
+    // Sorting parameters
+    const sortBy = req.query.sortBy || 'createdAt';
+    const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1;
+    
+    // Filter parameters
+    const { status, startDate, endDate } = req.query;
+    
+    const filter = { idUser: userId };
+    
+    // Status filtering
+    if (status) {
+      filter.status = status;
+    }
+    
+    // Date range filtering
+    if (startDate || endDate) {
+      filter.createdAt = {};
+      if (startDate) {
+        filter.createdAt.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        filter.createdAt.$lte = new Date(endDate);
+      }
+    }
+    
+    // Count total documents
+    const total = await Order.countDocuments(filter);
+    
+    // Find orders with pagination
+    const orders = await Order.find(filter)
+      .sort({ [sortBy]: sortOrder })
+      .skip(skip)
+      .limit(limit);
+    
+    // Calculate pagination info
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
     
     res.status(200).json({
       success: true,
       message: "Orders retrieved successfully",
-      data: orders
+      data: {
+        orders: orders,
+        pagination: {
+          currentPage: page,
+          totalPages: totalPages,
+          totalOrders: total,
+          ordersPerPage: limit,
+          hasNextPage: hasNextPage,
+          hasPrevPage: hasPrevPage
+        }
+      }
     });
     
   } catch (error) {
+    console.error("getOrdersByUserId error:", error);
     res.status(500).json({
       success: false,
       message: "Server error",
