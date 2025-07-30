@@ -21,6 +21,7 @@ import UserDetail from './admin/users/userDetails/page';
 import ProductManagement from './admin/products/page';
 import ProductDetail from './admin/product-detail/page';
 import AddProduct from './admin/create-product/page';
+import OrderManage from './admin/orders/page';
 
 
 
@@ -99,8 +100,12 @@ function App() {
       path: '/admin/create-product',
       element: <AddProduct />
 
-    }
+    },
+    {
+      path: '/admin/orders',
+      element: <OrderManage />
 
+    }
   ]);
 
   return (

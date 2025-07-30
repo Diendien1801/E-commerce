@@ -15,7 +15,7 @@ function OrderPage() {
       setLoading(false);
       return;
     }
-    fetch(`http://localhost:5000/api/user/${user._id}`)
+    fetch(`http://localhost:5000/api/orders/user/${user._id}`)
       .then(res => res.json())
       .then(data => {
         const ordersArr = Array.isArray(data?.data?.orders) ? data.data.orders : [];
