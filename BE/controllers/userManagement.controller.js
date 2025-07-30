@@ -26,7 +26,7 @@ exports.softDeleteUser = async (req, res) => {
     // Soft delete
     user.isDeleted = true;
     user.deletedAt = new Date();
-    user.status = "inactive"; // Nếu có field status
+    user.status = "suspended"; // Chuyển status thành suspended khi xóa
     await user.save();
 
     res.status(200).json({
@@ -35,6 +35,7 @@ exports.softDeleteUser = async (req, res) => {
       data: {
         userId: user._id,
         email: user.email,
+        status: user.status,
         deletedAt: user.deletedAt,
       },
     });
@@ -72,7 +73,7 @@ exports.restoreUser = async (req, res) => {
     // Khôi phục
     user.isDeleted = false;
     user.deletedAt = null;
-    user.status = "active"; // Nếu có field status
+    user.status = "active"; // Chuyển status thành active khi khôi phục
     await user.save();
 
     res.status(200).json({
@@ -82,6 +83,7 @@ exports.restoreUser = async (req, res) => {
         userId: user._id,
         email: user.email,
         fullName: user.fullName,
+        status: user.status,
         restoredAt: new Date(),
       },
     });
