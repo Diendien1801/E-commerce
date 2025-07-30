@@ -580,3 +580,92 @@ exports.getOrdersByUserId = async (req, res) => {
     });
   }
 };
+
+
+// Search orders by order ID với partial matching
+exports.searchOrdersByOrderId = async (req, res) => {
+  try {
+    const {
+      q,
+      page = 1,
+      limit = 10,
+      sortBy = "createdAt",
+      sortOrder = "desc",
+    } = req.query;
+
+    if (!q) {
+      return res.status(400).json({
+        success: false,
+        message: "Query parameter 'q' is required",
+        data: null,
+      });
+    }
+
+    // Build search filter
+    const searchFilter = {
+      $or: [
+        // Tìm trong idOrder với regex
+        { idOrder: { $regex: q, $options: "i" } },
+      ],
+    };
+
+    // Nếu query có thể là ObjectId (chỉ chứa hex characters)
+    if (/^[0-9a-fA-F]+$/.test(q)) {
+      // Convert ObjectId thành string để search
+      searchFilter.$or.push({
+        $expr: {
+          $regexMatch: {
+            input: { $toString: "$_id" },
+            regex: q,
+            options: "i",
+          },
+        },
+      });
+    }
+
+    // Pagination
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    // Sort
+    const sortDirection = sortOrder === "asc" ? 1 : -1;
+    const sortOptions = { [sortBy]: sortDirection };
+
+    // Count total documents
+    const total = await Order.countDocuments(searchFilter);
+
+    // Find orders with pagination and sorting
+    const orders = await Order.find(searchFilter)
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(limitNumber);
+
+    // Calculate pagination info
+    const totalPages = Math.ceil(total / limitNumber);
+
+    res.status(200).json({
+      success: true,
+      message: `Found ${total} order(s) matching "${q}"`,
+      data: {
+        orders: orders,
+        pagination: {
+          currentPage: pageNumber,
+          totalPages: totalPages,
+          totalOrders: total,
+          ordersPerPage: limitNumber,
+          hasNextPage: pageNumber < totalPages,
+          hasPrevPage: pageNumber > 1,
+        },
+        searchQuery: q,
+      },
+    });
+  } catch (error) {
+    console.error("searchOrders error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      data: null,
+    });
+  }
+};
