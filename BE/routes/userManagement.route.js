@@ -18,6 +18,10 @@ router.get("/:userId/details", userManagementController.getUserDetails);
 // GET localhost:5000/api/userManagement?page=1&limit=3
 router.get("/", userManagementController.getAllUsers);
 
+// Search users by name and userId
+// GET localhost:5000/api/userManagement/search?query=searchTerm
+
+router.get("/search", userManagementController.searchUsers);
 
 
 

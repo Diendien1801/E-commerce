@@ -30,6 +30,11 @@ router.post('/', productController.createProduct);
 router.put('/:id', productController.updateProduct);
 
 // Delete a product (soft delete)
-router.delete('/:id', productController.deleteProduct);
+// DELETE http://localhost:5000/api/products/:id
+router.delete('/:id', productController.softDeleteProduct);
+
+// Restore a deleted product
+// POST http://localhost:5000/api/products/:id/restore
+router.post('/:id/restore', productController.restoreProduct);
 
 module.exports = router;
