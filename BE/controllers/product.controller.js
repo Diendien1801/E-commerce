@@ -216,22 +216,22 @@ exports.updateProduct = async (req, res) => {
   }
 };
 
-// "Delete" a product by setting its status to 'deleted'
-exports.deleteProduct = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const product = await Product.findById(id);
-    if (!product) {
-      return res.status(404).json({ status: 404, success: false, message: 'Product not found', data: null });
-    }
-    product.status = 'deleted';
-    const saved = await product.save();
-    return res.status(200).json({ status: 200, success: true, message: 'Product deleted (status set to deleted)', data: saved });
-  } catch (err) {
-    console.error('deleteProduct error:', err);
-    return res.status(500).json({ status: 500, success: false, message: 'Server error while deleting product', data: null });
-  }
-};
+// // "Delete" a product by setting its status to 'deleted'
+// exports.deleteProduct = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const product = await Product.findById(id);
+//     if (!product) {
+//       return res.status(404).json({ status: 404, success: false, message: 'Product not found', data: null });
+//     }
+//     product.status = 'deleted';
+//     const saved = await product.save();
+//     return res.status(200).json({ status: 200, success: true, message: 'Product deleted (status set to deleted)', data: saved });
+//   } catch (err) {
+//     console.error('deleteProduct error:', err);
+//     return res.status(500).json({ status: 500, success: false, message: 'Server error while deleting product', data: null });
+//   }
+// };
 
 //ADMIN
 // Create a new product
@@ -470,3 +470,42 @@ exports.getProductsByCategory = async (req, res) => {
     });
   }
 };
+// API: Get all product (admin) paginated
+exports.getAllProductsAdmin = async (req, res) => {
+  try {
+    const { page = 1, limit = 10 } = req.query;
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const totalProducts = await Product.countDocuments();
+    const products = await Product.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNumber);
+
+    return res.status(200).json({
+      status: 200,
+      success: true,
+      message: 'All products retrieved successfully',
+      data: {
+        products,
+        pagination: {
+          currentPage: pageNumber,
+          totalPages: Math.ceil(totalProducts / limitNumber),
+          totalProducts,
+          limit: limitNumber,
+          hasNextPage: skip + limitNumber < totalProducts,
+          hasPrevPage: pageNumber > 1
+        }
+      }
+    });
+  } catch (err) {
+    return res.status(500).json({
+      status: 500,
+      success: false,
+      message: 'Error retrieving products: ' + err.toString(),
+      data: null
+    });
+  }
+}

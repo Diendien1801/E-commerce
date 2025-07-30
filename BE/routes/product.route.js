@@ -4,6 +4,11 @@ const productController = require("../controllers/product.controller");
 
 // Show product images
 router.get("/", productController.getAllProducts); // Return all products
+
+// Get all products admin
+// GET http://localhost:5000/api/products/admin
+router.get("/admin", productController.getAllProductsAdmin);
+
 router.get("/filter-paginated", productController.filterAndPaginateProducts);
 
 router.get("/paginated", productController.getProductsPaginated); // Return paginated products
@@ -36,5 +41,6 @@ router.delete('/:id', productController.softDeleteProduct);
 // Restore a deleted product
 // POST http://localhost:5000/api/products/:id/restore
 router.post('/:id/restore', productController.restoreProduct);
+
 
 module.exports = router;
