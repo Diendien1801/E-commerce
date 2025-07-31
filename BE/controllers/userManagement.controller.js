@@ -153,7 +153,7 @@ exports.getUserDetails = async (req, res) => {
         userInfo: {
           _id: user._id,
           email: user.email,
-          fullName: user.fullName,
+          name: user.name,
           phoneNumber: user.phoneNumber,
           address: user.address,
           dateOfBirth: user.dateOfBirth,

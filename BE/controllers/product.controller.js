@@ -509,3 +509,32 @@ exports.getAllProductsAdmin = async (req, res) => {
     });
   }
 }
+
+// API get product by id (detail product admin)
+exports.getProductByIdAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({
+        status: 404,
+        success: false,
+        message: 'Product not found',
+        data: null
+      });
+    }
+    return res.status(200).json({
+      status: 200,
+      success: true,
+      message: 'Product details retrieved successfully',
+      data: product
+    });
+  } catch (err) {
+    return res.status(500).json({
+      status: 500,
+      success: false,
+      message: 'Error retrieving product details: ' + err.toString(),
+      data: null
+    });
+  }
+};

@@ -21,11 +21,14 @@ router.get("/filter", productController.filterProducts);
 //CRUD operations for products
 // View product details 
 router.get("/:id", productController.getProductById);
-
+// View product details by admin
+// GET http://localhost:5000/api/products/admin/:id
+router.get("/admin/:id", productController.getProductByIdAdmin);
 
 // Get products by category
 // GET http://localhost:5000/api/products/category/:categoryId
 router.get("/category/:categoryId", productController.getProductsByCategory);
+
 
 // Create a new product
 router.post('/', productController.createProduct);
