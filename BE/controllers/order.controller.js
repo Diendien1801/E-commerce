@@ -1,5 +1,7 @@
 const Order = require("../models/order.model");
 const User = require("../models/user.model");
+const { processPayPalRefund } = require('../services/refund');
+const Payment = require("../models/payment.model");
 
 // Helper: get user role by ID
 async function getUserRole(userId) {
@@ -242,34 +244,46 @@ exports.approveOrder = async (req, res) => {
 // Cancel order: pending or picking -> canceled
 exports.cancelOrder = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id);
-    if (!order)
-      return res
-        .status(404)
-        .json({ success: false, message: "Order not found", data: null });
-
-    if (!["pending", "picking"].includes(order.status)) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: `Cannot cancel order when status is: ${order.status}`,
-          data: null,
-        });
+    const { id } = req.params;
+    const order = await Order.findById(id);
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found', data: null });
     }
-    order.status = "canceled";
-    await order.save();
-    return res
-      .status(200)
-      .json({
-        success: true,
-        message: "Order canceled successfully",
-        data: order,
-      });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ success: false, message: "Server error", data: null });
+
+    const payment = await Payment.findOne({ orderId: order.idOrder });
+
+    // If order is pending or picking, cancel it
+    if (!payment || payment.status !== 'completed') {
+      if (payment) {
+        payment.status = 'canceled';
+        await payment.save();
+      }
+      order.status = 'canceled';
+      await order.save();
+      return res.status(200).json({ success: true, message: 'Order canceled', data: order });
+    }
+
+    // If payment is completed, process refund
+    if (payment.method === 'PayPal') {
+      try {
+        await processPayPalRefund(payment);
+        order.status = 'canceled';
+        await order.save();
+        return res.status(200).json({
+          success: true,
+          message: 'Order canceled and refunded',
+          data: order
+        });
+      } catch (refundErr) {
+        console.error('Refund error:', refundErr.message);
+        return res.status(500).json({ success: false, message: 'Refund failed', data: null });
+      }
+    }
+
+    return res.status(400).json({ success: false, message: 'Refund method not supported', data: null });
+  } catch (err) {
+    console.error('cancelOrder error:', err);
+    return res.status(500).json({ success: false, message: 'Server error', data: null });
   }
 };
 
