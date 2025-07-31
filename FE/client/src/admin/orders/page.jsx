@@ -23,15 +23,23 @@ const OrderManage = () => {
   const [selectedTab, setSelectedTab] = useState('all');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
+
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
         setLoading(true);
         setError('');
-        let url = `http://localhost:5000/api/orders?limit=${LIMIT}&page=${page}`;
-        if (selectedTab !== 'all') {
-          url = `http://localhost:5000/api/orders/status/${selectedTab}?limit=${LIMIT}&page=${page}`;
+
+        let url = '';
+        if (searchTerm.trim()) {
+          url = `http://localhost:5000/api/orders/search?q=${encodeURIComponent(searchTerm)}&page=${page}&limit=${LIMIT}`;
+          if (selectedTab !== 'all') {
+            url += `&status=${selectedTab}`;
+          }
+        } else {
+          url = `http://localhost:5000/api/orders${selectedTab !== 'all' ? `/status/${selectedTab}` : ''}?limit=${LIMIT}&page=${page}`;
         }
 
         const response = await fetch(url);
@@ -43,15 +51,19 @@ const OrderManage = () => {
 
         setOrders(data.data.orders);
         setTotalPages(data.data.pagination?.totalPages || 1);
-        setLoading(false);
       } catch (err) {
         setError(err.message || 'Failed to fetch orders');
+      } finally {
         setLoading(false);
-      }
-    };
+    }};
 
-    fetchOrders();
-  }, [selectedTab, page]);
+    const debounce = setTimeout(() => {
+      fetchOrders();
+    }, 300);
+
+    return () => clearTimeout(debounce);
+  }, [selectedTab, page, searchTerm]);
+
 
   const handleStatusChange = async (orderId, newStatus, apiEndpoint) => {
     try {
@@ -83,6 +95,24 @@ const OrderManage = () => {
       <div className="order-manage-container">
         <h2 className="order-header">Order Management</h2>
 
+        <input
+          type="text"
+          placeholder="Search by Order ID"
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setPage(1);
+            setSelectedTab('all'); 
+          }}
+          style={{
+            width: '100%',
+            padding: '0.6rem 1rem',
+            marginBottom: '1rem',
+            fontSize: '1rem',
+            border: '1px solid #ccc',
+            borderRadius: 6
+          }}
+        />
         <div className="order-tabs">
           {statusTabs.map(tab => (
             <button
@@ -144,7 +174,7 @@ const OrderManage = () => {
                     )}
                   </div>
 
-                  <div className="order-card-title">Order: {order.idOrder}</div>
+                  <div className="order-card-title">Order: {order._id}</div>
                   <div>User ID: <span style={{ fontWeight: 500 }}>{order.idUser}</span></div>
                   <div>Status: <span style={{ fontWeight: 500 }}>{order.status}</span></div>
                   <div>Payment: <span style={{ fontWeight: 500 }}>{order.paymentMethod}</span></div>
