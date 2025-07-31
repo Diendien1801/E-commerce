@@ -83,6 +83,69 @@ exports.searchProducts = async (req, res) => {
   }
 };
 
+// ADMIN: Search products by name
+exports.searchProductsAdmin = async (req, res) => {
+  try {
+    const { q, page = 1, limit = 10 } = req.query;
+
+    if (!q) {
+      return res.status(400).json({
+        status: 400,
+        success: false,
+        message: "Query parameter 'q' is required",
+        data: null,
+      });
+    }
+
+    // Build search filter - không dùng baseFilter để search cả deleted products
+    const regex = new RegExp(q, "i");
+    const filter = { title: regex };
+
+    // Pagination
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    // Execute queries
+    const [products, total] = await Promise.all([
+      Product.find(filter)
+        .collation(viCollation)
+        .sort({ title: 1 })
+        .skip(skip)
+        .limit(limitNumber),
+      Product.countDocuments(filter),
+    ]);
+
+    // Calculate pagination info
+    const totalPages = Math.ceil(total / limitNumber);
+
+    return res.status(200).json({
+      status: 200,
+      success: true,
+      message: `Found ${total} product(s) matching "${q}"`,
+      data: {
+        products,
+        pagination: {
+          currentPage: pageNumber,
+          totalPages: totalPages,
+          totalProducts: total,
+          productsPerPage: limitNumber,
+          hasNextPage: pageNumber < totalPages,
+          hasPrevPage: pageNumber > 1,
+        },
+        searchQuery: q,
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({
+      status: 500,
+      success: false,
+      message: "Error searching products: " + err.toString(),
+      data: null,
+    });
+  }
+};
+
 // FEATURE: VIEW PRODUCT DETAILS
 // API: View product details by ID
 exports.getProductById = async (req, res) => {
