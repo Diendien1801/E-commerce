@@ -170,6 +170,47 @@
   font-size: 16px;
 }
 
+.form-group select {
+  padding: 10px;
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  font-size: 16px;
+  background-color: #fff;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  color: #777;
+}
+
+.custom-select-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.custom-select {
+  width: 100%;
+  padding: 8px 32px 8px 12px;
+  font-size: 16px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: white;
+}
+
+.arrow {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-40%);
+  pointer-events: none;
+  font-size: 25px;
+  color: #777;
+}
+
+
 textarea {
   resize: vertical;
   min-height: 80px;
@@ -205,8 +246,6 @@ textarea {
   font-size: 16px;
   color: #777;
 }
-
-
 
 .create-button {
   width: 100%;
