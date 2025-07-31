@@ -15,6 +15,7 @@ const authRoutes = require('./routes/auth.route'); //authentication
 const analysisRoutes = require("./routes/analysis.route");
 const userManagementRoutes = require("./routes/userManagement.route"); // user management
 const categoriesRoutes = require("./routes/categories.route"); // categories
+const paymentRoutes = require("./routes/payment.route"); // payment
 app.use(express.json());
 
 app.use("/api/categories", categoriesRoutes); // categories
@@ -28,8 +29,8 @@ app.use(authFBRoute);
 app.use("/api/analysis", analysisRoutes);
 
 
-app.use('/api/auth', authRoutes); 
-
+app.use('/api/auth', authRoutes);
+app.use('/api/payments', paymentRoutes);
 
 module.exports = app;
 
