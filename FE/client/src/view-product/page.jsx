@@ -18,7 +18,7 @@ const ViewProduct = () => {
     useEffect(() => {
         fetch(`http://localhost:5000/api/products/${id}`)
             .then(res => res.json())
-            .then(data => setProduct(data));
+            .then(data => setProduct(data.data));
     }, [id]);
 
     const handleAddFavorite = async () => {
@@ -64,6 +64,7 @@ const ViewProduct = () => {
                     <div className="view-product-info">
                         <h2>{product.title}</h2>
                         <p>{product.description}</p>
+                        <div className="view-product-price">${product.price}</div>
                         <button
                             className="favorite-btn"
                             style={{ margin: '0.7rem 0', padding: '0.5rem 1.2rem', background: '#9E3736', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 500, fontSize: '1rem' }}
@@ -74,7 +75,6 @@ const ViewProduct = () => {
                         </button>
                         {favError && <div style={{ color: 'red', marginTop: '0.5rem' }}>{favError}</div>}
                         {favSuccess && <div style={{ color: 'green', marginTop: '0.5rem' }}>{favSuccess}</div>}
-                        <div className="view-product-price">${product.price}</div>
                     </div>
                 </div>
             </div>

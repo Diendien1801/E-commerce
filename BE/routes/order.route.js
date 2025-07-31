@@ -13,9 +13,8 @@ router.get('/orders', orderController.getAllOrders);
 // Get orders by status (validate status)
 router.get('/orders/status/:status', orderController.getOrdersByStatus);
 
-
 // Get orders by user ID
-//router.get("/user/:userId", orderController.getOrdersByUserId);
+router.get("/user/:userId", orderController.getOrdersByUserId);
 
 // Get orders with filters
 //router.get("/user/:userId/filter", orderController.getOrdersWithFilters);

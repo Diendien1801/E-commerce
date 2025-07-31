@@ -12,12 +12,36 @@ const Shop = () => {
     const [sortOrder, setSortOrder] = useState('price_low');
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [categories, setCategories] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState(null);
+    const [expandedParents, setExpandedParents] = useState({});
+
+    const toggleExpand = (idCategory) => {
+        setExpandedParents(prev => ({
+            ...prev,
+            [idCategory]: !prev[idCategory],
+        }));
+    };
 
     useEffect(() => {
-        let url = `http://localhost:5000/api/products/filter-paginated?page=${page}&limit=${products_per_page}`;
-        if (sortOrder === 'price_low') url += '&sort=price_asc';
-        else if (sortOrder === 'price_high') url += '&sort=price_desc';
-        else if (sortOrder === 'newest') url += '&sort=newest';
+        fetch('http://localhost:5000/api/categories/hierarchy')
+            .then(res => res.json())
+            .then(data => {
+                setCategories(data.data || []);
+            })
+            .catch(err => console.error('Failed to fetch categories:', err));
+    }, []);
+
+    useEffect(() => {
+        let url = selectedCategory
+            ? `http://localhost:5000/api/products/category/${selectedCategory}?page=${page}&limit=${products_per_page}`
+            : `http://localhost:5000/api/products/filter-paginated?page=${page}&limit=${products_per_page}`;
+
+        if (!selectedCategory) {
+            if (sortOrder === 'price_low') url += '&sort=price_asc';
+            else if (sortOrder === 'price_high') url += '&sort=price_desc';
+            else if (sortOrder === 'newest') url += '&sort=newest';
+        }
 
         fetch(url)
             .then(res => {
@@ -27,7 +51,7 @@ const Shop = () => {
             .then(data => {
                 setProducts(Array.isArray(data.data.products) ? data.data.products : []);
                 if (typeof data.data.total === 'number' && typeof data.data.limit === 'number') {
-                setTotalPages(Math.ceil(data.data.total / data.data.limit));
+                    setTotalPages(Math.ceil(data.data.total / data.data.limit));
                 } else {
                     setTotalPages(1);
                 }
@@ -37,15 +61,72 @@ const Shop = () => {
                 setTotalPages(1);
                 console.error('Failed to fetch products:', err);
             });
-    }, [sortOrder, page]);
+    }, [sortOrder, page, selectedCategory]);
 
-    const { t, i18n } = useTranslation();
+    const renderCategoryTree = (categories) => {
+        return (
+            <ul className="category-list">
+                {categories.map(parent => (
+                    <li key={parent.idCategory} className="category-item">
+                        <div className="category-parent">
+                            <button
+                                className={`category-btn ${selectedCategory === parent.idCategory ? 'active' : ''}`}
+                                onClick={() => {
+                                    setSelectedCategory(parent.idCategory);
+                                    setPage(1);
+                                }}
+                            >
+                                {parent.name}
+                            </button>
+                            {parent.children && parent.children.length > 0 && (
+                                <button
+                                    className="toggle-btn"
+                                    onClick={() => toggleExpand(parent.idCategory)}
+                                >
+                                   <span className={`arrow ${expandedParents[parent.idCategory] ? 'up' : 'down'}`}></span>
+                                </button>
+                            )}
+                        </div>
+                        {expandedParents[parent.idCategory] && parent.children.length > 0 && (
+                            <ul className="subcategory-list">
+                                {parent.children.map(child => (
+                                    <li key={child.idCategory}>
+                                        <button
+                                            className={`subcategory-btn ${selectedCategory === child.idCategory ? 'active' : ''}`}
+                                            onClick={() => {
+                                                setSelectedCategory(child.idCategory);
+                                                setPage(1);
+                                            }}
+                                        >
+                                            {child.name}
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </li>
+                ))}
+            </ul>
+        );
+    };
+
+    const { t } = useTranslation();
     return (
         <div>
             <Navbar />
             <div className="shop-container">
                 <aside className="shop-categories">
                     <h3>{t('categories')}</h3>
+                    <button
+                        className={`category-btn ${!selectedCategory ? 'active' : ''}`}
+                        onClick={() => {
+                            setSelectedCategory(null);
+                            setPage(1);
+                        }}
+                    >
+                        {t('allCategories')}
+                    </button>
+                    {renderCategoryTree(categories)}
                 </aside>
                 <main className="shop-main">
                     <div className="shop-filter-bar">
@@ -55,7 +136,7 @@ const Shop = () => {
                         <button className={sortOrder === 'newest' ? 'active' : ''} onClick={() => { setSortOrder('newest'); setPage(1); }}>{t('newest')}</button>
                     </div>
                     <div className="shop-product-list">
-                        {products && products.length > 0 ? (
+                        {products.length > 0 ? (
                             products.map(p => (
                                 <ProductCard product={p} key={p._id} />
                             ))
@@ -64,46 +145,12 @@ const Shop = () => {
                         )}
                     </div>
                     <div className="shop-pagination" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, margin: '24px 0' }}>
-                        <button
-                            onClick={() => setPage(page - 1)}
-                            disabled={page === 1}
-                            style={{
-                                fontSize: 20,
-                                padding: '4px 12px',
-                                cursor: page === 1 ? 'not-allowed' : 'pointer',
-                                opacity: page === 1 ? 0.5 : 1,
-                                border: 'none',
-                                background: 'none',
-                                outline: 'none',
-                                boxShadow: 'none',
-                            }}
-                        >
-                            &#8592;
-                        </button>
+                        <button onClick={() => setPage(page - 1)} disabled={page === 1}>&#8592;</button>
                         <span style={{ fontWeight: 600, fontSize: 18 }}>{page}</span>
-                        <button
-                            onClick={() => setPage(page + 1)}
-                            disabled={page === totalPages || totalPages === 0}
-                            style={{
-                                fontSize: 20,
-                                padding: '4px 12px',
-                                cursor: (page === totalPages || totalPages === 0) ? 'not-allowed' : 'pointer',
-                                opacity: (page === totalPages || totalPages === 0) ? 0.5 : 1,
-                                border: 'none',
-                                background: 'none',
-                                outline: 'none',
-                                boxShadow: 'none',
-                            }}
-                        >
-                            &#8594;
-                        </button>
+                        <button onClick={() => setPage(page + 1)} disabled={page === totalPages || totalPages === 0}>&#8594;</button>
                     </div>
                 </main>
             </div>
-            {/* <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-                <button onClick={() => i18n.changeLanguage('en')} style={{ marginRight: 8 }}>EN</button>
-                <button onClick={() => i18n.changeLanguage('vi')}>VI</button>
-            </div> */}
             <Footer />
         </div>
     );
