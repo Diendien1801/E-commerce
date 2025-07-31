@@ -82,7 +82,6 @@ const Login = () => {
                     }
                 }
                 login(token, userInfo);
-                alert(t('loginSuccessful'));
                 navigate('/');
             } else {
                 setError(data.message || t('loginFailed'));
