@@ -434,3 +434,111 @@ exports.getOrdersByUserId = async (req, res) => {
     });
   }
 };
+
+// API: Get orders by user ID with status filter
+exports.getOrdersByUserIdWithFilter = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { 
+      status,
+      page = 1,
+      limit = 10,
+      sortBy = 'createdAt',
+      sortOrder = 'desc'
+    } = req.query;
+
+    // Validate userId
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+        data: null
+      });
+    }
+
+    // Build filter
+    const filter = { idUser: userId };
+
+    // Add status filter if provided
+    if (status) {
+      const validStatuses = ['pending', 'picking', 'shipping', 'delivered', 'completed', 'returned', 'canceled'];
+      
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid status. Valid statuses: ${validStatuses.join(', ')}`,
+          data: null
+        });
+      }
+      
+      filter.status = status;
+    }
+
+    // Pagination
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    // Sort
+    const sortDirection = sortOrder === 'asc' ? 1 : -1;
+    const sortOptions = { [sortBy]: sortDirection };
+
+    // Execute queries
+    const [orders, total] = await Promise.all([
+      Order.find(filter)
+        .sort(sortOptions)
+        .skip(skip)
+        .limit(limitNumber),
+      Order.countDocuments(filter)
+    ]);
+
+    // Get status statistics for this user
+    const statusStats = await Order.aggregate([
+      { $match: { idUser: userId } },
+      { $group: { _id: '$status', count: { $sum: 1 } } },
+      { $sort: { _id: 1 } }
+    ]);
+
+    // Format statistics
+    const statistics = {};
+    statusStats.forEach(stat => {
+      statistics[stat._id] = stat.count;
+    });
+
+    // Calculate pagination info
+    const totalPages = Math.ceil(total / limitNumber);
+
+    res.status(200).json({
+      success: true,
+      message: status 
+        ? `Found ${total} ${status} order(s) for user ${userId}`
+        : `Found ${total} order(s) for user ${userId}`,
+      data: {
+        orders: orders,
+        pagination: {
+          currentPage: pageNumber,
+          totalPages: totalPages,
+          totalOrders: total,
+          ordersPerPage: limitNumber,
+          hasNextPage: pageNumber < totalPages,
+          hasPrevPage: pageNumber > 1
+        },
+        filters: {
+          userId: userId,
+          status: status || 'all',
+          sortBy: sortBy,
+          sortOrder: sortOrder
+        },
+        statistics: statistics
+      }
+    });
+
+  } catch (error) {
+    console.error("getOrdersByUserIdWithFilter error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while retrieving orders",
+      data: null
+    });
+  }
+};
