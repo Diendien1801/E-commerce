@@ -1,0 +1,17 @@
+.order-annually-container {
+  margin: 20px;
+}
+
+.controls {
+  margin-bottom: 10px;
+}
+
+.chart-svg {
+  width: 100%;
+  height: auto;
+}
+
+.chart-title {
+  font-size: 18px;
+  font-weight: bold;
+}
