@@ -483,7 +483,7 @@ exports.searchUsers = async (req, res) => {
         $project: {
           _id: 1,
           email: 1,
-          fullName: 1,
+          name: 1,
           phoneNumber: 1,
           avatar: 1,
           isDeleted: 1,
