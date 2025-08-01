@@ -48,7 +48,9 @@ const Dashboard = () => {
 
               <div className="dashboard-card">
                 <h2>Best sellers</h2>
+                <div className="top-stock-scroll">
                 <TopSale />
+                </div>
               </div>
             </>
           )}

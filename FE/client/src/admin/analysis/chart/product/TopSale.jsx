@@ -32,7 +32,7 @@ const TopSelling = () => {
         .select(chartRef.current)
         .append("svg")
         .attr("width", svgWidth)
-        .attr("height", svgHeight)
+        .attr("height", svgHeight + 310)
         .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
@@ -48,7 +48,7 @@ const TopSelling = () => {
         .attr("transform", `translate(0,${height})`)
         .call(d3.axisBottom(x))
         .selectAll("text")
-        .attr("transform", null)
+        .attr("transform", "rotate(-90)") 
         .style("text-anchor", "end")
         .style("font-size", "12px");
 
@@ -82,6 +82,7 @@ const TopSelling = () => {
         .attr("text-anchor", "middle")
         .text((d) => d.quantity)
         .style("font-size", "11px");
+        
     }
   }, []);
 

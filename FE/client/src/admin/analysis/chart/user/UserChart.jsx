@@ -12,7 +12,18 @@ const UserRegistration = () => {
       const res = await axios.get(
         `http://localhost:5000/api/analysis/registration-stats?period=month&year=${year}`
       );
-      if (Array.isArray(res.data)) setData(res.data);
+      const rawData = res.data.data?.registrations || [];
+
+      const completeData = Array.from({ length: 12 }, (_, i) => {
+        const month = i + 1;
+        const entry = rawData.find((d) => d.month === month);
+        return {
+          month,
+          count: entry ? entry.count : 0
+        };
+      });
+
+      setData(completeData);
     } catch (error) {
       console.error("Fetch registration data error:", error);
     }
@@ -29,7 +40,7 @@ const UserRegistration = () => {
     const width = 700 - margin.left - margin.right;
     const height = 400 - margin.top - margin.bottom;
 
-    d3.select(svgRef.current).selectAll("*").remove(); // Clear old chart
+    d3.select(svgRef.current).selectAll("*").remove(); 
 
     const svg = d3
       .select(svgRef.current)
@@ -38,7 +49,6 @@ const UserRegistration = () => {
       .append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    // X Axis - Months
     const x = d3
       .scaleBand()
       .domain(data.map((d) => d.month))
@@ -58,7 +68,6 @@ const UserRegistration = () => {
       .style("text-anchor", "end")
       .style("font-size", "12px");
 
-    // Y Axis - Counts
     const y = d3
       .scaleLinear()
       .domain([0, d3.max(data, (d) => d.count) || 0])
@@ -67,7 +76,6 @@ const UserRegistration = () => {
 
     svg.append("g").call(d3.axisLeft(y)).style("font-size", "12px");
 
-    // Bars
     svg
       .selectAll(".bar")
       .data(data)
@@ -79,7 +87,6 @@ const UserRegistration = () => {
       .attr("height", (d) => height - y(d.count))
       .attr("fill", "#4682B4");
 
-    // Labels
     svg
       .selectAll(".label")
       .data(data)
@@ -91,7 +98,6 @@ const UserRegistration = () => {
       .style("font-size", "11px")
       .text((d) => d.count);
 
-    // Title
     svg
       .append("text")
       .attr("x", width / 2)
@@ -99,14 +105,12 @@ const UserRegistration = () => {
       .attr("text-anchor", "middle")
       .style("font-size", "16px")
       .style("font-weight", "bold")
-      .text(`User Registrations by Month - ${year}`);
-  }, [data]);
+  }, [data, year]);
 
   const years = Array.from({ length: 6 }, (_, i) => 2020 + i);
 
   return (
     <div style={{ padding: "1rem" }}>
-      <h3>User Registration Statistics</h3>
       <label>
         Select Year:{" "}
         <select value={year} onChange={(e) => setYear(Number(e.target.value))}>

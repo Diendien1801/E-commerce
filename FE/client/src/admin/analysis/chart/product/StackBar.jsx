@@ -120,8 +120,8 @@ const ProductCategory = () => {
         })
         .on("mousemove", (event) => {
           tooltip
-            .style("top", event.pageY - 250 + "px")
-            .style("left", event.pageX + "px");
+            .style("top", event.pageY - 460 + "px")
+            .style("left", event.pageX - 300 + "px");
         })
         .on("mouseleave", () => tooltip.style("visibility", "hidden"));
 

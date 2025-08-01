@@ -10,7 +10,7 @@ const RevenueByMonth = () => {
   const fetchData = async (selectedYear) => {
     try {
       const res = await axios.get(`http://localhost:5000/api/analysis/revenue/by-time?year=${selectedYear}`);
-      setData(res.data);
+      setData(res.data.data.revenueData || []);
     } catch (err) {
       console.error('Fetch error:', err);
     }
@@ -41,13 +41,13 @@ const RevenueByMonth = () => {
 
     const x = d3
       .scaleBand()
-      .domain(data.map((d) => d.month))
+      .domain(data.map((d) => d.periodData.month))
       .range([0, width])
       .padding(0.2);
 
     const y = d3
       .scaleLinear()
-      .domain([0, d3.max(data, (d) => d.revenue) || 0])
+      .domain([0, d3.max(data, (d) => d.totalRevenue) || 0])
       .nice()
       .range([height, 0]);
 
@@ -71,10 +71,10 @@ const RevenueByMonth = () => {
       .enter()
       .append('rect')
       .attr('class', 'bar')
-      .attr('x', (d) => x(d.month))
-      .attr('y', (d) => y(d.revenue))
+      .attr('x', (d) => x(d.periodData.month))
+      .attr('y', (d) => y(d.totalRevenue))
       .attr('width', x.bandwidth())
-      .attr('height', (d) => height - y(d.revenue))
+      .attr('height', (d) => height - y(d.totalRevenue))
       .attr('fill', '#4682B4');
 
     // Title
@@ -92,7 +92,6 @@ const RevenueByMonth = () => {
 
   return (
     <div style={{ padding: '1rem' }}>
-      <h3>Revenue by Month</h3>
       <label>
         Select Year:{' '}
         <select value={year} onChange={(e) => setYear(e.target.value)}>
