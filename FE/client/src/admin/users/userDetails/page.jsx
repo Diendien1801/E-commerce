@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import Navbar from "../../../components/navbar/navbar";
 import Footer from "../../../components/footer/footer";
 import defaultAvatar from "./avatar-default.svg";
+import { useTranslation } from 'react-i18next';
 import "./detail.css";
 
 function UserDetail() {
@@ -42,6 +43,8 @@ function UserDetail() {
 
   const { userInfo, orders, orderStats } = userDetail;
 
+  const { t } = useTranslation();
+
   return (
     <div>
       <Navbar />
@@ -62,7 +65,7 @@ function UserDetail() {
         ) : (
           <>
             <h2 style={{ marginBottom: "1.5rem", fontWeight: 600 }}>
-              User Details
+              {t('userDetails', 'User Details')}
             </h2>
 
             <div className="user-card" style={{ position: "relative" }}>
@@ -109,7 +112,7 @@ function UserDetail() {
                     }
                   }}
                 >
-                  Restore
+                  {t('restore', 'Restore')}
                 </button>
                 ) : (
                 <button
@@ -156,7 +159,7 @@ function UserDetail() {
                     }
                   }}
                 >
-                  Delete
+                  {t('delete', 'Delete')}
                 </button>
               )}
 
@@ -169,17 +172,21 @@ function UserDetail() {
               <div className="user-card-details">
                 <h3>{userInfo.name || "N/A"}</h3>
                 <p>
-                  <strong>ID:</strong> {userInfo._id}
+                  <strong>{t('id', 'ID')}:</strong> {userInfo._id}
                 </p>
                 <p>
-                  <strong>Email:</strong> {userInfo.email}
+                  <strong>{t('email', 'Email')}:</strong> {userInfo.email}
                 </p>
                 <p>
-                  <strong>Address:</strong>{" "}
+                  <strong>{t('address', 'Address')}:</strong>{" "}
                   {userInfo.address?.country || "N/A"}
                 </p>
                 <p>
-                  <strong>Registered:</strong>{" "}
+                  <strong>{t('phoneNumber', 'Phone number')}:</strong>{" "}
+                  {userInfo.phoneNumber || "N/A"}
+                </p>
+                <p>
+                  <strong>{t('register', 'Registered')}:</strong>{" "}
                   {new Date(userInfo.createdAt).toLocaleString()}
                 </p>
               </div>
@@ -188,26 +195,26 @@ function UserDetail() {
             <h3 style={{ marginTop: "2rem" }}>Order Statistics</h3>
             <ul style={{ paddingLeft: "1.2rem" }}>
               <li>
-                <strong>Total Orders:</strong> {orderStats.totalOrders}
+                <strong>{t('totalOrder', 'Total Orders')}:</strong> {orderStats.totalOrders}
               </li>
               <li>
-                <strong>Pending:</strong> {orderStats.pendingOrders}
+                <strong>{t('pending', 'Pending')}:</strong> {orderStats.pendingOrders}
               </li>
               <li>
-                <strong>Completed:</strong> {orderStats.completedOrders}
+                <strong>{t('completed', 'Completed')}:</strong> {orderStats.completedOrders}
               </li>
               <li>
-                <strong>Canceled:</strong> {orderStats.canceledOrders}
+                <strong>{t('canceled', 'Canceled')}:</strong> {orderStats.canceledOrders}
               </li>
               <li>
-                <strong>Total Spent:</strong> $
+                <strong>{t('totalSpent', 'Total Spent')}:</strong> $
                 {orderStats.totalSpent?.toFixed(2)}
               </li>
             </ul>
 
-            <h3 style={{ marginTop: "2rem" }}>Order List</h3>
+            <h3 style={{ marginTop: "2rem" }}>{t('orderList', 'Order List')}</h3>
             {orders.length === 0 ? (
-              <div style={{ color: "#888" }}>No orders found.</div>
+              <div style={{ color: "#888" }}>{t('noOrdersFound', 'No orders found.')}</div>
             ) : (
               <div
                 style={{
@@ -233,33 +240,32 @@ function UserDetail() {
                         marginBottom: "0.5rem",
                       }}
                     >
-                      Order: {order.idOrder}
+                      {t('orderId', 'Order')}: {order._id}
                     </div>
                     <div>
-                      Status:{" "}
+                      {t('status1', 'Status')}:{" "}
                       <span style={{ fontWeight: 500 }}>{order.status}</span>
                     </div>
                     <div>
-                      Payment:{" "}
+                      {t('payment', 'Payment')}:{" "}
                       <span style={{ fontWeight: 500 }}>
                         {order.paymentMethod}
                       </span>
                     </div>
                     <div>
-                      Items: <strong>{order.totalItems}</strong> | Total:{" "}
-                      <strong>${order.totalAmount.toFixed(2)}</strong>
+                      {t('shippingAddress', 'Shipping Address')}: <span style={{ fontWeight: 500 }}>{order.shippingAddress}</span>
                     </div>
                     <div>
-                      Created: {new Date(order.createdAt).toLocaleString()}
+                      {t('date', 'Date')}: {new Date(order.createdAt).toLocaleString()}
                     </div>
                     {order.items?.length > 0 && (
                       <div style={{ marginTop: "0.5rem" }}>
-                        <div style={{ fontWeight: 500 }}>Products:</div>
+                        <div style={{ fontWeight: 500 }}>{t('products', 'Products')}:</div>
                         <ul style={{ margin: 0, paddingLeft: "1.2rem" }}>
                           {order.items.map((item, idx) => (
                             <li key={idx}>
-                              Product ID: {item.productID} | Quantity:{" "}
-                              {item.quantity} | Price: ${item.price}
+                              {t('productid', 'Product ID')}: {item.productID} | {t('quantity', 'Quantity')}:{" "}
+                              {item.quantity} | {t('price', 'Price')}: ${item.price}
                             </li>
                           ))}
                         </ul>

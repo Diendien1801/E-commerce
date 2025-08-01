@@ -2,17 +2,18 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../components/context/authcontext';
 import Navbar from '../components/navbar/navbar';
 import Footer from '../components/footer/footer';
+import { useTranslation } from 'react-i18next';
 import './order.css';
 
 const statusTabs = [
-  { key: 'all', label: 'All Orders' },
-  { key: 'pending', label: 'Pending' },
-  { key: 'picking', label: 'Picking' },
-  { key: 'shipping', label: 'Shipping' },
-  { key: 'delivered', label: 'Delivered' },
-  { key: 'completed', label: 'Completed' },
-  { key: 'canceled', label: 'Canceled' },
-  { key: 'returned', label: 'Returned' }
+  { key: 'all'},
+  { key: 'pending' },
+  { key: 'picking'},
+  { key: 'shipping'},
+  { key: 'delivered' },
+  { key: 'completed' },
+  { key: 'canceled' },
+  { key: 'returned' }
 ];
 
 function OrderPage() {
@@ -82,11 +83,13 @@ function OrderPage() {
     alert(`Error: ${err.message}`);
   }};
 
+const { t } = useTranslation();
+
 return (
 <>
   <Navbar />
   <div className="order-manage-container">
-    <h2 className="order-header">My Orders</h2>
+    <h2 className="order-header">{t('myOrders', 'My Orders')}</h2>
 
     <div className="order-tabs">
       {statusTabs.map(tab => (
@@ -95,16 +98,16 @@ return (
           onClick={() => setSelectedTab(tab.key)}
           className={`order-tab-button ${selectedTab === tab.key ? 'active' : ''}`}
         >
-          {tab.label}
+          {t(`status.${tab.key}`, tab.key)}
         </button>
       ))}
     </div>
 
-    {loading ? (<div>Loading...</div>) 
+    {loading ? (<div>{t('loading', 'Loading...')}</div>) 
     : error ? ( 
       <div style={{ color: 'red' }}>{error}</div>) 
       : orders.length === 0 ? (
-        <div style={{ color: '#888' }}>No orders found.</div>) 
+        <div style={{ color: '#888' }}>{t('noOrders', 'No orders found.')}</div>) 
           : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {orders.map(order => {
@@ -120,7 +123,7 @@ return (
                     onClick={() => handleStatusChange(order._id, 'canceled')}
                     style={{ ...actionStyle, backgroundColor: '#f44336' }}
                   >
-                    Cancel
+                    {t('cancel', 'Cancel')}
                   </button>
                 )}
                 {showComplete && (
@@ -128,7 +131,7 @@ return (
                     onClick={() => handleStatusChange(order._id, 'completed')}
                     style={{ ...actionStyle, backgroundColor: '#009688' }}
                   >
-                    Complete
+                    {t('complete', 'Complete')}
                   </button>
                 )}
                 {showReturn && (
@@ -136,24 +139,24 @@ return (
                     onClick={() => handleStatusChange(order._id, 'returned')}
                     style={{ ...actionStyle, backgroundColor: '#607d8b' }}
                   >
-                    Return
+                    {t('return', 'Return')}
                   </button>
                 )}
               </div>
 
-              <div className="order-card-title">Order: {order._id}</div>
-              <div>Status: <span style={{ fontWeight: 500 }}>{order.status}</span></div>
-              <div>Payment: <span style={{ fontWeight: 500 }}>{order.paymentMethod}</span></div>
-              <div>Shipping Address: <span style={{ fontWeight: 500 }}>{order.shippingAddress}</span></div>
-              <div>Date: {order.createdAt ? new Date(order.createdAt).toLocaleString() : 'N/A'}</div>
+              <div className="order-card-title">{t('orderId', 'Order')}: {order._id}</div>
+              <div>{t('status1', 'Status')}: <span style={{ fontWeight: 500 }}>{order.status}</span></div>
+              <div>{t('payment', 'Payment')}: <span style={{ fontWeight: 500 }}>{order.paymentMethod}</span></div>
+              <div>{t('shippingAddress', 'Shipping Address')}: <span style={{ fontWeight: 500 }}>{order.shippingAddress}</span></div>
+              <div>{t('date', 'Date')}: {order.createdAt ? new Date(order.createdAt).toLocaleString() : 'N/A'}</div>
 
               {order.items && order.items.length > 0 && (
                 <div className="order-product-list">
-                  <div style={{ fontWeight: 500 }}>Products:</div>
+                  <div style={{ fontWeight: 500 }}>{t('products', 'Products')}:</div>
                   <ul>
                     {order.items.map((item, idx) => (
                       <li key={idx}>
-                        Product ID: {item.productId} | Quantity: {item.quantity} | Price: ${item.price}
+                        {t('productid', 'Product ID')}: {item.productId} | {t('quantity', 'Quantity')}: {item.quantity} | {t('price', 'Price')}: ${item.price}
                       </li>
                     ))}
                   </ul>

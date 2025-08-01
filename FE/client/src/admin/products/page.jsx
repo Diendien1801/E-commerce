@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Navbar from '../../components/navbar/navbar';
 import Footer from '../../components/footer/footer';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import './product.css';
 
 const PAGE_SIZE = 5;
@@ -89,20 +90,22 @@ function ProductManagement() {
     return () => clearTimeout(delayDebounce);
   }, [search, page]);
 
+  const { t } = useTranslation();
+
   return (
     <div className='container'>
       <Navbar />
       <div className="product-management-container" style={{ minHeight: '500px' }}>
         <div className="product-management-header">
-          <h2>Product Management</h2>
+          <h2>{t("productManagement","Product Management")}</h2>
           <button className="add-product-btn" onClick={() => navigate('/admin/create-product')}>
-            + Add Product
+            + {t("addProduct", "Add Product")}
           </button>
         </div>
 
         <input
           type="text"
-          placeholder="Search by Title"
+          placeholder={t("searchbytitle", "Search by title")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="search-input"
@@ -115,21 +118,21 @@ function ProductManagement() {
             <table className="product-table">
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Image</th>
-                  <th>Title</th>
-                  <th  style ={{textAlign: 'center'}}>Price</th>
-                  <th  style ={{textAlign: 'center'}}>Quantity</th>
-                  <th  style ={{textAlign: 'center'}}>Category</th>
-                  <th  style ={{textAlign: 'center'}}>Status</th>
-                  <th  style ={{textAlign: 'center'}}>Visible</th>
+                  <th>{t("id", "ID")}</th>
+                  <th>{t("image", "Image")}</th>
+                  <th>{t("title", "Title")}</th>
+                  <th  style ={{textAlign: 'center'}}>{t('price', 'Price')}</th>
+                  <th  style ={{textAlign: 'center'}}>{t('quantity', 'Quantity')}</th>
+                  <th  style ={{textAlign: 'center'}}>{t('category', 'Category')}</th>
+                  <th  style ={{textAlign: 'center'}}>{t('status1', 'Status')}</th>
+                  <th  style ={{textAlign: 'center'}}>{t('visible', 'Visible')}</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="no-data">
-                      No products found.
+                      {t('nopProductFound', 'No products found.')}
                     </td>
                   </tr>
                 ) : (

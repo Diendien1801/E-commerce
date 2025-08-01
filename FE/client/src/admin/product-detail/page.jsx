@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Navbar from '../../components/navbar/navbar';
 import Footer from '../../components/footer/footer';
+import { useTranslation } from 'react-i18next';
 import './detail.css';
 
 const ProductDetail = () => {
@@ -14,6 +15,7 @@ const ProductDetail = () => {
     const [editedPrice, setEditedPrice] = useState('');
     const [categories, setCategories] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState('');
+    const { t } = useTranslation();
 
 
     useEffect(() => {
@@ -133,7 +135,7 @@ const ProductDetail = () => {
                         {isEditing ? (
                             <>
                                 <div className="edit-form-group">
-                                <label>Title</label>
+                                <label>{t("title", "Title")}</label>
                                 <input
                                     type="text"
                                     value={editedTitle}
@@ -142,7 +144,7 @@ const ProductDetail = () => {
                                 />
                                 </div>
                                 <div className="edit-form-group">
-                                <label>Description</label>
+                                <label>{t("description", "Description")}</label>
                                 <textarea
                                     value={editedDescription}
                                     onChange={(e) => setEditedDescription(e.target.value)}
@@ -150,7 +152,7 @@ const ProductDetail = () => {
                                 />
                                 </div>
                                 <div className="edit-form-group">
-                                <label>Price</label>
+                                <label>{t('price', 'Price')}</label>
                                 <input
                                     type="number"
                                     value={editedPrice}
@@ -160,14 +162,14 @@ const ProductDetail = () => {
                                 />
                                 </div>
                                 <div className="edit-form-group">
-                                <label>Category</label>
+                                <label>{t('category', 'Category')}</label>
                                 <div className="custom-select-wrapper">
                                 <select
                                     className="custom-select"
                                     value={selectedCategory}
                                     onChange={(e) => setSelectedCategory(e.target.value)}
                                 >
-                                    <option value="">Select a category</option>
+                                    <option value="">{t('selectCategory', 'Select a category')}</option>
                                     {categories.map((cat) => (
                                     <option key={cat.idCategory} value={cat.idCategory}>
                                         {cat.name}
@@ -182,8 +184,8 @@ const ProductDetail = () => {
                             <>
                                 <h2>{product.title}</h2>
                                 <p>{product.description}</p>
-                                <p><strong>Price:</strong> ${product.price}</p>
-                                <p><strong>Category:</strong> {categories.find(cat => cat.idCategory === product.idCategory)?.name || 'N/A'}</p>
+                                <p><strong>{t('price', 'Price')}:</strong> ${product.price}</p>
+                                <p><strong>{t('category', 'Category')}:</strong> {categories.find(cat => cat.idCategory === product.idCategory)?.name || 'N/A'}</p>
                             </>
                         )}
 
@@ -198,7 +200,7 @@ const ProductDetail = () => {
                                     borderRadius: '4px',
                                     cursor: 'pointer',
                                 }}>
-                                {isEditing ? 'Save' : 'Edit'}
+                                {isEditing ? t('save') : t('edit')}
                             </button>
                             {product.isDeleted ? (
                             <button
@@ -211,7 +213,7 @@ const ProductDetail = () => {
                                 borderRadius: '4px',
                                 cursor: 'pointer',
                                 }}>
-                                Restore
+                                {t('restore', 'Restore')}
                             </button>
                             ) : (
                             <button
@@ -224,7 +226,7 @@ const ProductDetail = () => {
                                 borderRadius: '4px',
                                 cursor: 'pointer',
                                 }}>
-                                Delete
+                                {t('delete', 'Delete')}
                             </button>
                             )}
 

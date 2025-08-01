@@ -5,6 +5,7 @@ import { useAuth } from '../components/context/authcontext';
 import Navbar from '../components/navbar/navbar';
 import Footer from '../components/footer/footer';
 import './profile.css';
+import defaultAvatar from './avatar-default.svg';
 
 const Profile = () => {
     const { t, i18n } = useTranslation();
@@ -139,7 +140,7 @@ const Profile = () => {
                              onClick={handlePicClick}
                              onMouseEnter={e => e.currentTarget.querySelector('.change-pic-overlay').style.opacity = 1}
                              onMouseLeave={e => e.currentTarget.querySelector('.change-pic-overlay').style.opacity = 0}>
-                            <img src={user && user.avatar ? user.avatar : "/profile-placeholder.png"} alt="Profile" className="profile-pic" />
+                            <img src={user && user.avatar ? user.avatar : defaultAvatar} alt="Profile" className="profile-pic" />
                             <div className="change-pic-overlay">
                                 {t('changeProfilePic', 'Change profile picture')}
                             </div>
@@ -177,7 +178,7 @@ const Profile = () => {
                                 />
                             </div>
                             <div className="profile-info">
-                                <strong>{t('country', 'Country')}:</strong>
+                                <strong>{t('address', 'Address')}:</strong>
                                 <input
                                     type="text"
                                     value={editedCountry}

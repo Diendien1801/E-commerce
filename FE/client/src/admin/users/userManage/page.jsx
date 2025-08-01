@@ -3,6 +3,7 @@ import Navbar from '../../../components/navbar/navbar';
 import Footer from '../../../components/footer/footer';
 import defaultAvatar from './avatar-default.svg';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const PAGE_SIZE = 5;
 
@@ -70,14 +71,16 @@ function UserManagement() {
     return () => clearTimeout(delayDebounce);
   }, [search, page]);
 
+  const { t } = useTranslation();
+
   return (
     <>
       <Navbar />
       <div style={{ maxWidth: 900, margin: '2rem auto', padding: '0 1rem', minHeight: '500px' }}>
-        <h2 style={{ marginBottom: '1.5rem', fontWeight: 600 }}>User Management</h2>
+        <h2 style={{ marginBottom: '1.5rem', fontWeight: 600 }}>{t("userManagement", "User Management")}</h2>
         <input
           type="text"
-          placeholder="Search by Email"
+          placeholder={t("searchByEmail", "Search by Email")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           style={{
@@ -96,19 +99,19 @@ function UserManagement() {
             <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', fontFamily: 'Arial', fontSize: '0.9rem' }}>
               <thead>
                 <tr style={{ background: '#f5f5f5' }}>
-                  <th style={{ padding: '0.7rem', border: '1px solid #eee' }}>ID</th>
-                  <th style={{ padding: '0.7rem', border: '1px solid #eee' }}>Avatar</th>
-                  <th style={{ padding: '0.7rem', border: '1px solid #eee' }}>Name</th>
-                  <th style={{ padding: '0.7rem', border: '1px solid #eee' }}>Email</th>
-                  <th style={{ padding: '0.7rem', border: '1px solid #eee' }}>Status</th>
-                  <th style={{ padding: '0.7rem', border: '1px solid #eee' }}>Registered Date</th>
+                  <th style={{ padding: '0.7rem', border: '1px solid #eee' }}>{t("id", "ID")}</th>
+                  <th style={{ padding: '0.7rem', border: '1px solid #eee' }}>{t("avatar", "Avatar")}</th>
+                  <th style={{ padding: '0.7rem', border: '1px solid #eee' }}>{t("name", "Name")}</th>
+                  <th style={{ padding: '0.7rem', border: '1px solid #eee' }}>{t("email", "Email")}</th>
+                  <th style={{ padding: '0.7rem', border: '1px solid #eee' }}>{t('status1', 'Status')}</th>
+                  <th style={{ padding: '0.7rem', border: '1px solid #eee' }}>{t("registerDate", "Registered Date")}</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
                     <td colSpan={6} style={{ textAlign: 'center', padding: '1.5rem', color: '#888' }}>
-                      No users found.
+                      {t('noUserFound', 'No users found.')}
                     </td>
                   </tr>
                 ) : (

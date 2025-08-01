@@ -2,16 +2,17 @@ import { useEffect, useState } from 'react';
 import Navbar from '../../components/navbar/navbar';
 import Footer from '../../components/footer/footer';
 import './order.css'; 
+import { useTranslation } from 'react-i18next';
 
 const statusTabs = [
-  { key: 'all', label: 'All Orders' },
-  { key: 'pending', label: 'Pending' },
-  { key: 'picking', label: 'Picking' },
-  { key: 'shipping', label: 'Shipping' },
-  { key: 'delivered', label: 'Delivered' },
-  { key: 'completed', label: 'Completed' },
-  { key: 'canceled', label: 'Canceled' },
-  { key: 'returned', label: 'Returned' }
+  { key: 'all'},
+  { key: 'pending' },
+  { key: 'picking'},
+  { key: 'shipping'},
+  { key: 'delivered' },
+  { key: 'completed' },
+  { key: 'canceled' },
+  { key: 'returned' }
 ];
 
 const LIMIT = 5;
@@ -89,15 +90,17 @@ const OrderManage = () => {
     setPage(1);
   };
 
+  const { t } = useTranslation();
+
   return (
     <div>
       <Navbar />
       <div className="order-manage-container">
-        <h2 className="order-header">Order Management</h2>
+        <h2 className="order-header">{t('orderManagement', 'Order Management')}</h2>
 
         <input
           type="text"
-          placeholder="Search by Order ID"
+          placeholder={t('searchOrderId', 'Search by Order ID')}
           value={searchTerm}
           onChange={(e) => {
             setSearchTerm(e.target.value);
@@ -120,7 +123,7 @@ const OrderManage = () => {
               onClick={() => handleTabChange(tab.key)}
               className={`order-tab-button ${selectedTab === tab.key ? 'active' : ''}`}
             >
-              {tab.label}
+              {t(`status.${tab.key}`, tab.key)}
             </button>
           ))}
         </div>
@@ -130,7 +133,7 @@ const OrderManage = () => {
         ) : error ? (
           <div style={{ color: 'red' }}>{error}</div>
         ) : orders.length === 0 ? (
-          <div style={{ color: '#888' }}>No orders found.</div>
+          <div style={{ color: '#888' }}>{t('noOrdersFound', 'No orders found.')}</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {orders.map(order => {
@@ -174,20 +177,20 @@ const OrderManage = () => {
                     )}
                   </div>
 
-                  <div className="order-card-title">Order: {order._id}</div>
-                  <div>User ID: <span style={{ fontWeight: 500 }}>{order.idUser}</span></div>
-                  <div>Status: <span style={{ fontWeight: 500 }}>{order.status}</span></div>
-                  <div>Payment: <span style={{ fontWeight: 500 }}>{order.paymentMethod}</span></div>
-                  <div>Shipping Address: <span style={{ fontWeight: 500 }}>{order.shippingAddress}</span></div>
-                  <div>Date: {order.createdAt ? new Date(order.createdAt).toLocaleString() : 'N/A'}</div>
+                  <div className="order-card-title">{t('orderId', 'Order')}: {order._id}</div>
+                  <div>{t('userid', 'User ID')}: <span style={{ fontWeight: 500 }}>{order.idUser}</span></div>
+                  <div>{t('status1', 'Status')}: <span style={{ fontWeight: 500 }}>{order.status}</span></div>
+                  <div>{t('payment', 'Payment')}: <span style={{ fontWeight: 500 }}>{order.paymentMethod}</span></div>
+                  <div>{t('shippingAddress', 'Shipping Address')}: <span style={{ fontWeight: 500 }}>{order.shippingAddress}</span></div>
+                  <div>{t('date', 'Date')}: {order.createdAt ? new Date(order.createdAt).toLocaleString() : 'N/A'}</div>
 
                   {order.items && order.items.length > 0 && (
                     <div className="order-product-list">
-                      <div style={{ fontWeight: 500 }}>Products:</div>
+                      <div style={{ fontWeight: 500 }}>{t('products', 'Products')}:</div>
                       <ul>
                         {order.items.map((item, idx) => (
                           <li key={idx}>
-                            Product ID: {item.productID} | Quantity: {item.quantity} | Price: ${item.price}
+                            {t('productid', 'Product ID')}: {item.productId} | {t('quantity', 'Quantity')}: {item.quantity} | {t('price', 'Price')}: ${item.price}
                           </li>
                         ))}
                       </ul>
