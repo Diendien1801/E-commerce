@@ -5,6 +5,7 @@ import logo from './logo.png';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
     const [search, setSearch] = useState("");
@@ -13,6 +14,7 @@ const Navbar = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [showDropdown, setShowDropdown] = useState(false);
+    const navigate = useNavigate();
 
     const { isLoggedIn, user, logout } = useAuth();
 
@@ -153,7 +155,7 @@ const Navbar = () => {
                     </a>
                 </div>
                 <div className="header-col header-cart">
-                    <button className="cart-btn">
+                    <button className="cart-btn" onClick={() => navigate('/cart')}>
                         <i className="bi bi-cart2 cart-icon"></i> {t('cart')}
                     </button>
                 </div>
