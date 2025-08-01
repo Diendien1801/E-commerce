@@ -22,6 +22,7 @@ import ProductManagement from './admin/products/page';
 import ProductDetail from './admin/product-detail/page';
 import AddProduct from './admin/create-product/page';
 import OrderManage from './admin/orders/page';
+import Dashboard from './admin/analysis/dashboard';
 
 
 
@@ -104,7 +105,10 @@ function App() {
     {
       path: '/admin/orders',
       element: <OrderManage />
-
+    },
+    {
+      path: '/admin/dashboard',
+      element: <Dashboard />
     }
   ]);
 

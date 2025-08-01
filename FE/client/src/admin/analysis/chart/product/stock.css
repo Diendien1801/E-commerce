@@ -1,0 +1,8 @@
+.x-axis-label {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+svg:hover .x-axis-label {
+  opacity: 1;
+}
