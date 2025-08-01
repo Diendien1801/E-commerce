@@ -569,7 +569,7 @@ exports.getRevenueByTime = async (req, res) => {
     } = req.query;
 
     // Build match filter
-    let matchFilter = { status: 'complete' }; // Chỉ tính đơn hàng hoàn thành
+    let matchFilter = { status: 'completed' }; // Chỉ tính đơn hàng hoàn thành
     
     if (startDate && endDate) {
       matchFilter.createdAt = {
@@ -603,34 +603,34 @@ exports.getRevenueByTime = async (req, res) => {
     switch (period) {
       case 'day':
         groupFormat = {
-          year: { $year: "$paymentDate" },
-          month: { $month: "$paymentDate" },
-          day: { $dayOfMonth: "$paymentDate" },
+          year: { $year: "$createdAt" },
+          month: { $month: "$createdAt" },
+          day: { $dayOfMonth: "$createdAt" }
         };
         sortField = "_id";
         break;
         
       case 'month':
         groupFormat = {
-          year: { $year: "$paymentDate" },
-          month: { $month: "$paymentDate" },
+          year: { $year: "$createdAt" },
+          month: { $month: "$createdAt" }
         };
         sortField = "_id";
         break;
         
       case 'quarter':
         groupFormat = {
-          year: { $year: "$paymentDate" },
+          year: { $year: "$createdAt" },
           quarter: {
-            $ceil: { $divide: [{ $month: "$paymentDate" }, 3] },
-          },
+            $ceil: { $divide: [{ $month: "$createdAt" }, 3] }
+          }
         };
         sortField = "_id";
         break;
         
       case 'year':
         groupFormat = {
-          year: { $year: "$paymentDate" },
+          year: { $year: "$createdAt" }
         };
         sortField = "_id.year";
         break;
