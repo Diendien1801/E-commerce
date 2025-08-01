@@ -181,4 +181,20 @@ exports.getUserById = async (req, res) => {
   }
 };
 
+// updateUser
+exports.updateUser = async (req, res) => {
+  try {
+    const { userId, ...updateData } = req.body;
+    if (!userId) {
+      return res.status(400).json({ success: false, message: "User ID is required" });
+    }
+    const user = await User.findByIdAndUpdate(userId, updateData, { new: true });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    res.status(200).json({ success: true, data: user });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error", data: err.message });
+  }
+};
 

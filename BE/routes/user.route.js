@@ -21,5 +21,7 @@ router.put("/changeavt", userController.changeAvatar);
 // Route: change password
 router.put("/changepass", userController.changePassword);
 
+// Route: update user information
+router.put("/update", userController.updateUser);
 
 module.exports = router;
