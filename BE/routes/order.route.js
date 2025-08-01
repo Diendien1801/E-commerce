@@ -20,12 +20,23 @@ router.get('/orders', orderController.getAllOrders);
 router.get('/orders/status/:status', orderController.getOrdersByStatus);
 
 
+
 // Get orders by user ID pagination, sorting, filtering
 // GET localhost:5000/api/orders/user/6888ecdffb44b885381dd9e2
 router.get("/orders/user/:userId", orderController.getOrdersByUserId);
 
+// Get orders by user ID
+router.get("/user/:userId", orderController.getOrdersByUserId);
+
+
 // Get orders with filters
 //router.get("/user/:userId/filter", orderController.getOrdersWithFilters);
+
+// Get orders with filters of a specific user
+// GET http://localhost:5000/api/orders/user/:userId?status=pending&page=1&limit=5
+router.get("/orders/user/:userId", orderController.getOrdersByUserIdWithFilter);
+
+
 
 // Get order detail by order ID
 //router.get("/detail/:orderId", orderController.getOrderDetailById);

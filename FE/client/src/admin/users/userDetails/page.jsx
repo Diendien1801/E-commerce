@@ -27,12 +27,8 @@ function UserDetail() {
           throw new Error(data.error || "Failed to fetch user data");
         }
 
-        if (data.data.userInfo?.isDeleted) {
-          setError("User not found or has been deleted.");
-          return;
-        }
-
         setUserDetail(data.data);
+        console.log("User detail fetched:", data.data.userInfo);
       } catch (err) {
         console.error(err);
         setError(err.message || "Error fetching user data");
@@ -70,56 +66,111 @@ function UserDetail() {
             </h2>
 
             <div className="user-card" style={{ position: "relative" }}>
-              <button
-                style={{
-                  position: "absolute",
-                  top: 10,
-                  right: 10,
-                  backgroundColor: "#ff4d4f",
-                  color: "#fff",
-                  border: "none",
-                  padding: "6px 12px",
-                  borderRadius: "4px",
-                  fontWeight: 500,
-                  cursor: "pointer",
-                  transition: "background-color 0.3s",
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = "#d9363e";
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = "#ff4d4f";
-                }}
-                onClick={async () => {
-                  try {
-                    const response = await fetch(
-                      `http://localhost:5000/api/userManagement/${userId}/soft-delete`,
-                      {
-                        method: "DELETE",
+              {userInfo.isDeleted ? (
+                <button
+                  style={{
+                    position: "absolute",
+                    top: 10,
+                    right: 10,
+                    backgroundColor: "#52c41a",
+                    color: "#fff",
+                    border: "none",
+                    padding: "6px 12px",
+                    borderRadius: "4px",
+                    fontWeight: 500,
+                    cursor: "pointer",
+                    transition: "background-color 0.3s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = "#389e0d";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = "#52c41a";
+                  }}
+                  onClick={async () => {
+                    try {
+                      const response = await fetch(
+                        `http://localhost:5000/api/userManagement/${userId}/restore`,
+                        { method: "PATCH" }
+                      );
+
+                      if (!response.ok) {
+                        throw new Error("Failed to restore user.");
                       }
-                    );
 
-                    if (!response.ok) {
-                      throw new Error("Failed to delete user.");
+                      alert("User restored successfully.");
+
+                      setUserDetail((prev) => ({
+                        ...prev,
+                        userInfo: { ...prev.userInfo, isDeleted: false },
+                      }));
+                    } catch (error) {
+                      alert("Error restoring user: " + error.message);
                     }
+                  }}
+                >
+                  Restore
+                </button>
+                ) : (
+                <button
+                  style={{
+                    position: "absolute",
+                    top: 10,
+                    right: 10,
+                    backgroundColor: "#ff4d4f",
+                    color: "#fff",
+                    border: "none",
+                    padding: "6px 12px",
+                    borderRadius: "4px",
+                    fontWeight: 500,
+                    cursor: "pointer",
+                    transition: "background-color 0.3s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = "#d9363e";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = "#ff4d4f";
+                  }}
+                  onClick={async () => {
+                    try {
+                      const response = await fetch(
+                        `http://localhost:5000/api/userManagement/${userId}/soft-delete`,
+                        {
+                          method: "DELETE",
+                        }
+                      );
 
-                    alert("User soft-deleted successfully.");
-                    setError("User not found or has been deleted."); // Optional: refresh view
-                  } catch (error) {
-                    alert("Error deleting user: " + error.message);
-                  }
-                }}
-              >
-                Delete
-              </button>
+                      if (!response.ok) {
+                        throw new Error("Failed to delete user.");
+                      }
+
+                      alert("User soft-deleted successfully.");
+
+                      setUserDetail((prev) => ({
+                        ...prev,
+                        userInfo: { ...prev.userInfo, isDeleted: true },
+                      }));
+                    } catch (error) {
+                      alert("Error deleting user: " + error.message);
+                    }
+                  }}
+                >
+                  Delete
+                </button>
+              )}
+
               <div className="user-card-avatar">
                 <img
                   src={userInfo.avatar || defaultAvatar}
-                  alt={`${userInfo.fullName || "User"}'s avatar`}
+                  alt={`${userInfo.name|| "User"}'s avatar`}
                 />
               </div>
               <div className="user-card-details">
-                <h3>{userInfo.fullName || "N/A"}</h3>
+                <h3>{userInfo.name || "N/A"}</h3>
+                <p>
+                  <strong>ID:</strong> {userInfo._id}
+                </p>
                 <p>
                   <strong>Email:</strong> {userInfo.email}
                 </p>

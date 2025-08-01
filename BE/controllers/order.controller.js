@@ -582,45 +582,43 @@ exports.getOrdersByUserId = async (req, res) => {
 };
 
 
-// Search orders by order ID với partial matching
-exports.searchOrdersByOrderId = async (req, res) => {
+// API: Get orders by user ID with status filter
+exports.getOrdersByUserIdWithFilter = async (req, res) => {
   try {
-    const {
-      q,
+    const { userId } = req.params;
+    const { 
+      status,
       page = 1,
       limit = 10,
-      sortBy = "createdAt",
-      sortOrder = "desc",
+      sortBy = 'createdAt',
+      sortOrder = 'desc'
     } = req.query;
 
-    if (!q) {
+    // Validate userId
+    if (!userId) {
       return res.status(400).json({
         success: false,
-        message: "Query parameter 'q' is required",
-        data: null,
+        message: "User ID is required",
+        data: null
       });
     }
 
-    // Build search filter
-    const searchFilter = {
-      $or: [
-        // Tìm trong idOrder với regex
-        { idOrder: { $regex: q, $options: "i" } },
-      ],
-    };
+    // Build filter
+    const filter = { idUser: userId };
 
-    // Nếu query có thể là ObjectId (chỉ chứa hex characters)
-    if (/^[0-9a-fA-F]+$/.test(q)) {
-      // Convert ObjectId thành string để search
-      searchFilter.$or.push({
-        $expr: {
-          $regexMatch: {
-            input: { $toString: "$_id" },
-            regex: q,
-            options: "i",
-          },
-        },
-      });
+    // Add status filter if provided
+    if (status) {
+      const validStatuses = ['pending', 'picking', 'shipping', 'delivered', 'completed', 'returned', 'canceled'];
+      
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid status. Valid statuses: ${validStatuses.join(', ')}`,
+          data: null
+        });
+      }
+      
+      filter.status = status;
     }
 
     // Pagination
@@ -629,24 +627,44 @@ exports.searchOrdersByOrderId = async (req, res) => {
     const skip = (pageNumber - 1) * limitNumber;
 
     // Sort
-    const sortDirection = sortOrder === "asc" ? 1 : -1;
+
+
+    const sortDirection = sortOrder === 'asc' ? 1 : -1;
     const sortOptions = { [sortBy]: sortDirection };
 
-    // Count total documents
-    const total = await Order.countDocuments(searchFilter);
+    // Execute queries
+    const [orders, total] = await Promise.all([
+      Order.find(filter)
+        .sort(sortOptions)
+        .skip(skip)
+        .limit(limitNumber),
+      Order.countDocuments(filter)
+    ]);
 
-    // Find orders with pagination and sorting
-    const orders = await Order.find(searchFilter)
-      .sort(sortOptions)
-      .skip(skip)
-      .limit(limitNumber);
+    // Get status statistics for this user
+    const statusStats = await Order.aggregate([
+      { $match: { idUser: userId } },
+      { $group: { _id: '$status', count: { $sum: 1 } } },
+      { $sort: { _id: 1 } }
+    ]);
+
+    // Format statistics
+    const statistics = {};
+    statusStats.forEach(stat => {
+      statistics[stat._id] = stat.count;
+    });
 
     // Calculate pagination info
     const totalPages = Math.ceil(total / limitNumber);
 
     res.status(200).json({
       success: true,
-      message: `Found ${total} order(s) matching "${q}"`,
+
+
+      message: status 
+        ? `Found ${total} ${status} order(s) for user ${userId}`
+        : `Found ${total} order(s) for user ${userId}`,
+
       data: {
         orders: orders,
         pagination: {
@@ -655,17 +673,26 @@ exports.searchOrdersByOrderId = async (req, res) => {
           totalOrders: total,
           ordersPerPage: limitNumber,
           hasNextPage: pageNumber < totalPages,
-          hasPrevPage: pageNumber > 1,
+
+          hasPrevPage: pageNumber > 1
         },
-        searchQuery: q,
-      },
+        filters: {
+          userId: userId,
+          status: status || 'all',
+          sortBy: sortBy,
+          sortOrder: sortOrder
+        },
+        statistics: statistics
+      }
     });
+
   } catch (error) {
-    console.error("searchOrders error:", error);
+    console.error("getOrdersByUserIdWithFilter error:", error);
     res.status(500).json({
       success: false,
-      message: "Server error",
-      data: null,
+      message: "Server error while retrieving orders",
+      data: null
+
     });
   }
 };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './create.css';
 import Navbar from '../../components/navbar/navbar';
@@ -8,9 +8,43 @@ const AddProduct = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
+  const [quantity, setQuantity] = useState('');
   const [imagePreview, setImagePreview] = useState('');
   const [cloudImageUrl, setCloudImageUrl] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(''); 
+  const [categories, setCategories] = useState([]);
   const navigate = useNavigate();
+
+  
+  useEffect(() => {
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/categories/hierarchy');
+      const result = await res.json();
+
+      const flatChildren = [];
+
+      const extractChildren = (nodes) => {
+        for (let node of nodes) {
+          if (node.children && node.children.length > 0) {
+            flatChildren.push(...node.children); 
+          }
+        }
+      };
+
+      const root = result.data || [];
+      extractChildren(root);
+
+      console.log('Extracted child categories:', flatChildren);
+      setCategories(flatChildren);
+      } catch (error) {
+      console.error('Failed to fetch categories:', error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
@@ -24,6 +58,7 @@ const AddProduct = () => {
     formData.append('upload_preset', UPLOAD_PRESET);
 
     try {
+      setLoading(true); 
       const cloudRes = await fetch(CLOUDINARY_URL, {
         method: 'POST',
         body: formData,
@@ -40,11 +75,14 @@ const AddProduct = () => {
     } catch (error) {
       alert('Image upload failed: ' + error.message);
       console.error(error);
+        } finally {
+          setLoading(false); 
     }
   };
 
+
   const handleCreate = async () => {
-    if (!title || !description || !price || !cloudImageUrl) {
+    if (!title || !description || !price || !quantity || !cloudImageUrl || !selectedCategory) {
       alert('Please fill in all fields and upload an image.');
       return;
     }
@@ -53,7 +91,9 @@ const AddProduct = () => {
       title,
       description,
       price: parseFloat(price) || 0,
+      quantity: parseInt(quantity) || 0,
       imageUrl: cloudImageUrl,
+      categoryId: selectedCategory
     };
 
     try {
@@ -64,7 +104,7 @@ const AddProduct = () => {
       });
 
       if (response.ok) {
-        // navigate('/admin/products');
+        navigate('/admin/products');
         console.log('Product created successfully');
       } else {
         alert('Failed to create product');
@@ -96,6 +136,31 @@ const AddProduct = () => {
         <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Enter price" />
       </div>
 
+      <div className="form-group dropdown-wrapper">
+        <label>Category</label>
+        <div className="custom-select-wrapper">
+        <select
+          className="custom-select"
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+        >
+        <option value="">Select a category</option>
+        {categories.map((cat) => (
+          <option key={cat.idCategory} value={cat.idCategory}>
+          {cat.name}
+          </option>
+        ))}
+        </select>
+        <span className="arrow">&#9662;</span>
+      </div>
+    </div>
+
+
+      <div className="form-group">
+        <label>Quantity</label>
+        <input type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="Enter quantity" />
+      </div>
+
       <div className="form-group">
         <label>Image</label>
         <div className="upload-wrapper">
@@ -107,17 +172,15 @@ const AddProduct = () => {
             style={{ display: 'none' }}
             />
             <label htmlFor="file-upload" className="upload-placeholder">
-            {imagePreview ? (
-                <img src={imagePreview} alt="Preview" />
-            ) : (
+            {loading ? ( <span>Loading...</span> ) : imagePreview ? (
+              <img src={imagePreview} alt="Preview" />
+              ) : (
                 <span>Upload image</span>
-            )}
+              )}
             </label>
         </div>
-        </div>
-
-
-
+      </div>
+      
       <button className="create-button" onClick={handleCreate}>Create Product</button>
     </div>
     <Footer />

@@ -83,6 +83,69 @@ exports.searchProducts = async (req, res) => {
   }
 };
 
+// ADMIN: Search products by name
+exports.searchProductsAdmin = async (req, res) => {
+  try {
+    const { q, page = 1, limit = 10 } = req.query;
+
+    if (!q) {
+      return res.status(400).json({
+        status: 400,
+        success: false,
+        message: "Query parameter 'q' is required",
+        data: null,
+      });
+    }
+
+    // Build search filter - không dùng baseFilter để search cả deleted products
+    const regex = new RegExp(q, "i");
+    const filter = { title: regex };
+
+    // Pagination
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    // Execute queries
+    const [products, total] = await Promise.all([
+      Product.find(filter)
+        .collation(viCollation)
+        .sort({ title: 1 })
+        .skip(skip)
+        .limit(limitNumber),
+      Product.countDocuments(filter),
+    ]);
+
+    // Calculate pagination info
+    const totalPages = Math.ceil(total / limitNumber);
+
+    return res.status(200).json({
+      status: 200,
+      success: true,
+      message: `Found ${total} product(s) matching "${q}"`,
+      data: {
+        products,
+        pagination: {
+          currentPage: pageNumber,
+          totalPages: totalPages,
+          totalProducts: total,
+          productsPerPage: limitNumber,
+          hasNextPage: pageNumber < totalPages,
+          hasPrevPage: pageNumber > 1,
+        },
+        searchQuery: q,
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({
+      status: 500,
+      success: false,
+      message: "Error searching products: " + err.toString(),
+      data: null,
+    });
+  }
+};
+
 // FEATURE: VIEW PRODUCT DETAILS
 // API: View product details by ID
 exports.getProductById = async (req, res) => {
@@ -216,22 +279,22 @@ exports.updateProduct = async (req, res) => {
   }
 };
 
-// "Delete" a product by setting its status to 'deleted'
-exports.deleteProduct = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const product = await Product.findById(id);
-    if (!product) {
-      return res.status(404).json({ status: 404, success: false, message: 'Product not found', data: null });
-    }
-    product.status = 'deleted';
-    const saved = await product.save();
-    return res.status(200).json({ status: 200, success: true, message: 'Product deleted (status set to deleted)', data: saved });
-  } catch (err) {
-    console.error('deleteProduct error:', err);
-    return res.status(500).json({ status: 500, success: false, message: 'Server error while deleting product', data: null });
-  }
-};
+// // "Delete" a product by setting its status to 'deleted'
+// exports.deleteProduct = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const product = await Product.findById(id);
+//     if (!product) {
+//       return res.status(404).json({ status: 404, success: false, message: 'Product not found', data: null });
+//     }
+//     product.status = 'deleted';
+//     const saved = await product.save();
+//     return res.status(200).json({ status: 200, success: true, message: 'Product deleted (status set to deleted)', data: saved });
+//   } catch (err) {
+//     console.error('deleteProduct error:', err);
+//     return res.status(500).json({ status: 500, success: false, message: 'Server error while deleting product', data: null });
+//   }
+// };
 
 //ADMIN
 // Create a new product
@@ -276,23 +339,113 @@ exports.updateProduct = async (req, res) => {
   }
 };
 
-// "Delete" a product by setting its status to 'deleted'
-exports.deleteProduct = async (req, res) => {
+// API: Soft delete product
+exports.softDeleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
+
+    // Tìm product
     const product = await Product.findById(id);
     if (!product) {
-      return res.status(404).json({ status: 404, success: false, message: 'Product not found', data: null });
+      return res.status(404).json({
+        status: 404,
+        success: false,
+        message: "Product not found",
+        data: null
+      });
     }
-    product.status = 'deleted';
-    const saved = await product.save();
-    return res.status(200).json({ status: 200, success: true, message: 'Product deleted (status set to deleted)', data: saved });
-  } catch (err) {
-    console.error('deleteProduct error:', err);
-    return res.status(500).json({ status: 500, success: false, message: 'Server error while deleting product', data: null });
+
+    // Kiểm tra nếu đã bị xóa
+    if (product.isDeleted) {
+      return res.status(400).json({
+        status: 400,
+        success: false,
+        message: "Product already deleted",
+        data: null
+      });
+    }
+
+    // Soft delete - chỉ thay đổi isDeleted
+    product.isDeleted = true;
+    product.deletedAt = new Date();
+    await product.save();
+
+    return res.status(200).json({
+      status: 200,
+      success: true,
+      message: "Product soft deleted successfully",
+      data: {
+        productId: product._id,
+        title: product.title,
+        isDeleted: product.isDeleted,
+        deletedAt: product.deletedAt
+      }
+    });
+
+  } catch (error) {
+    console.error('softDeleteProduct error:', error);
+    return res.status(500).json({
+      status: 500,
+      success: false,
+      message: "Server error while soft deleting product",
+      data: null
+    });
   }
 };
 
+// API: Restore product
+exports.restoreProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Tìm product bị xóa
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({
+        status: 404,
+        success: false,
+        message: "Product not found",
+        data: null
+      });
+    }
+
+    // Kiểm tra nếu chưa bị xóa
+    if (!product.isDeleted) {
+      return res.status(400).json({
+        status: 400,
+        success: false,
+        message: "Product is not deleted",
+        data: null
+      });
+    }
+
+    // Restore product - chỉ thay đổi isDeleted
+    product.isDeleted = false;
+    product.deletedAt = null;
+    await product.save();
+
+    return res.status(200).json({
+      status: 200,
+      success: true,
+      message: "Product restored successfully",
+      data: {
+        productId: product._id,
+        title: product.title,
+        isDeleted: product.isDeleted,
+        restoredAt: new Date()
+      }
+    });
+
+  } catch (error) {
+    console.error('restoreProduct error:', error);
+    return res.status(500).json({
+      status: 500,
+      success: false,
+      message: "Server error while restoring product",
+      data: null
+    });
+  }
+};
 // API: Lấy sản phẩm theo idCategory với phân trang và sort
 exports.getProductsByCategory = async (req, res) => {
   try {
@@ -377,6 +530,74 @@ exports.getProductsByCategory = async (req, res) => {
       success: false,
       error: "Lỗi lấy sản phẩm theo danh mục",
       detail: error.message
+    });
+  }
+};
+// API: Get all product (admin) paginated
+exports.getAllProductsAdmin = async (req, res) => {
+  try {
+    const { page = 1, limit = 10 } = req.query;
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const totalProducts = await Product.countDocuments();
+    const products = await Product.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNumber);
+
+    return res.status(200).json({
+      status: 200,
+      success: true,
+      message: 'All products retrieved successfully',
+      data: {
+        products,
+        pagination: {
+          currentPage: pageNumber,
+          totalPages: Math.ceil(totalProducts / limitNumber),
+          totalProducts,
+          limit: limitNumber,
+          hasNextPage: skip + limitNumber < totalProducts,
+          hasPrevPage: pageNumber > 1
+        }
+      }
+    });
+  } catch (err) {
+    return res.status(500).json({
+      status: 500,
+      success: false,
+      message: 'Error retrieving products: ' + err.toString(),
+      data: null
+    });
+  }
+}
+
+// API get product by id (detail product admin)
+exports.getProductByIdAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({
+        status: 404,
+        success: false,
+        message: 'Product not found',
+        data: null
+      });
+    }
+    return res.status(200).json({
+      status: 200,
+      success: true,
+      message: 'Product details retrieved successfully',
+      data: product
+    });
+  } catch (err) {
+    return res.status(500).json({
+      status: 500,
+      success: false,
+      message: 'Error retrieving product details: ' + err.toString(),
+      data: null
     });
   }
 };

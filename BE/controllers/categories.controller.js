@@ -49,3 +49,48 @@ exports.getAllCategoriesHierarchy = async (req, res) => {
     });
   }
 };
+
+// Lấy thông tin category theo ID 
+exports.getCategoryById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "Category ID is required",
+        data: null,
+      });
+    }
+
+    const category = await Category.findOne({ idCategory: id });
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: "Category not found",
+        data: null,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Category retrieved successfully",
+      data: {
+        idCategory: category.idCategory,
+        name: category.nameCategory,
+        parentID: category.parentID,
+        image: category.image,
+        description: category.description,
+      },
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      data: null,
+      detail: error.message,
+    });
+  }
+};

@@ -9,7 +9,6 @@ function ResetPasswordUI() {
   const { t, i18n } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -20,10 +19,6 @@ function ResetPasswordUI() {
     e.preventDefault();
     setError('');
     setSuccess('');
-    if (!currentPassword) {
-      setError(t('enterCurrentPassword', 'Please enter your current password'));
-      return;
-    }
     if (newPassword !== confirmPassword) {
       setError(t('newPasswordsNoMatch', 'New passwords do not match'));
       return;
@@ -63,24 +58,11 @@ function ResetPasswordUI() {
       <Navbar />
       <div className="auth-container">
         <div className="auth-box">
-          <div className="auth-title" style={{ marginBottom: '0.7rem' }}>{t('changePassword', 'Change Password')}</div>
+          <div className="auth-title" style={{ marginBottom: '0.7rem' }}>{t('resetPassword', 'Reset Password')}</div>
           <div className="auth-subtext" style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.6rem', textAlign: 'center', fontWeight: 400 }}>
             {t('changePasswordPrompt', 'Enter your current password and new password below.')}
           </div>
           <form className="auth-form" onSubmit={handleSubmit}>
-            <div style={{ width: '100%', marginBottom: '0.2rem' }}>
-              <label htmlFor="currentPassword" className="label-bold" style={{ color: '#444', marginBottom: '0.2rem', display: 'block', textAlign: 'left' }}>{t('currentPassword', 'Current Password')}</label>
-              <input
-                id="currentPassword"
-                className="auth-input"
-                type="password"
-                name="currentPassword"
-                placeholder={t('currentPasswordPlaceholder', 'Enter current password')}
-                value={currentPassword}
-                onChange={e => setCurrentPassword(e.target.value)}
-                required
-              />
-            </div>
             <div style={{ width: '100%', marginBottom: '0.2rem' }}>
               <label htmlFor="newPassword" className="label-bold" style={{ color: '#444', marginBottom: '0.2rem', display: 'block', textAlign: 'left' }}>{t('newPassword', 'New Password')}</label>
               <input

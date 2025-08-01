@@ -2,7 +2,6 @@
   width: 100%;
   background: #fff;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  padding: 0.5rem 0;
 }
 
 .navbar-flex {
@@ -52,6 +51,7 @@
 
 .nav-search-custom {
   position: relative;
+  margin-top: 22px;
 }
 
 .search-input-custom {
@@ -59,6 +59,12 @@
   min-width: 374px;
   max-width: 374px;
   margin-right: 0;
+}
+
+.search-dropdown-custom {
+  width: 374px;
+  min-width: 374px;
+  max-width: 374px;
 }
 
 .search-icon-custom {
@@ -70,12 +76,6 @@
   pointer-events: none;
   font-size: 1.1em;
   margin-right: 0;
-}
-
-.search-dropdown-custom {
-  width: 374px;
-  min-width: 374px;
-  max-width: 374px;
 }
 
 .search-result-item {

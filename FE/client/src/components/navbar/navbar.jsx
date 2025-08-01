@@ -32,7 +32,8 @@ const Navbar = () => {
         try {
             const res = await fetch(`http://localhost:5000/api/products/search?q=${encodeURIComponent(value)}`);
             const data = await res.json();
-            setSearchResults(Array.isArray(data) ? data: []);
+            setSearchResults(Array.isArray(data.data) ? data.data: []);
+            console.log(data);
             setShowResults(true);
         } catch (err) {
             setSearchResults([]);
@@ -195,7 +196,7 @@ const Navbar = () => {
                             />
                             <i className="bi bi-search search-icon search-icon-custom"></i>
                             {showResults && (
-                                <div className="search-dropdown search-dropdown-custom">
+                                <div className="search-dropdown search-dropdown-custom" style={{width: '374px'}}>
                                     {loading ? (
                                         <div className="search-loading" style={{ padding: '10px', color: '#888' }}>{t('loading')}</div>
                                     ) : error ? (

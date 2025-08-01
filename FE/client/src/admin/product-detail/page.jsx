@@ -12,13 +12,16 @@ const ProductDetail = () => {
     const [editedTitle, setEditedTitle] = useState('');
     const [editedDescription, setEditedDescription] = useState('');
     const [editedPrice, setEditedPrice] = useState('');
+    const [categories, setCategories] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState('');
+
 
     useEffect(() => {
-        fetch(`http://localhost:5000/api/products/${id}`)
+        fetch(`http://localhost:5000/api/products/admin/${id}`)
             .then(res => res.json())
             .then(data => {
                 const prod = data.data;
-                if (!prod || prod.status === 'deleted') {
+                if (!prod) {
                     setProduct(null);
                 } else {
                     setProduct(prod);
@@ -26,6 +29,30 @@ const ProductDetail = () => {
                     setEditedDescription(prod.description);
                     setEditedPrice(prod.price || '');
                 }
+                const fetchCategories = async () => {
+            try {
+                const res = await fetch('http://localhost:5000/api/categories/hierarchy');
+                const result = await res.json();
+                const flatChildren = [];
+
+                const extractChildren = (nodes) => {
+                for (let node of nodes) {
+                    if (node.children && node.children.length > 0) {
+                    flatChildren.push(...node.children);
+                    }
+                }
+                };
+
+                extractChildren(result.data || []);
+                setCategories(flatChildren);
+            } catch (error) {
+                console.error('Failed to fetch categories:', error);
+            }
+            };
+
+            fetchCategories();
+
+            setSelectedCategory(prod.idCategory || '');
             })
             .catch(() => setProduct(null));
     }, [id]);
@@ -41,6 +68,7 @@ const ProductDetail = () => {
             title: editedTitle,
             description: editedDescription,
             price: parseFloat(editedPrice),
+            categoryId: selectedCategory
         };
 
         try {
@@ -61,9 +89,6 @@ const ProductDetail = () => {
     };
 
     const handleDelete = async () => {
-        const confirmDelete = window.confirm('Are you sure you want to delete this product?');
-        if (!confirmDelete) return;
-
         try {
             const response = await fetch(`http://localhost:5000/api/products/${id}`, {
                 method: 'DELETE',
@@ -71,12 +96,25 @@ const ProductDetail = () => {
 
             const data = await response.json();
             if (data.success) {
-                navigate('/not-found');
+                console.log('Product deleted successfully');
             }
         } catch (error) {
             console.error('Delete failed:', error);
-        }
-    };
+    }};
+
+    const handleRestore = async () => {
+        try {
+            const response = await fetch(`http://localhost:5000/api/products/${id}/restore`, {
+            method: 'POST',
+            });
+
+            const data = await response.json();
+            if (data.success) {
+            setProduct({ ...product, isDeleted: false }); 
+            }
+        } catch (error) {
+            console.error('Restore failed:', error);
+    }};
 
     if (!product) return <div style={{ padding: 40, textAlign: 'center' }}>Product not found</div>;
 
@@ -94,17 +132,25 @@ const ProductDetail = () => {
                     <div className="view-product-info">
                         {isEditing ? (
                             <>
+                                <div className="edit-form-group">
+                                <label>Title</label>
                                 <input
                                     type="text"
                                     value={editedTitle}
                                     onChange={(e) => setEditedTitle(e.target.value)}
                                     style={{ fontSize: 24, marginBottom: 8 }}
                                 />
+                                </div>
+                                <div className="edit-form-group">
+                                <label>Description</label>
                                 <textarea
                                     value={editedDescription}
                                     onChange={(e) => setEditedDescription(e.target.value)}
                                     style={{ fontSize: 16, width: '100%', height: 100, marginBottom: 8 }}
                                 />
+                                </div>
+                                <div className="edit-form-group">
+                                <label>Price</label>
                                 <input
                                     type="number"
                                     value={editedPrice}
@@ -112,12 +158,32 @@ const ProductDetail = () => {
                                     placeholder="Price"
                                     style={{ fontSize: 16, width: '100%', marginBottom: 8 }}
                                 />
+                                </div>
+                                <div className="edit-form-group">
+                                <label>Category</label>
+                                <div className="custom-select-wrapper">
+                                <select
+                                    className="custom-select"
+                                    value={selectedCategory}
+                                    onChange={(e) => setSelectedCategory(e.target.value)}
+                                >
+                                    <option value="">Select a category</option>
+                                    {categories.map((cat) => (
+                                    <option key={cat.idCategory} value={cat.idCategory}>
+                                        {cat.name}
+                                    </option>
+                                    ))}
+                                </select>
+                                <span className="arrow">&#9662;</span>
+                                </div>
+                                </div>
                             </>
                         ) : (
                             <>
                                 <h2>{product.title}</h2>
                                 <p>{product.description}</p>
                                 <p><strong>Price:</strong> ${product.price}</p>
+                                <p><strong>Category:</strong> {categories.find(cat => cat.idCategory === product.idCategory)?.name || 'N/A'}</p>
                             </>
                         )}
 
@@ -131,23 +197,37 @@ const ProductDetail = () => {
                                     border: 'none',
                                     borderRadius: '4px',
                                     cursor: 'pointer',
-                                }}
-                            >
+                                }}>
                                 {isEditing ? 'Save' : 'Edit'}
                             </button>
+                            {product.isDeleted ? (
+                            <button
+                                onClick={handleRestore}
+                                style={{
+                                padding: '8px 16px',
+                                backgroundColor: '#28a745',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                }}>
+                                Restore
+                            </button>
+                            ) : (
                             <button
                                 onClick={handleDelete}
                                 style={{
-                                    padding: '8px 16px',
-                                    backgroundColor: '#dc3545',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    cursor: 'pointer',
-                                }}
-                            >
+                                padding: '8px 16px',
+                                backgroundColor: '#dc3545',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                }}>
                                 Delete
                             </button>
+                            )}
+
                         </div>
                     </div>
                 </div>
