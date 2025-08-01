@@ -72,63 +72,76 @@ exports.loginWithEmail = async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
-    if (!user)
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Email not registered. Please sign up.",
-          data: null,
-        }); // Email not found
+    
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Email not registered. Please sign up.",
+        data: null,
+      });
+    }
 
     if (!user.isVerified) {
-      // Email not verified: resend verification email
       try {
         await sendVerificationEmail(user);
-        return res
-          .status(401)
-          .json({
-            success: false,
-            message:
-              "Email not verified! Verification email sent, please check your email.",
-            data: null,
-          }); // Notify verification email sent
+        return res.status(401).json({
+          success: false,
+          message: "Email not verified! Verification email sent, please check your email.",
+          data: null,
+        });
       } catch (mailErr) {
         console.error("sendVerificationEmail error:", mailErr);
-        return res
-          .status(500)
-          .json({
-            success: false,
-            message:
-              "Unable to send verification email. Please try again later.",
-            data: null,
-          }); // Email send failure
+        return res.status(500).json({
+          success: false,
+          message: "Unable to send verification email. Please try again later.",
+          data: null,
+        });
       }
     }
 
     const isMatch = await user.comparePassword(password);
-    if (!isMatch)
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid credentials", data: null }); // Password mismatch
+    if (!isMatch) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid credentials",
+        data: null
+      });
+    }
 
-    const payload = { id: user._id, email: user.email };
+    // Include role in JWT payload
+    const payload = { 
+      id: user._id, 
+      email: user.email,
+      role: user.role // Thêm role vào token
+    };
+    
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
 
-    return res
-      .status(200)
-      .json({ success: true, message: "Login successful", data: { token } }); // Successful login
+    return res.status(200).json({
+      success: true,
+      message: "Login successful",
+      data: {
+        token,
+        user: {
+          id: user._id,
+          email: user.email,
+          name: user.name,
+          role: user.role, // Trả về role
+          avatar: user.avatar,
+          isVerified: user.isVerified
+        }
+      }
+    });
+
   } catch (err) {
     console.error("loginWithEmail error:", err);
-    return res
-      .status(500)
-      .json({
-        success: false,
-        message: "Server error during login",
-        data: err.message,
-      }); // Server error
+    return res.status(500).json({
+      success: false,
+      message: "Server error during login",
+      data: err.message,
+    });
   }
 };
 
