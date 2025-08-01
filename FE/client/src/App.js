@@ -21,81 +21,84 @@ import UserDetail from './admin/users/userDetails/page';
 import ProductManagement from './admin/products/page';
 import ProductDetail from './admin/product-detail/page';
 import AddProduct from './admin/create-product/page';
+
 import OrderManage from './admin/orders/page';
 import Dashboard from './admin/analysis/dashboard';
+
+
+import Cart from './cart/page';
 
 
 
 function App() {
   const router = createBrowserRouter([
-    { 
-      path: '/',
-      element: <Home />
+    {
+      path: "/",
+      element: <Home />,
     },
     {
-      path: '/view-product/:id',
-      element: <ViewProduct />
+      path: "/view-product/:id",
+      element: <ViewProduct />,
     },
     {
-      path: '/shop',
-      element: <Shop />
+      path: "/shop",
+      element: <Shop />,
     },
     {
-      path: '/login',
-      element: <Login />
+      path: "/login",
+      element: <Login />,
     },
     {
-      path: '/register',
-      element: <Register />
+      path: "/register",
+      element: <Register />,
     },
     {
-      path: '/forgot-password',
-      element: <ForgotPassword />
+      path: "/forgot-password",
+      element: <ForgotPassword />,
     },
     {
-      path: '/reset-password',
-      element: <ResetPassword />
+      path: "/reset-password",
+      element: <ResetPassword />,
     },
     {
-      path: '/profile/:id',
-      element: <Profile />
+      path: "/profile/:id",
+      element: <Profile />,
     },
     {
-      path: '/change-password',
-      element: <ChangePassword />
+      path: "/change-password",
+      element: <ChangePassword />,
     },
     {
-      path: '/favourite',
-      element: <Favourite />
+      path: "/favourite",
+      element: <Favourite />,
     },
     {
-      path: '/order',
-      element: <OrderPage />
+      path: "/order",
+      element: <OrderPage />,
     },
     {
-      path: '/reset',
-      element: <ResetPasswordUI />
+      path: "/reset",
+      element: <ResetPasswordUI />,
     },
     {
-
-      path: '/admin/users',
-      element: <UserManagement /> 
+      path: "/admin/users",
+      element: <UserManagement />,
     },
     {
-      path: '/admin/users/:userId',
-      element: <UserDetail />
+      path: "/admin/users/:userId",
+      element: <UserDetail />,
     },
     // {
     //   path: '/admin/status',
     //   element: <DashboardPage />
     // },
     {
-      path: '/admin/products',
-      element: <ProductManagement/>
+      path: "/cart",
+      element: <Cart />,
     },
     {
-      path: '/admin/products/:id',
-      element: <ProductDetail />
+      path: "/admin/products",
+      element: <ProductManagement />,
     },
     {
       path: '/admin/create-product',
@@ -109,7 +112,12 @@ function App() {
     {
       path: '/admin/dashboard',
       element: <Dashboard />
-    }
+    },
+    {
+      path: "/admin/products/:id",
+      element: <ProductDetail />,
+    },
+    
   ]);
 
   return (
