@@ -603,34 +603,34 @@ exports.getRevenueByTime = async (req, res) => {
     switch (period) {
       case 'day':
         groupFormat = {
-          year: { $year: "$createdAt" },
-          month: { $month: "$createdAt" },
-          day: { $dayOfMonth: "$createdAt" }
+          year: { $year: "$paymentDate" },
+          month: { $month: "$paymentDate" },
+          day: { $dayOfMonth: "$paymentDate" },
         };
         sortField = "_id";
         break;
         
       case 'month':
         groupFormat = {
-          year: { $year: "$createdAt" },
-          month: { $month: "$createdAt" }
+          year: { $year: "$paymentDate" },
+          month: { $month: "$paymentDate" },
         };
         sortField = "_id";
         break;
         
       case 'quarter':
         groupFormat = {
-          year: { $year: "$createdAt" },
+          year: { $year: "$paymentDate" },
           quarter: {
-            $ceil: { $divide: [{ $month: "$createdAt" }, 3] }
-          }
+            $ceil: { $divide: [{ $month: "$paymentDate" }, 3] },
+          },
         };
         sortField = "_id";
         break;
         
       case 'year':
         groupFormat = {
-          year: { $year: "$createdAt" }
+          year: { $year: "$paymentDate" },
         };
         sortField = "_id.year";
         break;
