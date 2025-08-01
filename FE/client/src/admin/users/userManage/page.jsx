@@ -77,7 +77,7 @@ function UserManagement() {
         <h2 style={{ marginBottom: '1.5rem', fontWeight: 600 }}>User Management</h2>
         <input
           type="text"
-          placeholder="Search by name or ID"
+          placeholder="Search by Email"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           style={{
@@ -93,7 +93,7 @@ function UserManagement() {
           <p>Loading...</p>
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', fontFamily: 'Arial', fontSize: '0.9rem' }}>
               <thead>
                 <tr style={{ background: '#f5f5f5' }}>
                   <th style={{ padding: '0.7rem', border: '1px solid #eee' }}>ID</th>
@@ -122,7 +122,7 @@ function UserManagement() {
                       }}
                       onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f9f9f9')}
                       onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#fff')}>
-                      <td style={{ padding: '0.7rem', border: '1px solid #eee', fontFamily: 'monospace' }}>{user._id}</td>
+                      <td style={{ padding: '0.7rem', border: '1px solid #eee' }}>{user._id}</td>
                       <td style={{ padding: '0.7rem', border: '1px solid #eee', textAlign: 'center' }}>
                         <img
                           src={user.avatar || defaultAvatar}

@@ -90,7 +90,7 @@ function ProductManagement() {
   }, [search, page]);
 
   return (
-    <>
+    <div className='container'>
       <Navbar />
       <div className="product-management-container" style={{ minHeight: '500px' }}>
         <div className="product-management-header">
@@ -102,7 +102,7 @@ function ProductManagement() {
 
         <input
           type="text"
-          placeholder="Search by title or ID"
+          placeholder="Search by Title"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="search-input"
@@ -175,7 +175,7 @@ function ProductManagement() {
         </div>
       </div>
       <Footer />
-    </>
+    </div>
   );
 }
 

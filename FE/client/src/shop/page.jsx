@@ -83,7 +83,7 @@ const Shop = () => {
                                     className="toggle-btn"
                                     onClick={() => toggleExpand(parent.idCategory)}
                                 >
-                                   <span className={`arrow ${expandedParents[parent.idCategory] ? 'up' : 'down'}`}></span>
+                                   <span className="arr">{expandedParents[parent.idCategory] ? '▲' : '▼'}</span>
                                 </button>
                             )}
                         </div>
@@ -116,7 +116,7 @@ const Shop = () => {
             <Navbar />
             <div className="shop-container">
                 <aside className="shop-categories">
-                    <h3>{t('categories')}</h3>
+                    <h3 style={{fontSize:"1.2rem"}}>{t('categories')}</h3>
                     <button
                         className={`category-btn ${!selectedCategory ? 'active' : ''}`}
                         onClick={() => {

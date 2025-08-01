@@ -5,6 +5,7 @@
   justify-content: center;
   background: #fff;
   padding: 0;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .view-product-flex {
@@ -159,11 +160,13 @@
 
 .form-group label {
   font-weight: 600;
+  font-size: 1.1rem;
   margin-bottom: 6px;
 }
 
 .form-group input,
 .form-group textarea {
+  font-family: Arial, Helvetica, sans-serif;
   padding: 10px;
   border: 1px solid #bbb;
   border-radius: 6px;
@@ -248,9 +251,10 @@ textarea {
 }
 
 .create-button {
+  font-family: Arial, Helvetica, sans-serif;
   width: 100%;
   padding: 12px;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: bold;
   color: white;
   background-color: #1976d2;

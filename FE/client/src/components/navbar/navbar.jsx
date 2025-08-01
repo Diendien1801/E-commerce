@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect} from 'react';
 import { useAuth } from '../context/authcontext';
 import './navbar.css';
 import logo from './logo.png';
@@ -14,11 +14,28 @@ const Navbar = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [showDropdown, setShowDropdown] = useState(false);
+    const [userRole, setUserRole] = useState(null);
     const navigate = useNavigate();
 
     const { isLoggedIn, user, logout } = useAuth();
 
     const userId = user?._id || user?.userId || user?.id;
+
+    useEffect(() => {
+        const fetchUserRole = async () => {
+            if (!userId) return;
+            try {
+                const response = await fetch(`http://localhost:5000/api/users/${userId}`);
+                if (!response.ok) throw new Error('Failed to fetch user data');
+                const data = await response.json();
+                setUserRole(data.data.role);  
+            } catch (err) {
+                console.error('Error fetching user role:', err);
+            }
+        };
+
+    fetchUserRole();
+    }, [userId]);
 
     const handleSearch = async (e) => {
         const value = e.target.value;
@@ -122,6 +139,78 @@ const Navbar = () => {
                                     >
                                         {t('orderHistory')}
                                     </Link>
+                                    {userRole === 'admin' && (
+                                    <>
+                                        <Link
+                                            to="/admin/orders"
+                                            style={{
+                                            display: 'block',
+                                            padding: '0.7rem 1.2rem',
+                                            color: '#222',
+                                            textDecoration: 'none',
+                                            fontWeight: 500,
+                                            borderTop: '1px solid #eee',
+                                            transition: 'background 0.18s',
+                                        }}
+                                            onClick={() => setShowDropdown(false)}
+                                            onMouseOver={e => e.currentTarget.style.background = '#f5f5f5'}
+                                            onMouseOut={e => e.currentTarget.style.background = '#fff'}
+                                        >
+                                            {t('orderManagement')}
+                                        </Link>
+                                        <Link
+                                            to="/admin/products"
+                                            style={{
+                                            display: 'block',
+                                            padding: '0.7rem 1.2rem',
+                                            color: '#222',
+                                            textDecoration: 'none',
+                                            fontWeight: 500,
+                                            borderTop: '1px solid #eee',
+                                            transition: 'background 0.18s',
+                                        }}
+                                            onClick={() => setShowDropdown(false)}
+                                            onMouseOver={e => e.currentTarget.style.background = '#f5f5f5'}
+                                            onMouseOut={e => e.currentTarget.style.background = '#fff'}
+                                        >
+                                            {t('productManagement')}
+                                        </Link>
+                                        <Link
+                                            to="/admin/users"
+                                            style={{
+                                            display: 'block',
+                                            padding: '0.7rem 1.2rem',
+                                            color: '#222',
+                                            textDecoration: 'none',
+                                            fontWeight: 500,
+                                            borderTop: '1px solid #eee',
+                                            transition: 'background 0.18s',
+                                        }}
+                                            onClick={() => setShowDropdown(false)}
+                                            onMouseOver={e => e.currentTarget.style.background = '#f5f5f5'}
+                                            onMouseOut={e => e.currentTarget.style.background = '#fff'}
+                                        >
+                                            {t('userManagement')}
+                                        </Link>
+                                        <Link
+                                            to="/admin/dashboard"
+                                            style={{ 
+                                            display: 'block',
+                                            padding: '0.7rem 1.2rem',
+                                            color: '#222',
+                                            textDecoration: 'none',
+                                            fontWeight: 500,
+                                            borderTop: '1px solid #eee',
+                                            transition: 'background 0.18s', 
+                                            }}
+                                            onClick={() => setShowDropdown(false)}
+                                            onMouseOver={e => e.currentTarget.style.background = '#f5f5f5'}
+                                            onMouseOut={e => e.currentTarget.style.background = '#fff'}
+                                        >
+                                            {t('analysisDashboard')}
+                                        </Link>
+                                    </>
+                                )}
                                     <Link
                                         to="/"
                                         style={{
