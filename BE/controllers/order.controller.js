@@ -696,3 +696,7 @@ exports.getOrdersByUserIdWithFilter = async (req, res) => {
     });
   }
 };
+
+// Search orders by order ID với partial matching
+exports.searchOrdersByOrderId = async (req, res) => {
+};
