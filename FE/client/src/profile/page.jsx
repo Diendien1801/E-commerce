@@ -13,7 +13,13 @@ const Profile = () => {
     const { user: loggedInUser } = useAuth();
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedName, setEditedName] = useState('');
+    const [editedEmail, setEditedEmail] = useState('');
+    const [editedPhoneNumber, setEditedPhoneNumber] = useState('');
+    const [editedCountry, setEditedCountry] = useState('');
 
+    
     useEffect(() => {
         async function fetchUser() {
             setLoading(true);
@@ -22,6 +28,8 @@ const Profile = () => {
                 const data = await res.json();
                 if (res.ok && data.success && data.data) {
                     setUser(data.data);
+                    console.log('address', data.data)
+                    console.log(user)
                 } else {
                     setUser(null);
                 }
@@ -84,13 +92,38 @@ const Profile = () => {
             const changeData = await changeRes.json();
             if (!changeData.success) throw new Error(changeData.message);
             setUser(prev => ({ ...prev, avatar: avatarUrl }));
-            alert(t('profilePicUpdated', 'Profile picture successfully updated!'));
+            // alert(t('profilePicUpdated', 'Profile picture successfully updated!'));
         } catch (err) {
             alert(t('error', 'Error') + ': ' + err.message);
         }
         
     };
 
+    const handleUpdateProfile = async () => {
+        const userId = loggedInUser?._id || loggedInUser?.userId || loggedInUser?.id;
+        try {
+            const res = await fetch(`http://localhost:5000/api/users/update`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    userId: userId,
+                    name: editedName,
+                    email: editedEmail
+                })
+            });
+
+            const data = await res.json();
+            if (!data.success) throw new Error(data.message);
+
+            setUser(prev => ({ ...prev, name: editedName, email: editedEmail }));
+            setIsEditing(false);
+            // alert(t('profileUpdated', 'Profile updated successfully!'));
+        } catch (err) {
+            alert(t('error', 'Error') + ': ' + err.message);
+        }
+    };
 
     return (
         <div>
@@ -114,13 +147,94 @@ const Profile = () => {
                         </div>
                     </div>
                     <div className="profile-info-col">
-                        <div className="profile-info"> 
-                            <strong>{t('name', 'Name')}:</strong> {user ? user.name : t('name', 'Name')}
-                        </div>
-                        {user && user.email && (
-                            <div className="profile-info"><strong>{t('email', 'Email')}:</strong> {user.email}</div>
-                        )}
-                        <div style={{ marginTop: '0.7rem', textAlign: 'left' }}>
+                        {isEditing ? (
+                            <>
+                            <div className="profile-info">
+                                <strong>{t('name', 'Name')}:</strong>
+                                <input 
+                                    type="text" 
+                                    value={editedName} 
+                                    onChange={e => setEditedName(e.target.value)} 
+                                    className="profile-input"
+                                />
+                            </div>
+                            <div className="profile-info">
+                                <strong>{t('email', 'Email')}:</strong>
+                                <input 
+                                    type="email" 
+                                    value={editedEmail} 
+                                    onChange={e => setEditedEmail(e.target.value)} 
+                                    className="profile-input"
+                                />
+                            </div>
+                            <div className="profile-info">
+                            <strong>{t('phoneNumber', 'Phone Number')}:</strong>
+                                <input
+                                    type="text"
+                                    value={editedPhoneNumber}
+                                    onChange={e => setEditedPhoneNumber(e.target.value)}
+                                    className="profile-input"
+                                />
+                            </div>
+                            <div className="profile-info">
+                                <strong>{t('country', 'Country')}:</strong>
+                                <input
+                                    type="text"
+                                    value={editedCountry}
+                                    onChange={e => setEditedCountry(e.target.value)}
+                                    className="profile-input"
+                                />
+                            </div>
+                            <div style={{ marginTop: '0.7rem' }}>
+                                <button onClick={handleUpdateProfile} className="profile-edit-btn" style={{ marginRight: '0.5rem' }}>
+                                    {t('save', 'Save')}
+                                </button>
+                                <button onClick={() => setIsEditing(false)} className="profile-edit-btn" style={{ backgroundColor: '#aaa' }}>
+                                    {t('cancel', 'Cancel')}
+                                </button>
+                            </div>
+                            </>
+                        ) : (
+                                <>
+        <div className="profile-info"> 
+            <strong>{t('name', 'Name')}:</strong> {user?.name}
+        </div>
+        {user?.email && (
+            <div className="profile-info">
+                <strong>{t('email', 'Email')}:</strong> {user.email}
+            </div>
+        )}
+        {user?.phoneNumber && (
+            <div className="profile-info">
+                <strong>{t('phoneNumber', 'Phone Number')}:</strong> {user.phoneNumber}
+            </div>
+        )}
+
+        {user?.address?.country && (
+            <div className="profile-info">
+                <strong>{t('address', 'Address')}:</strong> {user.address.country}
+            </div>
+        )}
+
+        <div>
+            <button 
+                onClick={() => {
+                    setEditedName(user?.name || '');
+                    setEditedEmail(user?.email || '');
+                    setEditedPhoneNumber(user?.phoneNumber || '');
+                    setEditedCountry(user?.address?.country || '');
+                    setIsEditing(true);
+                }}
+                className="profile-edit-btn"
+                style={{ padding: '0.32rem 0.8rem', fontSize: '0.92rem', background: '#2a6b8f', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 500 }}
+            >
+                {t('editProfile', 'Edit Profile')}
+            </button>
+        </div>
+    </>
+)}
+
+                        <div style={{textAlign: 'left' }}>
                             <a href="/change-password" className="profile-edit-btn" style={{ padding: '0.32rem 0.8rem', fontSize: '0.92rem', background: '#9E3736', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 500, textDecoration: 'none', display: 'inline-block' }}>
                                 {t('changePassword', 'Change Password')}
                             </a>
