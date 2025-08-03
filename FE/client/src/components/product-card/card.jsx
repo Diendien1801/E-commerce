@@ -10,7 +10,7 @@ const ProductCard = ({ product }) => {
 
     return (
         <div className="product-card" onClick={() => navigate(`../view-product/${product._id}`)} style={{ cursor: 'pointer' }}>
-            <img src={product.imageUrl || 'https://via.placeholder.com/160x160?text=Product'} alt={product.name} />
+            <img src={product.imageUrl[0] || 'https://via.placeholder.com/160x160?text=Product'} alt={product.name} />
             <div className="product-name">{product.title}</div>
             <div className="product-price">{formatPrice(product.price)} VND</div>
         </div>
