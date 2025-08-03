@@ -1,153 +1,263 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap');
+
 .footer {
-  background: #F6CCAA;
+  background: #EAC6A4;
   color: #333;
-  padding: 2rem 0 1.5rem 0;
-  text-align: center;
-  border-top: 1px solid #eee;
-}
-
-.footer .container {
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-.footer .row {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.7rem;
-}
-
-.footer .col-md-6 {
-  width: 100%;
-  text-align: center;
-}
-
-.footer .text-md-end {
-  text-align: center;
+  padding: 3rem 0 0 0;
+  text-align: left;
 }
 
 .footer-flex {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: 0.8fr 1fr 1fr 1.2fr;
+  gap: 4rem;
   max-width: 1200px;
   margin: 0 auto;
-  gap: 2.5rem;
+  padding: 0 2rem;
 }
-
+.footer-logo
+{
+  margin: auto;
+}
 .footer-col {
-  flex: 1 1 0;
-  min-width: 180px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
 }
 
-.footer-logo-col {
-  justify-content: center;
-  display: flex;
-  width: 100%;
-  align-items: flex-start;
-  min-height: 120px;
-}
-
-.footer-logo {
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-  margin-bottom: 1.2rem;
-  margin-top: 0.7rem;
-  width: 120px;
-  height: auto;
-  object-fit: contain;
-}
-
-.footer-info-col {
-  align-items: flex-start !important;
-  text-align: left;
-}
-
-.footer-info-col .footer-heading {
-  text-align: left;
-}
-
-.footer-info-col .footer-list {
-  text-align: left;
-}
-
-.footer-info-col .footer-list li {
-  text-align: left;
-}
-
 .footer-heading {
-  color: #b71c1c;
-  font-size: 1.15rem;
-  margin-bottom: 0.7rem;
+  font-family: 'Boleroesque', 'Playfair Display', serif;
+  color: #d32f2f;
+  font-size: 1.3rem;
+  margin-bottom: 1.2rem;
   font-weight: bold;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
 .footer-list {
   list-style: none;
   padding: 0;
   margin: 0;
+  width: 100%;
 }
 
 .footer-list li {
-  color: #4e342e;
-  font-size: 1rem;
-  margin-bottom: 0.4rem;
-  transition: color 0.2s;
+  margin-bottom: 0.3rem;
+  font-weight: 500;
 }
 
-.footer-list li:hover {
-  color: #b71c1c;
-}
-
-.footer-social-col {
-  align-items: flex-start;
-}
-
-.footer-social-links {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.social-link {
-  color: #4e342e;
+.footer-list li a {
+  color: #5d4037;
   text-decoration: none;
-  font-size: 1rem;
-  transition: color 0.2s;
-  text-align: left;
+  font-size: 14px;
+  line-height: 1.2;
+  transition: color 0.3s ease;
 }
 
-.social-link:hover {
-  color: #b71c1c;
+.footer-list li a:hover {
+  color: #E03C3B;
+  text-decoration: underline;
 }
 
-@media (max-width: 800px) {
-  .footer-flex {
+/* Social Icons Row */
+.social-icons-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.social-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px; /* Kích thước icon */
+  height: 48px;
+  border-radius: 50%;
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+.social-icon img {
+  width: 36px; /* Kích thước icon bên trong */
+  height: 36px;
+  object-fit: contain; /* Giữ tỷ lệ của icon */
+}
+
+
+
+.social-icon:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+.facebook-icon {
+  background: #EAC6A4;
+  
+}
+
+.instagram-icon {
+  background: #EAC6A4;
+}
+
+.youtube-icon {
+  background: #EAC6A4;
+}
+
+.twitter-icon {
+  background: #EAC6A4;
+}
+
+.tiktok-icon {
+  background: #EAC6A4;
+}
+
+.social-icon:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+
+
+
+
+/* icon trong suốt, không có background */
+.social-icon.transparent {
+  background: transparent;
+  border: 2px solid #ddd;
+}
+
+/* Footer Bottom - Red Section */
+.footer-bottom {
+  background: #E53E3E;
+  color: #F2D9C3;
+  padding: 40px 0;
+  
+  margin-top: 30px;
+}
+
+.footer-bottom-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 30px;
+  color: #F2D9C3;
+}
+
+.company-info {
+  flex: 1;
+}
+
+.company-info p {
+  margin: 5px 0;
+  font-size: 12px;
+  line-height: 1.4;
+  
+}
+
+.company-name {
+  font-size: 16px !important;
+  margin-bottom: 8px !important;
+}
+
+.footer-certifications {
+  display: flex;
+  flex-direction: column; /* Stack theo chiều dọc */
+  align-items: flex-end; /* Căn bên phải */
+  gap: 15px;
+}
+
+/* Certification Badge - Ở trên */
+.certification-badge {
+  order: 1; /* Đặt thứ tự đầu tiên */
+}
+
+.certification-logo {
+  max-height: 50px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* Payment Methods - Ở dưới */
+.payment-methods {
+  order: 2; /* Đặt thứ tự thứ hai */
+}
+
+.payment-banks {
+  max-height: 80px;
+  width: auto;
+  object-fit: contain;
+}
+
+
+
+/* Responsive for Footer Bottom */
+@media (max-width: 768px) {
+  .footer-bottom-content {
     flex-direction: column;
-    align-items: center;
-    gap: 1.5rem;
+    text-align: center;
+    gap: 20px;
   }
-  .footer-col {
-    align-items: center;
-    min-width: 0;
+  
+  .footer-certifications {
+    flex-direction: column;
+    gap: 15px;
   }
-  .footer-logo {
+  
+  .payment-methods {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .company-info p {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 992px) {
+  .footer-bottom-content {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+/* Responsive cho 4 cột */
+@media (max-width: 1024px) {
+  .footer-flex {
+    grid-template-columns: 1fr 1fr; /* 2 cột trên tablet */
+    gap: 2rem;
+  }
+  
+  .footer-logo-col {
+    grid-column: 1 / -1; /* Logo chiếm full width */
     margin-bottom: 1rem;
   }
-  .footer-info-col {
-    align-items: center !important;
+}
+
+@media (max-width: 768px) {
+  .footer-flex {
+    grid-template-columns: 1fr; /* 1 cột trên mobile */
+    gap: 2rem;
     text-align: center;
   }
-  .footer-info-col .footer-heading,
-  .footer-info-col .footer-list,
-  .footer-info-col .footer-list li {
+  
+  .footer-col {
+    align-items: center;
+  }
+  
+  .footer-list {
     text-align: center;
+  }
+
+  
+  .social-icons-row {
+    justify-content: center;
+  }
+  
+  .facebook-widget {
+    max-width: 100%;
   }
 }
