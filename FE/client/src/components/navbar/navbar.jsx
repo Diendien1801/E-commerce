@@ -249,7 +249,7 @@ const Navbar = () => {
                     </button>
                 </div>
             </div>
-            <hr style={{ margin: 0, border: 0, borderTop: '2px solid #111' }} />
+            <hr style={{ margin: 0, border: 0, borderTop: '2px solid #111', maxWidth: '1200px', margin: '0 auto' }} />
             <nav className="navbar">
                 <div className="navbar-flex navbar-flex-custom">
                     <div className="nav-left-cluster">
@@ -301,7 +301,7 @@ const Navbar = () => {
                                             >
                                                 {item.imageUrl && (
                                                     <img
-                                                        src={item.imageUrl}
+                                                        src={item.imageUrl[0]}
                                                         alt={item.title}
                                                         className="search-result-img"
                                                     />

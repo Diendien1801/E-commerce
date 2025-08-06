@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../components/context/authcontext';
 import Navbar from '../components/navbar/navbar';
 import Footer from '../components/footer/footer';
+import Breadcrumb from '../components/breadcrumb/page';
 import ProductCard from '../components/product-card/card';
 
 function Favourite() {
@@ -68,6 +69,7 @@ function Favourite() {
   return (
     <>
       <Navbar />
+      <Breadcrumb />
       <div style={{ maxWidth: '900px', margin: '2.5rem auto', padding: '0 1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 600, margin: 0 }}>{t('favouriteProducts', 'Favourite Products')}</h2>

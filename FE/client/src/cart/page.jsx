@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Navbar from '../components/navbar/navbar';
 import Footer from '../components/footer/footer';
 import CartItem from '../components/CartItem';
+import Breadcrumb from '../components/breadcrumb/page';
 import CartSummary from '../components/CartSummary';
 import './cart.css';
 
@@ -93,7 +94,7 @@ const CartPage = () => {
   return (
     <div>
       <Navbar />
-      
+      <Breadcrumb />
       {/* Main Cart Content */}
       <div className="cart-container">
         {loading ? (

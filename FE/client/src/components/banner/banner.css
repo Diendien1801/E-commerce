@@ -1,11 +1,13 @@
 .banner-slider {
   width: 100%;
   max-width: 1200px;
-  margin: 2rem auto 0 auto;
+  margin: 0rem auto 0 auto;
   overflow: hidden;
-  border-radius: 14px;
+ 
   box-shadow: 0 2px 12px #00000014;
   position: relative;
+  
+  z-index: 6;
 }
 
 .banner-images {
@@ -26,28 +28,43 @@
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(255,255,255,0.85);
-  border: none;
-  font-size: 2rem;
+  background: rgba(255, 255, 255, 0.8); /* Background trắng mờ */
+  border: 1px solid rgba(0, 0, 0, 0.1);
   color: #333;
-  padding: 0.2em 1.2em;
-  border-radius: 6px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%; /* Nút tròn */
   cursor: pointer;
-  z-index: 2;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  opacity: 0;
-  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  z-index: 10;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
-.banner-arrow.left {
-  left: 16px;
-}
-.banner-arrow.right {
-  right: 16px;
-}
+
 .banner-arrow:hover {
-  background: white;
+  background: rgba(255, 255, 255, 0.95);
+  color: #000;
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
-.banner-slider:hover .banner-arrow {
-  opacity: 1;
-  pointer-events: auto;
+
+.banner-arrow.left {
+  left: 20px;
+}
+
+.banner-arrow.right {
+  right: 20px;
+}
+
+/* SVG styling */
+.banner-arrow svg {
+  transition: transform 0.2s ease;
+}
+
+.banner-arrow:hover svg {
+  transform: scale(1.1);
 }

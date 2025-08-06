@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Navbar from '../components/navbar/navbar';
 import Footer from '../components/footer/footer';
+import Breadcrumb from '../components/breadcrumb/page'; // Import Breadcrumb
+
 import ProductCard from '../components/product-card/card'; // Import ProductCard
 import { useAuth } from '../components/context/authcontext';
 import './view-product.css';
@@ -107,74 +109,102 @@ useEffect(() => {
         setFavLoading(false);
     };
 
-    if (!product) return <div className="loading">{t('loading', 'Loading...')}</div>;
+   if (!product) return <div className="loading">{t('loading', 'Loading...')}</div>;
 
-    // Mock data cho multiple images (bạn có thể thay thế bằng data thực từ API)
-    const productImages = [
-        product.imageUrl, "https://product.hstatic.net/1000304920/product/20231103_hieuthuhai-ai_cung_phai_bat_dau_tu_dau_do_0c18ee4276c84200885cb5d4462a97e5_grande.jpg"
-    ];
+    const productImages = Array.isArray(product.imageUrl) 
+        ? [...product.imageUrl].filter(img => img && img.trim() !== '')
+        : product.imageUrl 
+            ? [product.imageUrl].filter(img => img && img.trim() !== '')
+            : [];
+
+    // Thêm ảnh placeholder nếu không có ảnh nào
+    if (productImages.length === 0) {
+        productImages.push("https://via.placeholder.com/400x400?text=No+Image");
+    }
+
+    // Function để chuyển đổi URL ảnh từ compact sang master
+    const getMainImageUrl = (imageUrl) => {
+        if (!imageUrl) return imageUrl;
+        
+        // Chỉ thay đổi khi có _compact. trong URL
+        if (imageUrl.includes('_compact.')) {
+            return imageUrl.replace('_compact.', '_master.');
+        }
+        
+        // Nếu không có _compact. thì giữ nguyên URL
+        return imageUrl;
+    };
+
+    // Function để giữ nguyên URL cho thumbnails (compact)
+    const getThumbnailUrl = (imageUrl) => {
+        return imageUrl; // Giữ nguyên compact cho thumbnails
+    };
 
     return (
         <div>
             <Navbar />
+            <Breadcrumb />
             <div className="product-detail-container">
                 <div className="product-detail-content">
                    {/* Left side - Images */}
-<div className="product-images-section">
-    <div className="main-image">
-        <img 
-            src={productImages[selectedImage]} 
-            alt={product.title}
-            className="main-product-image"
-        />
-    </div>
-    
-    <div className="thumbnails-container">
-        {/* Mũi tên lên */}
-        <button 
-        className="thumbnail-nav-btn up" 
-        onClick={() => setSelectedImage(prev => prev > 0 ? prev - 1 : productImages.length - 1)}
-    >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path 
-                d="M18 15L12 9L6 15" 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-            />
-        </svg>
-    </button>
-        
-        <div className="image-thumbnails">
-            {productImages.map((image, index) => (
-                <div 
-                    key={index}
-                    className={`thumbnail ${selectedImage === index ? 'active' : ''}`}
-                    onClick={() => setSelectedImage(index)}
-                >
-                    <img src={image} alt={`${product.title} ${index + 1}`} />
-                </div>
-            ))}
-        </div>
-        
-        {/* Mũi tên xuống */}
-        <button 
-        className="thumbnail-nav-btn down" 
-        onClick={() => setSelectedImage(prev => prev < productImages.length - 1 ? prev + 1 : 0)}
-    >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path 
-                d="M6 9L12 15L18 9" 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-            />
-        </svg>
-    </button>
-    </div>
-</div>
+                   <div className="product-images-section">
+                        <div className="main-image">
+                            <img 
+                                src={getMainImageUrl(productImages[selectedImage])} 
+                                alt={product.title}
+                                className="main-product-image"
+                            />
+                        </div>
+                        
+                        <div className="thumbnails-container">
+                            {/* Mũi tên lên */}
+                            <button 
+                                className="thumbnail-nav-btn up" 
+                                onClick={() => setSelectedImage(prev => prev > 0 ? prev - 1 : productImages.length - 1)}
+                            >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path 
+                                        d="M18 15L12 9L6 15" 
+                                        stroke="currentColor" 
+                                        strokeWidth="2" 
+                                        strokeLinecap="round" 
+                                        strokeLinejoin="round"
+                                    />
+                                </svg>
+                            </button>
+                            
+                            <div className="image-thumbnails">
+                                {productImages.map((image, index) => (
+                                    <div 
+                                        key={index}
+                                        className={`thumbnail ${selectedImage === index ? 'active' : ''}`}
+                                        onClick={() => setSelectedImage(index)}
+                                    >
+                                        <img 
+                                            src={getThumbnailUrl(image)} 
+                                            alt={`${product.title} ${index + 1}`} 
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                            
+                            {/* Mũi tên xuống */}
+                            <button 
+                                className="thumbnail-nav-btn down" 
+                                onClick={() => setSelectedImage(prev => prev < productImages.length - 1 ? prev + 1 : 0)}
+                            >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path 
+                                        d="M6 9L12 15L18 9" 
+                                        stroke="currentColor" 
+                                        strokeWidth="2" 
+                                        strokeLinecap="round" 
+                                        strokeLinejoin="round"
+                                    />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
 
                     {/* Right side - Product Info */}
                     <div className="product-info-section">

@@ -34,7 +34,11 @@ const Banner = () => {
 
   return (
     <div className="banner-slider">
-      <button className="banner-arrow left" onClick={prevBanner} aria-label="Previous banner"><i class="bi bi-arrow-left"></i></button>
+      <button className="banner-arrow left" onClick={prevBanner} aria-label="Previous banner">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M15 18L9 12L15 6" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
       <div
         className="banner-images"
         style={{ transform: `translateX(-${current * 100}%)` }}
@@ -43,9 +47,13 @@ const Banner = () => {
           <img src={src} alt={`Banner ${idx + 1}`} className="banner-img" key={src} />
         ))}
       </div>
-      <button className="banner-arrow right" onClick={nextBanner} aria-label="Next banner"><i class="bi bi-arrow-right"></i></button>
+      <button className="banner-arrow right" onClick={nextBanner} aria-label="Next banner">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M9 18L15 12L9 6" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
     </div>
-  );
+);
 };
 
 export default Banner;
