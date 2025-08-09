@@ -139,7 +139,7 @@
   "category": "Category",
   "visible": "Visible",
   "nopProductFound": "No products found.",
-  "searchByEmail": "Search by Email",
+  "searchByEmail": "Search by User ID or Email",
   "registerDate": "Registered Date",
   "noUserFound": "No users found.",
   "userDetails": "User Details",

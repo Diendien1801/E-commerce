@@ -1,52 +1,98 @@
-.edit-form-group {
-  width: 100%;
-  margin-bottom: 18px;
+@import '../create-product/create.css';
+
+.detail-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 32px;
+}
+
+.detail-field {
+  margin-top: -10px;
+  margin-bottom: 0.5rem;
+}
+
+.detail-label {
+  font-weight: bold;
+  display: inline-block;
+  min-width: 120px;
+}
+
+.detail-value {
+  display: inline-block;
+}
+
+.form-right {
   display: flex;
   flex-direction: column;
 }
 
-.edit-form-group input,
-.edit-form-group textarea,
-.edit-form-group select {
-  padding: 10px;
-  border: 1px solid #bbb;
-  border-radius: 6px;
-  font-size: 16px;
-  width: 100%;
-  box-sizing: border-box;
+.form-right button {
+  margin-top: 1rem; 
 }
 
-.edit-form-group textarea {
-  resize: vertical;
-  min-height: 100px;
+/* Base style for all action buttons */
+.action-button {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 0.5rem 1.25rem;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
-.custom-select-wrapper {
-  position: relative;
-  display: inline-block;
-  width: 100%;
-  margin-bottom: 18px;
+.action-button:hover {
+  transform: scale(1.03);
 }
 
-.custom-select {
-  width: 100%;
-  padding: 10px 32px 10px 12px;
-  font-size: 16px;
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  border: 1px solid #bbb;
-  border-radius: 6px;
-  background-color: white;
-  color: #444;
+.action-button:active {
+  transform: scale(0.97);
 }
 
-.arrow {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-40%);
-  pointer-events: none;
-  font-size: 20px;
-  color: #777;
+.action-edit {
+  background-color: #007bff;
+  color: white;
+}
+.action-edit:hover {
+  background-color: #0056b3;
+}
+
+.action-save {
+  background-color: #28a745;
+  color: white;
+}
+.action-save:hover {
+  background-color: #1e7e34;
+}
+
+.action-restore {
+  background-color: #ffc107;
+  color: #000;
+}
+.action-restore:hover {
+  background-color: #e0a800;
+}
+
+.action-delete {
+  background-color: #d93025;
+  color: white;
+}
+.action-delete:hover {
+  background-color: #a71d18;
+}
+
+.form-left h3,
+.form-right h3 {
+  font-size: 18px; 
+  margin-bottom: 1rem;
 }

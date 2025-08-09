@@ -5,10 +5,26 @@ import Footer from "../../../components/footer/footer";
 import defaultAvatar from "./avatar-default.svg";
 import { useTranslation } from 'react-i18next';
 import "./detail.css";
+import "../../orders/order.css";
+
+const statusBadgeClass = (status) => {
+  const map = {
+    pending: 'badge pending',
+    picking: 'badge pending',
+    shipping: 'badge pending',
+    delivered: 'badge done',
+    completed: 'badge done',
+    canceled: 'badge canceled',
+    returned: 'badge canceled'
+  };
+  return map[status] || 'badge';
+};
+
 
 function UserDetail() {
   const { userId } = useParams();
   const [loading, setLoading] = useState(true);
+  const [expandedOrders, setExpandedOrders] = useState([]);
   const [error, setError] = useState("");
   const [userDetail, setUserDetail] = useState({
     userInfo: {},
@@ -45,9 +61,15 @@ function UserDetail() {
 
   const { t } = useTranslation();
 
+  const toggleOrder = (orderId) => {
+    setExpandedOrders((prev) =>
+      prev.includes(orderId) ? prev.filter((id) => id !== orderId) : [...prev, orderId]
+    );
+  };
+
+
   return (
     <div>
-      <Navbar />
       <div style={{ maxWidth: 900, margin: "2rem auto", padding: "0 1rem" }}>
         {loading ? (
           <div>Loading...</div>
@@ -64,9 +86,9 @@ function UserDetail() {
           </div>
         ) : (
           <>
-            <h2 style={{ marginBottom: "1.5rem", fontWeight: 600 }}>
+            <h1 className="page-title">
               {t('userDetails', 'User Details')}
-            </h2>
+            </h1>
 
             <div className="user-card" style={{ position: "relative" }}>
               {userInfo.isDeleted ? (
@@ -118,8 +140,8 @@ function UserDetail() {
                 <button
                   style={{
                     position: "absolute",
-                    top: 10,
-                    right: 10,
+                    top: 20,
+                    right: 20,
                     backgroundColor: "#ff4d4f",
                     color: "#fff",
                     border: "none",
@@ -128,6 +150,7 @@ function UserDetail() {
                     fontWeight: 500,
                     cursor: "pointer",
                     transition: "background-color 0.3s",
+                    fontSize: "14px"
                   }}
                   onMouseEnter={(e) => {
                     e.target.style.backgroundColor = "#d9363e";
@@ -192,93 +215,109 @@ function UserDetail() {
               </div>
             </div>
 
-            <h3 style={{ marginTop: "2rem" }}>Order Statistics</h3>
-            <ul style={{ paddingLeft: "1.2rem" }}>
-              <li>
-                <strong>{t('totalOrder', 'Total Orders')}:</strong> {orderStats.totalOrders}
-              </li>
-              <li>
-                <strong>{t('pending', 'Pending')}:</strong> {orderStats.pendingOrders}
-              </li>
-              <li>
-                <strong>{t('completed', 'Completed')}:</strong> {orderStats.completedOrders}
-              </li>
-              <li>
-                <strong>{t('canceled', 'Canceled')}:</strong> {orderStats.canceledOrders}
-              </li>
-              <li>
-                <strong>{t('totalSpent', 'Total Spent')}:</strong> $
-                {orderStats.totalSpent?.toFixed(2)}
-              </li>
-            </ul>
+            <h3 style={{ marginTop: "2rem", marginBottom: "1rem"}}><strong>Order Statistics</strong></h3>
+              <table className="order-stats-table">
+                <thead>
+                  <tr>
+                    <th>{t('totalOrder', 'Total Orders')}</th>
+                    <th>{t('pending', 'Pending')}</th>
+                    <th>{t('completed', 'Completed')}</th>
+                    <th>{t('canceled', 'Canceled')}</th>
+                    <th>{t('totalSpent', 'Total Spent')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>{orderStats.totalOrders}</td>
+                    <td><span className="status-badge pending">{orderStats.pendingOrders}</span></td>
+                    <td><span className="status-badge completed">{orderStats.completedOrders}</span></td>
+                    <td><span className="status-badge canceled">{orderStats.canceledOrders}</span></td>
+                    <td>${orderStats.totalSpent?.toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
 
-            <h3 style={{ marginTop: "2rem" }}>{t('orderList', 'Order List')}</h3>
-            {orders.length === 0 ? (
-              <div style={{ color: "#888" }}>{t('noOrdersFound', 'No orders found.')}</div>
-            ) : (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "1.5rem",
-                }}
-              >
-                {orders.map((order) => (
-                  <div
-                    key={order._id}
-                    style={{
-                      border: "1px solid #eee",
-                      borderRadius: "8px",
-                      padding: "1rem",
-                      background: "#fafafa",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontWeight: 600,
-                        fontSize: "1.1rem",
-                        marginBottom: "0.5rem",
-                      }}
-                    >
-                      {t('orderId', 'Order')}: {order._id}
-                    </div>
-                    <div>
-                      {t('status1', 'Status')}:{" "}
-                      <span style={{ fontWeight: 500 }}>{order.status}</span>
-                    </div>
-                    <div>
-                      {t('payment', 'Payment')}:{" "}
-                      <span style={{ fontWeight: 500 }}>
-                        {order.paymentMethod}
-                      </span>
-                    </div>
-                    <div>
-                      {t('shippingAddress', 'Shipping Address')}: <span style={{ fontWeight: 500 }}>{order.shippingAddress}</span>
-                    </div>
-                    <div>
-                      {t('date', 'Date')}: {new Date(order.createdAt).toLocaleString()}
-                    </div>
-                    {order.items?.length > 0 && (
-                      <div style={{ marginTop: "0.5rem" }}>
-                        <div style={{ fontWeight: 500 }}>{t('products', 'Products')}:</div>
-                        <ul style={{ margin: 0, paddingLeft: "1.2rem" }}>
-                          {order.items.map((item, idx) => (
-                            <li key={idx}>
-                              {t('productid', 'Product ID')}: {item.productID} | {t('quantity', 'Quantity')}:{" "}
-                              {item.quantity} | {t('price', 'Price')}: ${item.price}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+            <h3 style={{ marginTop: "2rem", marginBottom: "1rem"}}><strong>{t('orderList', 'Order List')}</strong></h3>
+              {orders.length === 0 ? (
+                <div className="no-orders">{t('noOrdersFound', 'No orders found.')}</div>
+              ) : (
+                <div className="table-wrapper">
+                  <table className="orders-table">
+                <thead>
+                  <tr>
+                    <th>{t('orderId', 'Order ID')}</th>
+                    <th>{t('status1', 'Status')}</th>
+                    <th>{t('payment', 'Payment')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map((order) => {
+                    const isExpanded = expandedOrders.includes(order._id);
+                    return (
+                      <React.Fragment key={order._id}>
+                        <tr>
+                          <td>
+                            <button
+                              onClick={() => toggleOrder(order._id)}
+                              style={{
+                                background: "none",
+                                border: "none",
+                                cursor: "pointer",
+                                fontSize: "1rem",
+                                color: "#444"
+                              }}
+                            >
+                              {isExpanded ? "▼" : "▶"}
+                            </button>
+                            {order._id}</td>
+                          <td>
+                            <span className={statusBadgeClass(order.status)}>
+                              {order.status}
+                            </span>
+                          </td>
+                          <td>{order.paymentMethod}
+                            </td>
+                        </tr>
+
+                        {isExpanded && (
+                          <tr>
+                            <td colSpan="4">
+                              {order.items?.length > 0 ? (
+                                <table className="product-table-order">
+                                  <thead>
+                                    <tr>
+                                      <th>{t('productid', 'Product ID')}</th>
+                                      <th style={{ textAlign: "center" }}>{t('quantity', 'Quantity')}</th>
+                                      <th style={{ textAlign: "center" }}>{t('price', 'Price')}</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {order.items.map((item, idx) => (
+                                      <tr key={idx}>
+                                        <td>{item.productID}</td>
+                                        <td style={{ textAlign: "center" }}>{item.quantity}</td>
+                                        <td style={{ textAlign: "center" }}>{item.price} VND</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              ) : (
+                                <span style={{ color: "#888" }}>{t('noProducts', 'No products')}</span>
+                              )}
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
+                </tbody>
+              </table>
+
+                </div>
+              )}
           </>
         )}
       </div>
-      <Footer />
     </div>
   );
 }

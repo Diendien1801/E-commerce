@@ -139,7 +139,7 @@
   "category": "Danh mục",
   "visible": "Hiển thị",
   "nopProductFound": "Không tìm thấy sản phẩm nào.",
-  "searchByEmail": "Tìm kiếm theo email",
+  "searchByEmail": "Tìm kiếm theo id người dùng hoặc email",
   "registerDate": "Ngày đăng ký",
   "noUserFound": "Không tìm thấy người dùng nào.",
   "userDetails": "Chi tiết người dùng",
