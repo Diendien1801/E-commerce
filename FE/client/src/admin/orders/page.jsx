@@ -44,13 +44,21 @@ const OrderRow = ({ order, handleStatusChange, t, expanded, toggleExpand }) => {
     <>
       <tr>
         <td>
-          <button
-            className="dropdown-btn"
-            onClick={() => toggleExpand(order._id)}
-          >
-            {expanded ? '▼' : '▶'}
-          </button>
-          {order._id}
+          <div className="id-with-arrow">
+            <button 
+              className="dropdown-btn"
+              style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: "1rem",
+                  color: "#444"
+                  }}
+              onClick={() => toggleExpand(order._id)}>
+              {expanded ? '▼' : '▶'}
+            </button>
+            <span>{order._id}</span>
+          </div>
         </td>
         <td>{order.idUser}</td>
         <td>{order.paymentMethod}</td>

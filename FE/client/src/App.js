@@ -18,7 +18,7 @@ import ResetPasswordUI from './authentication/reset-ui/page';
 import Cart from './cart/page';
 
 // Admin pages
-import AdminDashboard from './admin/home/page'; // Layout with sidebar
+import AdminDashboard from './admin/home/page'; 
 import Dashboard from './admin/analysis/dashboard';
 import UserManagement from './admin/users/userManage/page';
 import UserDetail from './admin/users/userDetails/page';
@@ -26,6 +26,8 @@ import ProductManagement from './admin/products/page';
 import ProductDetail from './admin/product-detail/page';
 import AddProduct from './admin/create-product/page';
 import OrderManage from './admin/orders/page';
+import CategoryManagement from './admin/category/page';
+
 
 function App() {
   const router = createBrowserRouter([
@@ -56,6 +58,7 @@ function App() {
         { path: "products/:id", element: <ProductDetail /> },
         { path: "create-product", element: <AddProduct /> },
         { path: "orders", element: <OrderManage /> },
+        { path: "categories", element: <CategoryManagement /> }
       ],
     },
   ]);

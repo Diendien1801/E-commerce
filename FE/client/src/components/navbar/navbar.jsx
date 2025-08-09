@@ -142,72 +142,21 @@ const Navbar = () => {
                                     {userRole === 'admin' && (
                                     <>
                                         <Link
-                                            to="/admin/orders"
-                                            style={{
-                                            display: 'block',
-                                            padding: '0.7rem 1.2rem',
-                                            color: '#222',
-                                            textDecoration: 'none',
-                                            fontWeight: 500,
-                                            borderTop: '1px solid #eee',
-                                            transition: 'background 0.18s',
-                                        }}
-                                            onClick={() => setShowDropdown(false)}
-                                            onMouseOver={e => e.currentTarget.style.background = '#f5f5f5'}
-                                            onMouseOut={e => e.currentTarget.style.background = '#fff'}
-                                        >
-                                            {t('orderManagement')}
-                                        </Link>
-                                        <Link
-                                            to="/admin/products"
-                                            style={{
-                                            display: 'block',
-                                            padding: '0.7rem 1.2rem',
-                                            color: '#222',
-                                            textDecoration: 'none',
-                                            fontWeight: 500,
-                                            borderTop: '1px solid #eee',
-                                            transition: 'background 0.18s',
-                                        }}
-                                            onClick={() => setShowDropdown(false)}
-                                            onMouseOver={e => e.currentTarget.style.background = '#f5f5f5'}
-                                            onMouseOut={e => e.currentTarget.style.background = '#fff'}
-                                        >
-                                            {t('productManagement')}
-                                        </Link>
-                                        <Link
-                                            to="/admin/users"
-                                            style={{
-                                            display: 'block',
-                                            padding: '0.7rem 1.2rem',
-                                            color: '#222',
-                                            textDecoration: 'none',
-                                            fontWeight: 500,
-                                            borderTop: '1px solid #eee',
-                                            transition: 'background 0.18s',
-                                        }}
-                                            onClick={() => setShowDropdown(false)}
-                                            onMouseOver={e => e.currentTarget.style.background = '#f5f5f5'}
-                                            onMouseOut={e => e.currentTarget.style.background = '#fff'}
-                                        >
-                                            {t('userManagement')}
-                                        </Link>
-                                        <Link
                                             to="/admin/dashboard"
-                                            style={{ 
+                                            style={{
                                             display: 'block',
                                             padding: '0.7rem 1.2rem',
                                             color: '#222',
                                             textDecoration: 'none',
                                             fontWeight: 500,
                                             borderTop: '1px solid #eee',
-                                            transition: 'background 0.18s', 
-                                            }}
+                                            transition: 'background 0.18s',
+                                        }}
                                             onClick={() => setShowDropdown(false)}
                                             onMouseOver={e => e.currentTarget.style.background = '#f5f5f5'}
                                             onMouseOut={e => e.currentTarget.style.background = '#fff'}
                                         >
-                                            {t('analysisDashboard')}
+                                            {t('adminDashboard')}
                                         </Link>
                                     </>
                                 )}

@@ -177,5 +177,6 @@
   "createError": "Error creating product",
   "imageUploadFailed": "Image upload failed",
   "save": "Save",
-  "productNotFound": "Product not found"
+  "productNotFound": "Product not found",
+  "adminDashboard": "Admin Dashboard"
 }

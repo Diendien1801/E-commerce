@@ -1,19 +1,56 @@
-import {BarChart3, ShoppingCart, Users, Package, Settings, User} from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { BarChart3, Home, ShoppingCart, Users, Package, Settings, User, Tags } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../components/context/authcontext'; 
 import './home.css';
 import logo from './logo.png';
 
 const SIDEBAR_ITEMS = [
+  { id: 'home', icon: Home, label: 'Home', path: '/' },
   { id: 'analytics', icon: BarChart3, label: 'Analytics', path: '/admin/dashboard' },
   { id: 'orders', icon: ShoppingCart, label: 'Order Management', path: '/admin/orders' },
   { id: 'products', icon: Package, label: 'Product Management', path: '/admin/products' },
+  { id: 'categories', icon: Tags, label: 'Category Management', path: '/admin/categories' },
   { id: 'users', icon: Users, label: 'User Management', path: '/admin/users' },
   { id: 'system', icon: Settings, label: 'System Management', path: '/admin/system' }
 ];
 
 export default function AdminDashboard() {
   const { t } = useTranslation();
+  const { isLoggedIn, user, logout } = useAuth();
+  const [userRole, setUserRole] = useState(null);
+  const navigate = useNavigate();
+
+  const userId = user?._id || user?.userId || user?.id;
+
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      if (!userId) return;
+      try {
+        const res = await fetch(`http://localhost:5000/api/users/${userId}`);
+        if (!res.ok) throw new Error('Failed to fetch user');
+        const data = await res.json();
+        setUserRole(data.data.role);
+      } catch (err) {
+        console.error('Error fetching user role:', err);
+      }
+    };
+    fetchUserRole();
+  }, [userId]);
+
+  useEffect(() => {
+    if (isLoggedIn && userRole && userRole !== 'admin') {
+      navigate('/'); 
+    }
+    if (!isLoggedIn) {
+      navigate('/login'); 
+    }
+  }, [isLoggedIn, userRole, navigate]);
+
+  if (!isLoggedIn || userRole !== 'admin') {
+    return null; 
+  }
 
   return (
     <div className="dashboard">
@@ -36,7 +73,9 @@ export default function AdminDashboard() {
           ))}
         </nav>
         <div className="sidebar-footer">
-          <button><User className="icon" />{t('logOut', 'Log Out')}</button>
+          <button onClick={() => { logout(); navigate('/'); }}>
+            <User className="icon" />{t('logOut', 'Log Out')}
+          </button>
         </div>
       </aside>
 

@@ -177,5 +177,6 @@
   "createError": "Lỗi khi tạo sản phẩm",
   "imageUploadFailed": "Tải ảnh lên thất bại",
   "save": "Lưu",
-  "productNotFound": "Không tìm thấy sản phẩm"
+  "productNotFound": "Không tìm thấy sản phẩm",
+  "adminDashboard": "Admin Dashboard"
 }
