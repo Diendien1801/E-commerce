@@ -32,10 +32,15 @@ exports.createPayment = async (req, res) => {
     if (method === 'PayPal') {
       try {
         const approveUrl = await createPayPalOrder(payment);
+
+        const urlObj = new URL(approveUrl);
+        const orderID = urlObj.searchParams.get("token");
+
         return res.status(200).json({
           success: true,
           data: {
             paymentId: payment.id,
+            orderID,
             approveUrl,
             currency: payCurrency
           }
