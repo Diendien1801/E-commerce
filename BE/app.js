@@ -17,6 +17,8 @@ const userManagementRoutes = require("./routes/userManagement.route"); // user m
 const categoriesRoutes = require("./routes/categories.route"); // categories
 const cartRoutes = require("./routes/cart.route"); // cart
 const categoriesManagementRoutes = require("./routes/categoriesManagement.route"); // categories management
+const productManagementRoutes = require("./routes/productManagement.route"); // product management
+
 app.use(express.json());
 
 app.use("/api/categoriesManagement", categoriesManagementRoutes); // categories management
@@ -38,7 +40,7 @@ app.use("/api/analysis", analysisRoutes);
 
 
 app.use('/api/auth', authRoutes); 
-
+app.use("/api/productManagement", productManagementRoutes); // product management
 
 module.exports = app;
 
