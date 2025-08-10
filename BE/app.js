@@ -17,8 +17,10 @@ const userManagementRoutes = require("./routes/userManagement.route"); // user m
 const categoriesRoutes = require("./routes/categories.route"); // categories
 const cartRoutes = require("./routes/cart.route"); // cart
 const categoriesManagementRoutes = require("./routes/categoriesManagement.route"); // categories management
-app.use(express.json());
+const momoRoutes = require("./routes/momo.route");
 
+app.use(express.json());
+app.use("/api/momo", momoRoutes);
 app.use("/api/categoriesManagement", categoriesManagementRoutes); // categories management
 
 
