@@ -17,10 +17,15 @@ const userManagementRoutes = require("./routes/userManagement.route"); // user m
 const categoriesRoutes = require("./routes/categories.route"); // categories
 const cartRoutes = require("./routes/cart.route"); // cart
 const categoriesManagementRoutes = require("./routes/categoriesManagement.route"); // categories management
+
 const productManagementRoutes = require("./routes/productManagement.route"); // product management
+
+const vnpayRoutes = require("./routes/vnpay.route");
+
 
 app.use(express.json());
 
+app.use("/api/vnpay", vnpayRoutes);
 app.use("/api/categoriesManagement", categoriesManagementRoutes); // categories management
 
 
