@@ -24,9 +24,10 @@ import AddProduct from './admin/create-product/page';
 
 import OrderManage from './admin/orders/page';
 import Dashboard from './admin/analysis/dashboard';
-
-
+import Payment from './payment/page';
+import PaymentResult from './paymentResult/payment-result'; 
 import Cart from './cart/page';
+
 
 
 
@@ -117,6 +118,15 @@ function App() {
       path: "/admin/products/:id",
       element: <ProductDetail />,
     },
+    {
+      path: "/payment",
+      element: <Payment />
+    }
+    ,
+    {
+      path: "/payment-result",
+      element: <PaymentResult />
+    }
     
   ]);
 
