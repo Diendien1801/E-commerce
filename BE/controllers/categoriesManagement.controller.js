@@ -3,29 +3,33 @@ const Category = require("../models/categories.model");
 // API: Tạo category mới
 exports.createCategory = async (req, res) => {
   try {
-    const { idCategory, nameCategory, parentID, image, description } = req.body;
+    const { nameCategory, parentID, image, description } = req.body;
 
-    // Validate required fields
-    if (!idCategory || !nameCategory) {
+    // Validate bắt buộc phải có nameCategory
+    if (!nameCategory) {
       return res.status(400).json({
         success: false,
-        message: "idCategory and nameCategory are required",
+        message: "nameCategory is required",
         data: null,
       });
     }
 
-    // Kiểm tra idCategory đã tồn tại chưa
-    const existingCategory = await Category.findOne({ idCategory });
-    if (existingCategory) {
-      return res.status(400).json({
-        success: false,
-        message: "Category ID already exists",
-        data: null,
-      });
-    }
+    let newIdCategory;
 
-    // Nếu có parentID, kiểm tra parent category có tồn tại không
-    if (parentID) {
+    if (!parentID) {
+      // Tạo category gốc
+      const maxRootCategory = await Category.findOne({ parentID: null })
+        .sort({ idCategory: -1 })
+        .select("idCategory");
+
+      if (!maxRootCategory) {
+        // Nếu chưa có category gốc nào
+        newIdCategory = 1;
+      } else {
+        newIdCategory = maxRootCategory.idCategory + 1;
+      }
+    } else {
+      // Kiểm tra parent category tồn tại
       const parentCategory = await Category.findOne({ idCategory: parentID });
       if (!parentCategory) {
         return res.status(400).json({
@@ -34,11 +38,23 @@ exports.createCategory = async (req, res) => {
           data: null,
         });
       }
+
+      // Tìm idCategory con lớn nhất của parentID
+      const maxChildCategory = await Category.findOne({ parentID })
+        .sort({ idCategory: -1 })
+        .select("idCategory");
+
+      if (!maxChildCategory) {
+        // Nếu chưa có con → tạo con đầu tiên
+        newIdCategory = parentID * 100 + 1;
+      } else {
+        newIdCategory = maxChildCategory.idCategory + 1;
+      }
     }
 
     // Tạo category mới
     const newCategory = new Category({
-      idCategory,
+      idCategory: newIdCategory,
       nameCategory,
       parentID: parentID || null,
       image: image || null,
@@ -62,6 +78,7 @@ exports.createCategory = async (req, res) => {
     });
   }
 };
+
 
 // API: Cập nhật category
 exports.updateCategory = async (req, res) => {
