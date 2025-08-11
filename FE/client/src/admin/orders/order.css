@@ -1,3 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap');
+
+body {
+  font-family: 'Open Sans', Arial, Helvetica, sans-serif;
+  margin: 0;
+}
+
 .orders-table {
   width: 100%;
   border-collapse: collapse;
@@ -10,10 +17,12 @@
   border: 1px solid #ddd;
   vertical-align: top;
   text-align: left;
+  font-size: 14px;
 }
 
 .orders-table th {
   background-color: #f4f4f4;
+  font-size: 14px;
 }
 
 .badge {
@@ -43,6 +52,7 @@
   background: #fff;
   cursor: pointer;
   border-radius: 4px;
+  font-size: 14px;
 }
 
 .order-tab-button.active {
@@ -67,7 +77,8 @@
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
-  background-color: #d9dddc;
+  background-color: #f9f9f9;
+  font-size: 14px;
 }
 
 .product-table-order  th,
@@ -77,11 +88,13 @@
   text-align: left;
   width: 33.33%;
   word-wrap: break-word;
+  font-size: 14px;
 }
 
 .product-table-order th {
   font-weight: bold;
-  background-color: #d9dddc;
+  background-color: #f4f4f4;
+  font-size: 14px;
 }
 
 .product-table-order  tr:hover {

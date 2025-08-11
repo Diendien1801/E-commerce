@@ -238,46 +238,46 @@ exports.filterAndPaginateProducts = async (req, res) => {
 
 //ADMIN
 // Create a new product
-exports.createProduct = async (req, res) => {
-  try {
-    const { title, price, description, imageUrl, idCategory, related, status, quantity } = req.body;
-    const newProduct = new Product({ title, price, description, imageUrl, idCategory, related, status, quantity });
-    const saved = await newProduct.save();
-    return res.status(201).json({ status: 201, success: true, message: 'Product created successfully', data: saved });
-  } catch (err) {
-    console.error('createProduct error:', err);
-    // Handle validation errors
-    if (err.name === 'ValidationError') {
-      return res.status(400).json({ status: 400, success: false, message: err.message, data: null });
-    }
-    return res.status(500).json({ status: 500, success: false, message: 'Server error while creating product', data: null });
-  }
-};
+// exports.createProduct = async (req, res) => {
+//   try {
+//     const { title, price, description, imageUrl, idCategory, related, status, quantity } = req.body;
+//     const newProduct = new Product({ title, price, description, imageUrl, idCategory, related, status, quantity });
+//     const saved = await newProduct.save();
+//     return res.status(201).json({ status: 201, success: true, message: 'Product created successfully', data: saved });
+//   } catch (err) {
+//     console.error('createProduct error:', err);
+//     // Handle validation errors
+//     if (err.name === 'ValidationError') {
+//       return res.status(400).json({ status: 400, success: false, message: err.message, data: null });
+//     }
+//     return res.status(500).json({ status: 500, success: false, message: 'Server error while creating product', data: null });
+//   }
+// };
 
 
 // Update an existing product by ID
-exports.updateProduct = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const updates = req.body;
-    const updated = await Product.findByIdAndUpdate(
-      id,
-      updates,
-      { new: true, runValidators: true, context: 'query' }
-    );
-    if (!updated) {
-      return res.status(404).json({ status: 404, success: false, message: 'Product not found', data: null });
-    }
-    return res.status(200).json({ status: 200, success: true, message: 'Product updated successfully', data: updated });
-  } catch (err) {
-    console.error('updateProduct error:', err);
-    // If validation error
-    if (err.name === 'ValidationError') {
-      return res.status(400).json({ status: 400, success: false, message: err.message, data: null });
-    }
-    return res.status(500).json({ status: 500, success: false, message: 'Server error while updating product', data: null });
-  }
-};
+// exports.updateProduct = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const updates = req.body;
+//     const updated = await Product.findByIdAndUpdate(
+//       id,
+//       updates,
+//       { new: true, runValidators: true, context: 'query' }
+//     );
+//     if (!updated) {
+//       return res.status(404).json({ status: 404, success: false, message: 'Product not found', data: null });
+//     }
+//     return res.status(200).json({ status: 200, success: true, message: 'Product updated successfully', data: updated });
+//   } catch (err) {
+//     console.error('updateProduct error:', err);
+//     // If validation error
+//     if (err.name === 'ValidationError') {
+//       return res.status(400).json({ status: 400, success: false, message: err.message, data: null });
+//     }
+//     return res.status(500).json({ status: 500, success: false, message: 'Server error while updating product', data: null });
+//   }
+// };
 
 // // "Delete" a product by setting its status to 'deleted'
 // exports.deleteProduct = async (req, res) => {

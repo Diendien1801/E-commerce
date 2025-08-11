@@ -27,6 +27,7 @@ import ProductDetail from './admin/product-detail/page';
 import AddProduct from './admin/create-product/page';
 import OrderManage from './admin/orders/page';
 import CategoryManagement from './admin/category/page';
+import CrawlPage from './admin/crawl/page';
 
 
 function App() {
@@ -58,7 +59,8 @@ function App() {
         { path: "products/:id", element: <ProductDetail /> },
         { path: "create-product", element: <AddProduct /> },
         { path: "orders", element: <OrderManage /> },
-        { path: "categories", element: <CategoryManagement /> }
+        { path: "categories", element: <CategoryManagement /> },
+        { path: "crawl", element: <CrawlPage /> }
       ],
     },
   ]);

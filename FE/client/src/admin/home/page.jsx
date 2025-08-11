@@ -1,19 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { BarChart3, Home, ShoppingCart, Users, Package, Settings, User, Tags } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate} from 'react-router-dom';
 import { useAuth } from '../../components/context/authcontext'; 
-import './home.css';
 import logo from './logo.png';
 
 const SIDEBAR_ITEMS = [
-  { id: 'home', icon: Home, label: 'Home', path: '/' },
   { id: 'analytics', icon: BarChart3, label: 'Analytics', path: '/admin/dashboard' },
+  { id: 'crawl', icon: Settings, label: 'Crawl Data', path: '/admin/crawl' },
   { id: 'orders', icon: ShoppingCart, label: 'Order Management', path: '/admin/orders' },
   { id: 'products', icon: Package, label: 'Product Management', path: '/admin/products' },
   { id: 'categories', icon: Tags, label: 'Category Management', path: '/admin/categories' },
-  { id: 'users', icon: Users, label: 'User Management', path: '/admin/users' },
-  { id: 'system', icon: Settings, label: 'System Management', path: '/admin/system' }
+  { id: 'users', icon: Users, label: 'User Management', path: '/admin/users' }
 ];
 
 export default function AdminDashboard() {
@@ -73,6 +71,9 @@ export default function AdminDashboard() {
           ))}
         </nav>
         <div className="sidebar-footer">
+          <button onClick={() => { navigate('/'); }}>
+            <Home className="icon" />{t('home1', 'Home')}
+          </button>
           <button onClick={() => { logout(); navigate('/'); }}>
             <User className="icon" />{t('logOut', 'Log Out')}
           </button>

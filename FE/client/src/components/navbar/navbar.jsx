@@ -205,7 +205,6 @@ const Navbar = () => {
                         <a href="/" className="nav-col nav-button">{t('home')}</a>
                         <a href="/shop" className="nav-col nav-button">{t('shop')}</a>
                         <a href="/contact" className="nav-col nav-button">{t('contact')}</a>
-                        <button className="crawl-btn">{t('crawl')}</button>
                     </div>
                     <div className="nav-right-cluster">
                         <button

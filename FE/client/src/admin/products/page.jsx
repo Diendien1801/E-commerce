@@ -120,7 +120,7 @@ export default function ProductManagement() {
                 <th>{t('id', 'ID')}</th>
                 <th>{t('image', 'Image')}</th>
                 <th>{t('title', 'Title')}</th>
-                <th style={{ textAlign: 'center' }}>{t('price', 'Price')}</th>
+                <th>{t('price', 'Price')}</th>
                 <th style={{ textAlign: 'center' }}>{t('quantity', 'Quantity')}</th>
                 <th style={{ textAlign: 'center' }}>{t('category', 'Category')}</th>
                 <th style={{ textAlign: 'center' }}>{t('status1', 'Status')}</th>

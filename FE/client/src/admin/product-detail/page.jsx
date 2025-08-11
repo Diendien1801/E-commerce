@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import './detail.css';
 
@@ -14,6 +14,8 @@ const ProductDetailView = () => {
   const [categories, setCategories] = useState([]);
   const [editedQuantity, setEditedQuantity] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [editedImages, setEditedImages] = useState([]);
+  const [loading, setLoading] = useState(false);
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -30,6 +32,7 @@ const ProductDetailView = () => {
           setEditedQuantity(prod.quantity || '');
           setEditedPrice(prod.price || '');
           setSelectedCategory(prod.idCategory || '');
+          setEditedImages(Array.isArray(prod.imageUrl) ? prod.imageUrl : []);
         }
         fetchCategories();
       })
@@ -55,6 +58,42 @@ const ProductDetailView = () => {
     }
   };
 
+  const handleFileUpload = async (files) => {
+    const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dumv5xryl/image/upload';
+    const UPLOAD_PRESET = 'RungRing';
+    setLoading(true);
+    const uploadPromises = Array.from(files).map(async (file) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', UPLOAD_PRESET);
+      try {
+        const cloudRes = await fetch(CLOUDINARY_URL, {
+          method: 'POST',
+          body: formData,
+        });
+        const cloudData = await cloudRes.json();
+        if (!cloudData.secure_url) throw new Error('Upload to Cloudinary failed');
+        return cloudData.secure_url;
+      } catch (error) {
+        console.error('Upload failed:', error);
+        return null;
+      }
+    });
+    try {
+      const uploadedImages = await Promise.all(uploadPromises);
+      const validImages = uploadedImages.filter(url => url !== null);
+      setEditedImages(prev => [...prev, ...validImages]);
+    } catch (error) {
+      alert('Image upload failed: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveImage = useCallback((index) => {
+    setEditedImages(prev => prev.filter((_, i) => i !== index));
+  }, []);
+
   const handleEdit = async () => {
     if (!isEditing) {
       setIsEditing(true);
@@ -64,8 +103,10 @@ const ProductDetailView = () => {
       ...product,
       title: editedTitle,
       description: editedDescription,
+      quantity: parseInt(editedQuantity) || 0,
       price: parseFloat(editedPrice),
-      categoryId: selectedCategory
+      idCategory: selectedCategory,
+      imageUrl: editedImages
     };
     try {
       const response = await fetch(`http://localhost:5000/api/products/${id}`, {
@@ -117,37 +158,99 @@ const ProductDetailView = () => {
         <div className="form-left">
           <div className="image-upload-section">
             <h3><strong>{t('productImage', 'Product Image')}</strong></h3>
-            <div className="uploaded-images">
-                {Array.isArray(product.imageUrl) && product.imageUrl.length > 0 ? (
-                    product.imageUrl.map((url, index) => (
-                    <div key={index} className="image-item">
-                        <div className="image-preview" style={{ width: 120, height: 120 }}>
-                        <img
-                            src={url}
-                            alt={`${product.title} - ${index + 1}`}
-                        />
+            {isEditing ? (
+              <div className="image-upload-section">
+                <h3>Add Images</h3>
+                <div 
+                  className="upload-area"
+                  onDrop={e => { e.preventDefault(); handleFileUpload(e.dataTransfer.files); }}
+                  onDragOver={e => e.preventDefault()}
+                  style={{ marginBottom: 24 }}
+                >
+                  <div className="upload-placeholder">
+                    <div className="upload-icon">
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21,15 16,10 5,21"/>
+                      </svg>
+                    </div>
+                    <div className="upload-text">
+                      <span>Drop your files here, or </span>
+                      <label htmlFor="file-upload-detail" className="browse-link">Browse</label>
+                    </div>
+                  </div>
+                  <input
+                    type="file"
+                    id="file-upload-detail"
+                    accept="image/*"
+                    multiple
+                    onChange={e => handleFileUpload(e.target.files)}
+                    style={{ display: 'none' }}
+                    disabled={loading}
+                  />
+                </div>
+                <div className="uploaded-images">
+                  {editedImages.length > 0 ? (
+                    editedImages.map((url, index) => (
+                      <div key={index} className="image-item" style={{ position: 'relative' }}>
+                        <div className="image-preview">
+                          <img src={url} alt={`Product - ${index + 1}`} />
                         </div>
                         <div className="image-info">
-                        <span className="image-name">
-                            {product.title} #{index + 1}
-                        </span>
+                          <span className="image-name">Image #{index + 1}</span>
                         </div>
-                    </div>
+                        <button 
+                          className="remove-image"
+                          onClick={() => handleRemoveImage(index)}
+                          type="button"
+                          style={{ position: 'absolute', top: 20, right: 20 }}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <polyline points="3,6 5,6 21,6"></polyline>
+                            <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6M8,6V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+                          </svg>
+                        </button>
+                      </div>
                     ))
-                ) : (
+                  ) : (
                     <div className="image-item">
+                      <div className="image-preview">
+                        <img src={'https://via.placeholder.com/400x400?text=No+Image'} alt="No image available" />
+                      </div>
+                      <div className="image-info">
+                        <span className="image-name">No image available</span>
+                      </div>
+                    </div>
+                  )}
+                  {loading && <span style={{ marginLeft: 8 }}>Uploading...</span>}
+                </div>
+              </div>
+            ) : (
+              <div className="uploaded-images">
+                {Array.isArray(product.imageUrl) && product.imageUrl.length > 0 ? (
+                  product.imageUrl.map((url, index) => (
+                    <div key={index} className="image-item">
+                      <div className="image-preview" style={{ width: 120, height: 120 }}>
+                        <img src={url} alt={`${product.title} - ${index + 1}`} />
+                      </div>
+                      <div className="image-info">
+                        <span className="image-name">{product.title} #{index + 1}</span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="image-item">
                     <div className="image-preview" style={{ width: 120, height: 120 }}>
-                        <img
-                        src={'https://via.placeholder.com/400x400?text=No+Image'}
-                        alt="No image available"
-                        />
+                      <img src={'https://via.placeholder.com/400x400?text=No+Image'} alt="No image available" />
                     </div>
                     <div className="image-info">
-                        <span className="image-name">No image available</span>
+                      <span className="image-name">No image available</span>
                     </div>
-                    </div>
+                  </div>
                 )}
-                </div>
+              </div>
+            )}
 
           </div>
         </div>

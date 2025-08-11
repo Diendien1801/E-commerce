@@ -1,5 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap');
+
 body {
-  font-family: sans-serif;
+  font-family: 'Open Sans', Arial, Helvetica, sans-serif;
   margin: 0;
 }
 
@@ -62,7 +64,7 @@ body {
   font-weight: 600;
   text-transform: uppercase;
   color: #6b7280;
-  margin: 0 0 16px;
+  margin: 0 7px 0 16px;
 }
 
 .sidebar-item {
@@ -71,7 +73,6 @@ body {
   gap: 12px;
   width: 100%;
   padding: 10px 12px;
-  border-radius: 8px;
   color: #4b5563;
   background: transparent;
   border: none;
@@ -81,9 +82,10 @@ body {
   background: #f9fafb;
   color: #111827;
 }
+
 .sidebar-item.active {
-  background: #f3f4f6;
-  color: #111827;
+  background: #9C3737;
+  color: white;
 }
 
 .sidebar-footer {
@@ -114,9 +116,10 @@ body {
 }
 
 .page-title {
-  font-size: 1.875rem;
+  font-size: 1.3rem;
   font-weight: bold;
   color: #111827;
+  margin-top: 10px;
   margin-bottom: 24px;
 }
 
@@ -172,9 +175,9 @@ body {
   font-size: 0.875rem;
   color: white;
 }
-.bg-purple-500 { background: #8b5cf6; }
-.bg-orange-500 { background: #f97316; }
-.bg-teal-500 { background: #14b8a6; }
+.custom-bg-purple { background: #8b5cf6; }
+.custom-bg-orange { background: #f97316; }
+.custom-bg-teal { background: #14b8a6; }
 .more-members {
   margin-left: 8px;
   font-size: 0.875rem;
@@ -303,13 +306,6 @@ tbody tr:hover {
 .product-table thead {
   background: #f9fafb;
 }
-
-.product-management-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-
 
 .search-input-product {
   flex: 1; 

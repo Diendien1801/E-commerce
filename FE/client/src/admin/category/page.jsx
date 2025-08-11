@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "./category.css";
 
-const CategoryRow = ({ category, expanded, toggleExpand, t }) => {
+const CategoryRow = ({ category, expanded, toggleExpand, t, setCurrentParentId, setShowForm, onEdit }) => {
   return (
     <>
       <tr>
@@ -32,28 +32,38 @@ const CategoryRow = ({ category, expanded, toggleExpand, t }) => {
             style={{ width: "50px", height: "50px", objectFit: "cover" }}
           />
         </td>
+        <td>
+          <button
+            className="action-button  action-edit"
+            onClick={() => onEdit(category)} 
+          >
+            Edit
+          </button>
+        </td>
       </tr>
 
       {expanded && category.children?.length > 0 && (
         <tr className="child-row">
-          <td colSpan="3" style={{ padding: 0 }}>
+          <td colSpan="4" style={{ padding: 0 }}>
             <table className="child-table-category">
                 <colgroup>
                     <col style={{ width: "20%" }} />
-                    <col style={{ width: "50%" }} />
-                    <col style={{ width: "30%" }} />
+                    <col style={{ width: "40%" }} />
+                    <col style={{ width: "20%" }} />
+                    <col style={{ width: "20%" }} />
                 </colgroup>
               <thead>
                 <tr>
-                  <th>{t("categoryId", "Category ID")}</th>
+                  <th style={{padding: "0 0 0 10px"}}>{t("categoryId", "Category ID")}</th>
                   <th>{t("name", "Name")}</th>
                   <th>{t("image", "Image")}</th>
+                  <th>{t("action", "Actions")}</th> 
                 </tr>
               </thead>
               <tbody>
                 {category.children.map((child) => (
                   <tr key={child.idCategory}>
-                    <td>{child.idCategory}</td>
+                    <td style={{padding: "0 0 0 40px"}}>{child.idCategory}</td>
                     <td>{child.name}</td>
                     <td>
                       <img
@@ -66,8 +76,29 @@ const CategoryRow = ({ category, expanded, toggleExpand, t }) => {
                         }}
                       />
                     </td>
+                    <td>
+                      <button
+                        className="action-button  action-edit-child"
+                        onClick={() => onEdit(child)}
+                      >
+                        Edit
+                      </button>
+                    </td>
                   </tr>
                 ))}
+
+                <tr
+                  className="add-category-row"
+                  style={{ cursor: "pointer", textAlign: "center" }}
+                  onClick={() => {
+                    setCurrentParentId(category.idCategory); // set parent
+                    setShowForm(true);
+                  }}
+                >
+                  <td colSpan="4" style={{ fontSize: "16px", color: "#2196F3", textAlign: "center" }}>
+                    + Add child category
+                  </td>
+                </tr>
               </tbody>
             </table>
           </td>
@@ -82,6 +113,14 @@ export default function CategoryManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [expandedCategories, setExpandedCategories] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newImage, setNewImage] = useState("");
+  const [currentParentId, setCurrentParentId] = useState(null);
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editImage, setEditImage] = useState("");
+
   const { t } = useTranslation();
 
   const toggleExpand = (categoryId) => {
@@ -113,8 +152,61 @@ export default function CategoryManagement() {
     fetchCategories();
   }, []);
 
+  const handleAddCategory = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/categoriesManagement", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nameCategory: newName, 
+          image: newImage,
+          parentID: currentParentId 
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to create category");
+
+      setCategories((prev) => [...prev, data.data]); 
+      setShowForm(false);
+      setNewName("");
+      setNewImage("");
+      setCurrentParentId(null);
+    } catch (err) {
+      setError(err.message || "Error creating category");
+    }
+  };
+
+  const handleUpdateCategory = async () => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/categoriesManagement/${editingCategory.idCategory}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nameCategory: editName,
+          image: editImage
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to update category");
+
+      setCategories((prev) =>
+        prev.map((cat) =>
+          cat.idCategory === editingCategory.idCategory
+            ? { ...cat, name: editName, image: editImage }
+            : cat
+        )
+      );
+
+      setEditingCategory(null);
+    } catch (err) {
+      setError(err.message || "Error updating category");
+    }
+  };
+
   return (
-    <>
+    <div className="card" style={{ padding: '1.5rem' }}>
       <h1 className="page-title">
         {t("categoryManagement", "Category Management")}
       </h1>
@@ -130,14 +222,16 @@ export default function CategoryManagement() {
           <table className="orders-table">
             <colgroup>
                 <col style={{ width: "20%" }} />
-                <col style={{ width: "50%" }} />
-                <col style={{ width: "30%" }} />
+                <col style={{ width: "40%" }} />
+                <col style={{ width: "20%" }} />
+                <col style={{ width: "20%" }} />
             </colgroup>
             <thead>
               <tr>
                 <th>{t("categoryId", "Category ID")}</th>
                 <th>{t("name", "Name")}</th>
                 <th>{t("image", "Image")}</th>
+                <th>{t("action", "Actions")}</th> 
               </tr>
             </thead>
             <tbody>
@@ -148,12 +242,86 @@ export default function CategoryManagement() {
                   expanded={expandedCategories.includes(category.idCategory)}
                   toggleExpand={toggleExpand}
                   t={t}
+                  setCurrentParentId={setCurrentParentId}
+                  setShowForm={setShowForm}
+                  onEdit={(cat) => {
+                    setEditingCategory(cat);
+                    setEditName(cat.name);
+                    setEditImage(cat.image);
+                  }}
                 />
               ))}
+
+              <tr
+                className="add-category-row"
+                style={{ cursor: "pointer", textAlign: "center" }}
+                onClick={() => {
+                  setCurrentParentId(null);
+                  setShowForm(true);
+                }}
+              >
+                <td colSpan="4" style={{ fontSize: "16px", color: "#4CAF50", textAlign: "center" }}>
+                  + Add new parent category
+                </td>
+              </tr>
+
+              {showForm && (
+                <div className="modal-overlay">
+                  <div className="modal-content">
+                     <h3>
+                      <strong>
+                        {currentParentId
+                          ? "Add New Child Category"
+                          : "Add New Parent Category"}
+                      </strong>
+                    </h3>
+                    <input
+                      type="text"
+                      placeholder="Category Name"
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Image URL"
+                      value={newImage}
+                      onChange={(e) => setNewImage(e.target.value)}
+                    />
+                    <div className="modal-buttons">
+                      <button onClick={handleAddCategory}>Add</button>
+                      <button onClick={() => setShowForm(false)}>Cancel</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {editingCategory && (
+                <div className="modal-overlay">
+                  <div className="modal-content">
+                    <h3><strong>Edit Category (ID: {editingCategory.idCategory})</strong></h3>
+                    <input
+                      type="text"
+                      placeholder="Category Name"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Image URL"
+                      value={editImage}
+                      onChange={(e) => setEditImage(e.target.value)}
+                    />
+                    <div className="modal-buttons">
+                      <button onClick={handleUpdateCategory}>Save</button>
+                      <button onClick={() => setEditingCategory(null)}>Cancel</button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </tbody>
           </table>
         </div>
       )}
-    </>
+    </div>
   );
 }

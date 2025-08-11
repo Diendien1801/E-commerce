@@ -4,7 +4,7 @@ import defaultAvatar from './avatar-default.svg';
 import { useTranslation } from 'react-i18next';
 import './user.css'; 
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 6;
 
 const statusBadgeClass = (status) => {
   if (status === 'active') return 'badge done';
@@ -163,7 +163,7 @@ export default function UserManagement() {
           alignItems: 'center',
           justifyContent: 'center',
           gap: 12,
-          margin: '24px 0'
+          margin: '24px 0 -5px 0'
         }}
       >
         <button

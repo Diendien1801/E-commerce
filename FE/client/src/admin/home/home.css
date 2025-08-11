@@ -1,15 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap');
+
 body {
-  font-family: sans-serif;
+  font-family: 'Open Sans', Arial, Helvetica, sans-serif;
   margin: 0;
 }
 
 .dashboard {
   display: flex;
   height: 100vh;
-  background: #f9fafb;
+  background: #F9F9F9;
 }
 
-/* Sidebar */
 .sidebar {
   width: 256px;
   background: white;
@@ -55,7 +56,6 @@ body {
   gap: 12px;
   width: 100%;
   padding: 10px 12px;
-  border-radius: 8px;
   color: #4b5563;
   background: transparent;
   border: none;
@@ -65,9 +65,14 @@ body {
   background: #f9fafb;
   color: #111827;
 }
+
 .sidebar-item.active {
-  background: #f3f4f6;
+  background: #9C3737;
   color: #111827;
+}
+
+.sidebar-item.active .lucide-icon {
+  color: white;
 }
 
 .sidebar-footer {
@@ -84,14 +89,12 @@ body {
   color: #4b5563;
   border: none;
   background: transparent;
-  border-radius: 8px;
   cursor: pointer;
 }
 .sidebar-footer button:hover {
   background: #f9fafb;
 }
 
-/* Main content */
 .main-content {
   flex: 1;
   overflow-y: auto;
@@ -112,7 +115,6 @@ body {
   margin-bottom: 24px;
 }
 
-/* Cards */
 .card {
   background: white;
   padding: 24px;

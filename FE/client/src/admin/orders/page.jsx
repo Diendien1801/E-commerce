@@ -76,7 +76,8 @@ const OrderRow = ({ order, handleStatusChange, t, expanded, toggleExpand }) => {
                   border: 'none',
                   padding: '0.4rem 0.8rem',
                   borderRadius: '4px',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  fontSize: '14px'
                 }}
               >
                 {action.label}
@@ -189,7 +190,7 @@ export default function OrderManagement() {
   };
 
   return (
-    <>
+    <div className="card" style={{ padding: '1.5rem' }}>
       <h1 className="page-title">{t('orderManagement', 'Order Management')}</h1>
 
       <input
@@ -295,6 +296,6 @@ export default function OrderManagement() {
         </div>
       )}
 
-    </>
+    </div>
   );
 }

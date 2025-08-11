@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './create.css';
-import Navbar from '../../components/navbar/navbar';
-import Footer from '../../components/footer/footer';
 import { useTranslation } from 'react-i18next';
 
 const AddProduct = () => {
@@ -26,19 +24,19 @@ const AddProduct = () => {
       try {
         const res = await fetch('http://localhost:5000/api/categories/hierarchy');
         const result = await res.json();
-        const flatChildren = [];
-
-        const extractChildren = (nodes) => {
+        // Flatten all categories (root and children)
+        const flatten = (nodes) => {
+          let arr = [];
           for (let node of nodes) {
+            arr.push({ ...node });
             if (node.children && node.children.length > 0) {
-              flatChildren.push(...node.children);
+              arr = arr.concat(flatten(node.children));
             }
           }
+          return arr;
         };
-
-        const root = result.data || [];
-        extractChildren(root);
-        setCategories(flatChildren);
+        const allCategories = flatten(result.data || []);
+        setCategories(allCategories);
       } catch (error) {
         console.error('Failed to fetch categories:', error);
       }
@@ -155,8 +153,8 @@ const AddProduct = () => {
       description,
       price: parseFloat(price) || 0,
       quantity: parseInt(quantity) || 0,
-      images: images.map(img => img.url),
-      categoryId: selectedCategory,
+      imageUrl: images.map(img => img.url),
+      idCategory: Number(selectedCategory),
       subCategoryId: selectedSubCategory || null,
     };
 

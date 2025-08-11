@@ -1,3 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap');
+
+body {
+  font-family: 'Open Sans', Arial, Helvetica, sans-serif;
+  margin: 0;
+}
+
+.action-button {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 0.3rem 1rem;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+.action-button:hover {
+  transform: scale(1.03);
+}
+.action-button:active {
+  transform: scale(0.97);
+}
+.action-edit {
+  background-color: #007bff;
+  color: white;
+}
+.action-edit:hover {
+  background-color: #0056b3;
+}
+
+.action-edit-child {
+  background-color: #ffae42;
+  color: white;
+}
+.action-edit-child:hover {
+  background-color: #218838;
+}
+
 .orders-table {
   width: 100%;
   border-collapse: collapse;
@@ -8,7 +47,7 @@
 .orders-table td {
   padding: 10px;
   border: 1px solid #ddd;
-  vertical-align: top;
+  vertical-align: middle;
   text-align: left;
 }
 
@@ -31,7 +70,8 @@
 .child-table-category {
   width: 100%;
   border-collapse: collapse;
-  background-color: #ececec;
+  background-color: #f9f9f9;
+  vertical-align: middle;
   font-size: 16px;
 }
 
@@ -40,7 +80,11 @@
   padding: 8px;
   border: 1px solid #ccc;
   text-align: left;
-  background-color: #ececec;
+  background-color: #f9f9f9;
+}
+
+.child-table-category th {
+  background-color: #f4f4f4;
 }
 
 .child-row:hover {
@@ -49,4 +93,50 @@
 
 .orders-table tbody tr:hover {
   background-color: transparent !important;
+}
+
+.add-category-row:hover {
+  background-color: #f0f0f0;
+}
+
+.add-category-row td {
+  padding: 12px;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  min-width: 300px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+}
+
+.modal-content h3 {
+  margin-top: 0;
+}
+
+.modal-content input {
+  display: block;
+  width: 100%;
+  padding: 8px;
+  margin: 8px 0;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
