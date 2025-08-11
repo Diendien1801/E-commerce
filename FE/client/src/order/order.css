@@ -3,12 +3,16 @@
   margin: 2.5rem auto;
   padding: 0 1rem;
   min-height: 500px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 
 .order-header {
   font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 1.5rem;
+  color: #222;
 }
 
 .order-tabs {
@@ -21,24 +25,66 @@
 .order-tab-button {
   padding: 0.5rem 1rem;
   border-radius: 4px;
-  border: 1px solid #ccc;
-  background: #fff;
-  color: #000;
+  border: 1px solid #e0e0e0;
+  background: #fafbfc;
+  color: #222;
   cursor: pointer;
+  transition: background 0.2s, border 0.2s;
 }
 
 .order-tab-button.active {
-  border: 2px solid #2196F3;
-  background: #2196F3;
-  color: #fff;
+  border: 1.5px solid #888;
+  background: #f0f0f0;
+  color: #111;
 }
 
 .order-card {
-  border: 1px solid #eee;
-  border-radius: 8px;
-  padding: 1rem;
-  background: #fafafa;
+  border: 1.5px solid rgba(255,255,255,0.25);
+  border-radius: 18px;
+  padding: 1.5rem 1.2rem 1.2rem 1.2rem;
+  background: linear-gradient(120deg, rgba(255,255,255,0.85) 60%, rgba(240,240,255,0.7) 100%);
   position: relative;
+  box-shadow: 0 4px 24px 0 rgba(0,0,0,0.10), 0 1.5px 8px 0 rgba(0,0,0,0.04);
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: box-shadow 0.2s, transform 0.2s, background 0.2s;
+  border-image: linear-gradient(120deg, #bdbdbd 0%, #fff 100%) 1;
+  
+}
+.order-card.status-pending {
+  background: linear-gradient(120deg, #fffbe7cc 60%, #ffe08299 100%);
+  border-image: linear-gradient(120deg, #ffb300 0%, #ffe082 100%) 1;
+}
+.order-card.status-picking {
+  background: linear-gradient(120deg, #f3f8fdcc 60%, #90caf999 100%);
+  border-image: linear-gradient(120deg, #42a5f5 0%, #90caf9 100%) 1;
+}
+.order-card.status-shipping {
+  background: linear-gradient(120deg, #f0fafdcc 60%, #4fc3f799 100%);
+  border-image: linear-gradient(120deg, #29b6f6 0%, #4fc3f7 100%) 1;
+}
+.order-card.status-delivered {
+  background: linear-gradient(120deg, #f3fbf5cc 60%, #81c78499 100%);
+  border-image: linear-gradient(120deg, #66bb6a 0%, #81c784 100%) 1;
+}
+.order-card.status-completed {
+  background: linear-gradient(120deg, #f4f9f4cc 60%, #a5d6a799 100%);
+  border-image: linear-gradient(120deg, #388e3c 0%, #a5d6a7 100%) 1;
+}
+.order-card.status-canceled {
+  background: linear-gradient(120deg, #fdf3f3cc 60%, #ef9a9a99 100%);
+  border-image: linear-gradient(120deg, #e57373 0%, #ef9a9a 100%) 1;
+}
+.order-card.status-returned {
+  background: linear-gradient(120deg, #f5f7facc 60%, #b0bec599 100%);
+  border-image: linear-gradient(120deg, #607d8b 0%, #b0bec5 100%) 1;
+}
+.order-card:hover {
+  box-shadow: 0 8px 32px 0 rgba(0,0,0,0.16), 0 2px 12px 0 rgba(0,0,0,0.08);
+  transform: translateY(-2px) scale(1.012);
+  background: linear-gradient(120deg, rgba(255,255,255,0.95) 60%, rgba(240,240,255,0.85) 100%);
 }
 
 .order-card-actions {
@@ -50,10 +96,42 @@
 }
 
 .order-card-title {
-  font-weight: 600;
-  font-size: 1.1rem;
+  font-family: 'Segoe UI', 'Arial', sans-serif;
+  font-weight: 700;
+  font-size: 1.15rem;
   margin-bottom: 0.5rem;
+  color: #222;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  padding-left: 14px;
+  
 }
+.order-card-title .music-note {
+  display: none;
+}
+.order-card-title::before {
+  content: '';
+  display: block;
+  position: absolute;
+  left: 0;
+  top: 0.2em;
+  width: 6px;
+  height: 1.3em;
+  border-radius: 3px;
+  background: #bdbdbd;
+}
+.order-card.status-pending .order-card-title::before { background: #ffb300; }
+.order-card.status-picking .order-card-title::before { background: #42a5f5; }
+.order-card.status-shipping .order-card-title::before { background: #29b6f6; }
+.order-card.status-delivered .order-card-title::before { background: #66bb6a; }
+.order-card.status-completed .order-card-title::before { background: #388e3c; }
+.order-card.status-canceled .order-card-title::before { background: #e57373; }
+.order-card.status-returned .order-card-title::before { background: #607d8b; }
+
+/* Xoá sóng nhạc border dưới tiêu đề */
+.order-card-title::after { display: none; content: none; }
 
 .order-product-list {
   margin-top: 0.5rem;
@@ -61,7 +139,72 @@
 
 .order-product-list ul {
   margin: 0;
-  padding-left: 1.2rem;
+  padding-left: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+}
+.order-product-list li {
+  background: #fff;
+  border: 1.5px solid #ececec;
+  border-radius: 16px;
+  box-shadow: 0 2px 10px 0 rgba(0,0,0,0.07);
+  padding: 1.1rem 1.2rem;
+  min-width: 280px;
+  max-width: 420px;
+  flex: 1 1 280px;
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  margin-bottom: 0.5rem;
+  transition: box-shadow 0.18s, border 0.18s;
+  position: relative;
+}
+.order-product-list li:hover {
+  box-shadow: 0 4px 18px 0 rgba(0,0,0,0.13);
+  border-color: #bdbdbd;
+}
+.order-product-list img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 10px;
+  background: #f5f5f5;
+  border: 1px solid #eee;
+  flex-shrink: 0;
+}
+.order-product-list .product-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.order-product-list .product-title {
+  font-weight: 700;
+  font-size: 1.08rem;
+  margin-bottom: 4px;
+  color: #1a237e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.order-product-list .product-desc {
+  color: #444;
+  font-size: 0.97rem;
+  margin-bottom: 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 2.2em;
+}
+.order-product-list .product-meta {
+  color: #607d8b;
+  font-size: 0.93rem;
+  margin-top: 2px;
+  letter-spacing: 0.01em;
 }
 
 .products-pagination {
@@ -80,9 +223,12 @@
   background: none;
   outline: none;
   box-shadow: none;
+  color: #888;
 }
 
 .pagination-button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
 }
+
+@import url('https://fonts.googleapis.com/css2?family=Fugaz+One&display=swap');

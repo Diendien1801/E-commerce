@@ -9,26 +9,59 @@ import { useTranslation } from 'react-i18next';
 
 const Home = () => {
     const [products, setProducts] = useState([]);
+    const [vinylProducts, setVinylProducts] = useState([]); // Thêm state cho vinyl
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
-
+useEffect(() => {
+        // Track trang hiện tại là home
+        sessionStorage.setItem('previousPage', '/');
+    }, []);
     useEffect(() => {
-        fetch('http://localhost:5000/api/products') 
+        // Fetch products category 104
+        fetch('http://localhost:5000/api/products/category/104') 
             .then(res => res.json())
             .then(data => {
-                setProducts(data.data || []);
+                setProducts(data.data.products || []);
             })
             .catch(err => console.error('Failed to fetch products:', err));
+
+        // Fetch vinyl products category 303
+        fetch('http://localhost:5000/api/products/category/303') 
+            .then(res => res.json())
+            .then(data => {
+                setVinylProducts(data.data.products || []);
+            })
+            .catch(err => console.error('Failed to fetch vinyl products:', err));
     }, []);
 
     const filterAndSlice = (filterFn) => products.filter(filterFn).slice(0, 5);
     const available = products.slice(0, 10);
+    const vinylAvailable = vinylProducts.slice(0, 5);
 
     return (
+        
         <div className='container'>
             <Navbar />
             <div className="home-page">
                 <Banner />
+                <section className="featured-images-section">
+    <div className="featured-images-grid">
+        <div className="featured-image-item large">
+            <img src="https://theme.hstatic.net/1000304920/1001307865/14/banner_3_image_1.png?v=466" alt="Vinyl Collection" />
+        </div>
+        <div className="featured-image-item medium">
+            <img src="https://theme.hstatic.net/1000304920/1001307865/14/banner_3_image_2.png?v=466" alt="Vinyl Collection" />
+        </div>
+        <div className="featured-images-right">
+            <div className="featured-image-item small">
+                <img src="https://theme.hstatic.net/1000304920/1001307865/14/banner_3_image_3_2.png?v=466" alt="CD Collection" />
+            </div>
+            <div className="featured-image-item small">
+                <img src="https://theme.hstatic.net/1000304920/1001307865/14/banner_3_image_3.png?v=466" alt="Cassette Collection" />
+            </div>
+        </div>
+    </div>
+</section>
                 <div className="product-sections">
                     <section className="product-section">
                         <div className="section-header">
@@ -41,6 +74,18 @@ const Home = () => {
                             ))}
                         </div>
                     </section>
+                    {/* New Vinyl section */}
+    <section className="product-section">
+        <div className="section-header">
+            <h2>Bộ sưu tập Vinyl</h2>
+            <button className="show-all-btn" onClick={() => navigate('../shop?category=303')}>Xem tất cả Vinyl &gt;</button>
+        </div>
+        <div className="product-list">
+            {vinylAvailable.map(p => (
+                <ProductCard product={p} key={p._id} />
+            ))}
+        </div>
+    </section>
                     {/* <section className="product-section">
                         <h2>{t('trending')}</h2>
                         <div className="product-list">

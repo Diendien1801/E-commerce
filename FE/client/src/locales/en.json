@@ -1,4 +1,29 @@
+
+    
+
 {
+  "breadcrumb": {
+        "home": "Home",
+        "products": "Products",
+        "viewProduct": "Product Details",
+        "cart": "Shopping Cart",
+        "checkout": "Checkout",
+        "profile": "Profile",
+        "order": "Orders",
+        "favorite": "Favorites",
+        "search": "Search",
+        "category": "Category",
+        "about": "About",
+        "contact": "Contact"
+    },
+    "phoneNumber": "Phone Number",
+    "dateOfBirth": "Date of Birth", 
+    "gender": "Gender",
+    "selectGender": "Select Gender",
+    "male": "Male",
+    "female": "Female",
+    "other": "Other",
+
   "signIn": "Sign In",
   "enterEmailPassword": "Enter your email and password.",
   "or": "or",

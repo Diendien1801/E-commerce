@@ -2,6 +2,8 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../components/context/authcontext';
+//breadcrumb component
+import Breadcrumb from '../components/breadcrumb/page'; 
 import Navbar from '../components/navbar/navbar';
 import Footer from '../components/footer/footer';
 import './profile.css';
@@ -18,7 +20,9 @@ const Profile = () => {
     const [editedName, setEditedName] = useState('');
     const [editedEmail, setEditedEmail] = useState('');
     const [editedPhoneNumber, setEditedPhoneNumber] = useState('');
-    const [editedCountry, setEditedCountry] = useState('');
+    const [editedDateOfBirth, setEditedDateOfBirth] = useState('');
+    const [editedGender, setEditedGender] = useState('');
+    const [editedCountry, setEditedCountry] = useState('')
 
     
     useEffect(() => {
@@ -101,34 +105,52 @@ const Profile = () => {
     };
 
     const handleUpdateProfile = async () => {
-        const userId = loggedInUser?._id || loggedInUser?.userId || loggedInUser?.id;
-        try {
-            const res = await fetch(`http://localhost:5000/api/users/update`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    userId: userId,
-                    name: editedName,
-                    email: editedEmail
-                })
-            });
+    const userId = loggedInUser?._id || loggedInUser?.userId || loggedInUser?.id;
+    try {
+        const res = await fetch(`http://localhost:5000/api/users/update`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                userId: userId,
+                name: editedName,
+                email: editedEmail,
+                phoneNumber: editedPhoneNumber,
+                dateOfBirth: editedDateOfBirth,
+                gender: editedGender,
+                address: {
+                    country: editedCountry
+                }
+            })
+        });
 
-            const data = await res.json();
-            if (!data.success) throw new Error(data.message);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
 
-            setUser(prev => ({ ...prev, name: editedName, email: editedEmail }));
-            setIsEditing(false);
-            // alert(t('profileUpdated', 'Profile updated successfully!'));
-        } catch (err) {
-            alert(t('error', 'Error') + ': ' + err.message);
-        }
-    };
+        setUser(prev => ({ 
+            ...prev, 
+            name: editedName, 
+            email: editedEmail,
+            phoneNumber: editedPhoneNumber,
+            dateOfBirth: editedDateOfBirth,
+            gender: editedGender,
+            address: {
+                ...prev.address,
+                country: editedCountry
+            }
+        }));
+        setIsEditing(false);
+        // alert(t('profileUpdated', 'Profile updated successfully!'));
+    } catch (err) {
+        alert(t('error', 'Error') + ': ' + err.message);
+    }
+};
 
     return (
         <div>
             <Navbar />
+            <Breadcrumb />
             <div className="profile-main">
                 <div className="profile-title-row">
                     <h2 className="profile-title">{t('profile', 'Profile')}</h2>
@@ -147,82 +169,126 @@ const Profile = () => {
                             <input type="file" accept="image/*" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileChange} />
                         </div>
                     </div>
-                    <div className="profile-info-col">
-                        {isEditing ? (
-                            <>
-                            <div className="profile-info">
-                                <strong>{t('name', 'Name')}:</strong>
-                                <input 
-                                    type="text" 
-                                    value={editedName} 
-                                    onChange={e => setEditedName(e.target.value)} 
-                                    className="profile-input"
-                                />
-                            </div>
-                            <div className="profile-info">
-                                <strong>{t('email', 'Email')}:</strong>
-                                <input 
-                                    type="email" 
-                                    value={editedEmail} 
-                                    onChange={e => setEditedEmail(e.target.value)} 
-                                    className="profile-input"
-                                />
-                            </div>
-                            <div className="profile-info">
-                            <strong>{t('phoneNumber', 'Phone Number')}:</strong>
-                                <input
-                                    type="text"
-                                    value={editedPhoneNumber}
-                                    onChange={e => setEditedPhoneNumber(e.target.value)}
-                                    className="profile-input"
-                                />
-                            </div>
-                            <div className="profile-info">
-                                <strong>{t('address', 'Address')}:</strong>
-                                <input
-                                    type="text"
-                                    value={editedCountry}
-                                    onChange={e => setEditedCountry(e.target.value)}
-                                    className="profile-input"
-                                />
-                            </div>
-                            <div style={{ marginTop: '0.7rem' }}>
-                                <button onClick={handleUpdateProfile} className="profile-edit-btn" style={{ marginRight: '0.5rem' }}>
-                                    {t('save', 'Save')}
-                                </button>
-                                <button onClick={() => setIsEditing(false)} className="profile-edit-btn" style={{ backgroundColor: '#aaa' }}>
-                                    {t('cancel', 'Cancel')}
-                                </button>
-                            </div>
-                            </>
-                        ) : (
-                                <>
-        <div className="profile-info"> 
-            <strong>{t('name', 'Name')}:</strong> {user?.name}
+                  <div className="profile-info-col">
+    {isEditing ? (
+        <>
+        {/* Cột 1: Name, Email, Phone */}
+        <div className="profile-info-row">
+            <div className="profile-info-column">
+                <div className="profile-info">
+                    <strong>{t('name', 'Name')}:</strong>
+                    <input 
+                        type="text" 
+                        value={editedName} 
+                        onChange={e => setEditedName(e.target.value)} 
+                        className="profile-input"
+                    />
+                </div>
+                <div className="profile-info">
+                    <strong>{t('email', 'Email')}:</strong>
+                    <input 
+                        type="email" 
+                        value={editedEmail} 
+                        onChange={e => setEditedEmail(e.target.value)} 
+                        className="profile-input"
+                    />
+                </div>
+                <div className="profile-info">
+                    <strong>{t('phoneNumber', 'Phone Number')}:</strong>
+                    <input
+                        type="tel"
+                        value={editedPhoneNumber}
+                        onChange={e => setEditedPhoneNumber(e.target.value)}
+                        className="profile-input"
+                        placeholder="0123456789"
+                    />
+                </div>
+            </div>
+
+            {/* Cột 2: Date of Birth, Gender, Address */}
+            <div className="profile-info-column">
+                <div className="profile-info">
+                    <strong>{t('dateOfBirth', 'Date of Birth')}:</strong>
+                    <input
+                        type="date"
+                        value={editedDateOfBirth}
+                        onChange={e => setEditedDateOfBirth(e.target.value)}
+                        className="profile-input"
+                    />
+                </div>
+                <div className="profile-info">
+                    <strong>{t('gender', 'Gender')}:</strong>
+                    <select
+                        value={editedGender}
+                        onChange={e => setEditedGender(e.target.value)}
+                        className="profile-input"
+                    >
+                        <option value="">{t('selectGender', 'Select Gender')}</option>
+                        <option value="male">{t('male', 'Male')}</option>
+                        <option value="female">{t('female', 'Female')}</option>
+                        <option value="other">{t('other', 'Other')}</option>
+                    </select>
+                </div>
+                <div className="profile-info">
+                    <strong>{t('address', 'Address')}:</strong>
+                    <input
+                        type="text"
+                        value={editedCountry}
+                        onChange={e => setEditedCountry(e.target.value)}
+                        className="profile-input"
+                    />
+                </div>
+            </div>
         </div>
-        {user?.email && (
-            <div className="profile-info">
-                <strong>{t('email', 'Email')}:</strong> {user.email}
-            </div>
-        )}
-        {user?.phoneNumber && (
-            <div className="profile-info">
-                <strong>{t('phoneNumber', 'Phone Number')}:</strong> {user.phoneNumber}
-            </div>
-        )}
 
-        {user?.address?.country && (
-            <div className="profile-info">
-                <strong>{t('address', 'Address')}:</strong> {user.address.country}
+        <div style={{ marginTop: '0.7rem' }}>
+            <button onClick={handleUpdateProfile} className="profile-edit-btn" style={{ marginRight: '0.5rem' }}>
+                {t('save', 'Save')}
+            </button>
+            <button onClick={() => setIsEditing(false)} className="profile-edit-btn" style={{ backgroundColor: '#aaa' }}>
+                {t('cancel', 'Cancel')}
+            </button>
+        </div>
+        </>
+    ) : (
+        <>
+        {/* View mode - 2 cột */}
+        <div className="profile-info-row">
+            <div className="profile-info-column">
+                <div className="profile-info"> 
+                    <strong>{t('name', 'Name')}:</strong> {user?.name}
+                </div>
+                {user?.email && (
+                    <div className="profile-info">
+                        <strong>{t('email', 'Email')}:</strong> {user.email}
+                    </div>
+                )}
+                <div className="profile-info">
+                    <strong>{t('phoneNumber', 'Phone Number')}:</strong> {user?.phoneNumber || t('notProvided', 'Not provided')}
+                </div>
             </div>
-        )}
 
-        <div>
+            <div className="profile-info-column">
+                <div className="profile-info">
+                    <strong>{t('dateOfBirth', 'Date of Birth')}:</strong> {user?.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString() : t('notProvided', 'Not provided')}
+                </div>
+                <div className="profile-info">
+                    <strong>{t('gender', 'Gender')}:</strong> {user?.gender ? t(user.gender, user.gender) : t('notProvided', 'Not provided')}
+                </div>
+                <div className="profile-info">
+                    <strong>{t('address', 'Address')}:</strong> {user?.address?.country || t('notProvided', 'Not provided')}
+                </div>
+            </div>
+        </div>
+
+        <div style={{ marginBottom: '1rem' }}>
             <button 
                 onClick={() => {
                     setEditedName(user?.name || '');
                     setEditedEmail(user?.email || '');
                     setEditedPhoneNumber(user?.phoneNumber || '');
+                    setEditedDateOfBirth(user?.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split('T')[0] : '');
+                    setEditedGender(user?.gender || '');
                     setEditedCountry(user?.address?.country || '');
                     setIsEditing(true);
                 }}
@@ -232,15 +298,16 @@ const Profile = () => {
                 {t('editProfile', 'Edit Profile')}
             </button>
         </div>
-    </>
-)}
 
-                        <div style={{textAlign: 'left' }}>
-                            <a href="/change-password" className="profile-edit-btn" style={{ padding: '0.32rem 0.8rem', fontSize: '0.92rem', background: '#9E3736', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 500, textDecoration: 'none', display: 'inline-block' }}>
-                                {t('changePassword', 'Change Password')}
-                            </a>
-                        </div>
-                    </div>
+        {/* Giữ lại nút đổi mật khẩu */}
+        <div style={{textAlign: 'left' }}>
+            <a href="/change-password" className="profile-edit-btn" style={{ padding: '0.32rem 0.8rem', fontSize: '0.92rem', background: '#9E3736', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 500, textDecoration: 'none', display: 'inline-block' }}>
+                {t('changePassword', 'Change Password')}
+            </a>
+        </div>
+        </>
+    )}
+</div>
                 </div>
                 {loading && <div style={{ textAlign: 'center', marginTop: '2rem', color: '#888' }}>{t('loading', 'Loading...')}</div>}
             </div>
