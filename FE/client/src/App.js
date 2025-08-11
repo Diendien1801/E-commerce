@@ -26,8 +26,17 @@ import ProductManagement from './admin/products/page';
 import ProductDetail from './admin/product-detail/page';
 import AddProduct from './admin/create-product/page';
 import OrderManage from './admin/orders/page';
+
 import CategoryManagement from './admin/category/page';
 import CrawlPage from './admin/crawl/page';
+
+import Dashboard from './admin/analysis/dashboard';
+import Payment from './payment/page';
+import PaymentResult from './paymentResult/payment-result'; 
+import Cart from './cart/page';
+
+
+
 
 
 function App() {
@@ -63,6 +72,26 @@ function App() {
         { path: "crawl", element: <CrawlPage /> }
       ],
     },
+
+    {
+      path: '/admin/dashboard',
+      element: <Dashboard />
+    },
+    {
+      path: "/admin/products/:id",
+      element: <ProductDetail />,
+    },
+    {
+      path: "/payment",
+      element: <Payment />
+    }
+    ,
+    {
+      path: "/payment-result",
+      element: <PaymentResult />
+    }
+    
+
   ]);
 
   return (
