@@ -25,6 +25,10 @@ router.get("/orders/total-completed", analysisController.getTotalCompletedOrders
 // GET http://localhost:5000/api/analysis/dashboard
 //router.get("/dashboard", analysisController.getDashboardStats);
 
+// Tổng số đơn hàng và tổng doanh thu theo thời gian
+// GET http://localhost:5000/api/analysis/orders/time-stats
+router.get("/orders/time-stats", analysisController.getOrdersCountByTime);
+    
 // =================================== SẢN PHẨM ===================================
 // Số lượng sản phẩm theo danh mục
 // GET http://localhost:5000/api/analysis/products/categories
