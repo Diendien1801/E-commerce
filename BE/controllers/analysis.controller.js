@@ -1473,3 +1473,167 @@ exports.getTotalCompletedOrders = async (req, res) => {
     });
   }
 };
+
+//API: TỔNG SỐ ORDER VÀ TỔNG ORDER THEO THỜI GIAN
+exports.getOrdersCountByTime = async (req, res) => {
+  try {
+    const {
+      period = 'month',
+      startDate,
+      endDate,
+      year = new Date().getFullYear(),
+      month,
+      quarter,
+      status // optional
+    } = req.query;
+
+    // --- Xây dựng filter match ---
+    let matchFilter = {};
+    if (status) {
+      matchFilter.status = status;
+    }
+
+    if (startDate && endDate) {
+      // dùng khoảng thời gian cụ thể nếu có
+      matchFilter.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      };
+    } else {
+      // nếu không có start/end -> build theo year/month/quarter
+      const startOfPeriod = new Date(Number(year), 0, 1, 0, 0, 0);
+      const endOfPeriod = new Date(Number(year), 11, 31, 23, 59, 59);
+
+      if (month) {
+        const m = Number(month) - 1;
+        startOfPeriod.setMonth(m, 1);
+        // end: last day of that month
+        endOfPeriod.setMonth(m + 1, 0, 23, 59, 59);
+      } else if (quarter) {
+        const q = Number(quarter);
+        const startMonth = (q - 1) * 3;
+        startOfPeriod.setMonth(startMonth, 1);
+        endOfPeriod.setMonth(startMonth + 3, 0, 23, 59, 59);
+      }
+
+      matchFilter.createdAt = {
+        $gte: startOfPeriod,
+        $lte: endOfPeriod
+      };
+    }
+
+    // --- Định nghĩa group format theo period ---
+    let groupFormat = {};
+    let sortField = '_id';
+
+    switch (period) {
+      case 'day':
+        groupFormat = {
+          year: { $year: '$createdAt' },
+          month: { $month: '$createdAt' },
+          day: { $dayOfMonth: '$createdAt' }
+        };
+        sortField = '_id';
+        break;
+      case 'month':
+        groupFormat = {
+          year: { $year: '$createdAt' },
+          month: { $month: '$createdAt' }
+        };
+        sortField = '_id';
+        break;
+      case 'quarter':
+        groupFormat = {
+          year: { $year: '$createdAt' },
+          quarter: {
+            $ceil: { $divide: [{ $month: '$createdAt' }, 3] }
+          }
+        };
+        sortField = '_id';
+        break;
+      case 'year':
+        groupFormat = {
+          year: { $year: '$createdAt' }
+        };
+        sortField = '_id.year';
+        break;
+      default:
+        // fallback to month
+        groupFormat = {
+          year: { $year: '$createdAt' },
+          month: { $month: '$createdAt' }
+        };
+        sortField = '_id';
+        break;
+    }
+
+    // --- Aggregation: tính tổng orders theo group + tổng overall (count) ---
+    const ordersByTime = await Order.aggregate([
+      { $match: matchFilter },
+      {
+        $group: {
+          _id: groupFormat,
+          totalOrders: { $sum: 1 }
+        }
+      },
+      { $sort: { [sortField]: 1 } }
+    ]);
+
+    // Tổng số đơn (overall) trong khoảng filter
+    const totalOrdersOverallResult = await Order.aggregate([
+      { $match: matchFilter },
+      { $count: 'total' }
+    ]);
+    const totalOrdersOverall = totalOrdersOverallResult.length > 0 ? totalOrdersOverallResult[0].total : 0;
+
+    // Format kết quả readable
+    const formatted = ordersByTime.map(item => {
+      let periodLabel = '';
+      switch (period) {
+        case 'day':
+          periodLabel = `${item._id.day}/${item._id.month}/${item._id.year}`;
+          break;
+        case 'month':
+          periodLabel = `${item._id.month}/${item._id.year}`;
+          break;
+        case 'quarter':
+          periodLabel = `Q${item._id.quarter}/${item._id.year}`;
+          break;
+        case 'year':
+          periodLabel = `${item._id.year}`;
+          break;
+        default:
+          periodLabel = `${item._id.month}/${item._id.year}`;
+          break;
+      }
+      return {
+        period: periodLabel,
+        periodData: item._id,
+        totalOrders: item.totalOrders
+      };
+    });
+
+    // Summary: tổng các period, tổng orders (từ aggregate hoặc tổng derived)
+    const summary = {
+      period: period,
+      totalPeriods: formatted.length,
+      totalOrders: totalOrdersOverall
+    };
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        summary,
+        ordersByTime: formatted
+      }
+    });
+
+  } catch (error) {
+    console.error('getOrdersCountByTime error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Lỗi khi lấy thống kê số đơn theo thời gian',
+      detail: error.message
+    });
+  }
+};
