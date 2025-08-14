@@ -2,15 +2,18 @@ const { paypalClient, paypalSdk } = require('../config/paypal');
 const Refund = require('../models/refund.model');
 const { v4: uuidv4 } = require('uuid');
 
+const EXCHANGE_RATE_VND_TO_USD = 0.000038; 
+
 exports.processPayPalRefund = async (payment) => {
-  const currency = payment.currency || 'USD';
+  // Convert VND to USD for PayPal refund
+  const amountUSD = Math.ceil((payment.amount * EXCHANGE_RATE_VND_TO_USD) * 100) / 100;
   const refundId = uuidv4();
 
   const request = new paypalSdk.payments.CapturesRefundRequest(payment.transactionId);
   request.requestBody({
     amount: {
-      currency_code: currency,
-      value: payment.amount.toFixed(2)
+      currency_code: 'USD',
+      value: amountUSD
     }
   });
 
@@ -28,7 +31,7 @@ exports.processPayPalRefund = async (payment) => {
         refundId,
         paymentId: payment.id,
         userId: payment.userId,
-        amount: payment.amount,
+        amount: payment.amount, // Save original VND amount
         method: payment.method,
         refundGatewayId: refundResponse.result.id,
         status: 'success'
