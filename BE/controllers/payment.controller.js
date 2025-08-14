@@ -5,34 +5,36 @@ const { createPayPalOrder } = require('../services/paypal');
 const { v4: uuidv4 } = require('uuid');
 const { URL } = require('url');
 
-const SUPPORTED_CURRENCIES = ['USD'];
-
+const EXCHANGE_RATE_VND_TO_USD = 0.000038; // 1 VND = 0.000038 USD
 
 exports.createPayment = async (req, res) => {
   try {
-    const { orderId, userId, amount, method, currency } = req.body;
+    const { orderId, userId, amount, method } = req.body;
 
     if (!orderId || !userId || !amount || !method) {
       return res.status(400).json({ success: false, message: 'Missing required fields', data: null });
     }
-
-    const payCurrency = currency && SUPPORTED_CURRENCIES.includes(currency)
-      ? currency
-      : 'USD';
 
     const payment = await Payment.create({
       id: uuidv4(),
       userId,
       orderId,
       method,
-      amount,
-      currency: payCurrency,
+      amount, // VND
+      currency: 'VND',
       status: 'pending'
     });
 
     if (method === 'PayPal') {
       try {
-        const approveUrl = await createPayPalOrder(payment);
+        // Convert VND to USD for PayPal
+        const amountUSD = Math.ceil((amount * EXCHANGE_RATE_VND_TO_USD) * 100) / 100;
+
+        const approveUrl = await createPayPalOrder({
+          ...payment.toObject(),
+          amount: amountUSD,
+          currency: 'USD'
+        });
 
         const urlObj = new URL(approveUrl);
         const orderID = urlObj.searchParams.get("token");
@@ -43,7 +45,8 @@ exports.createPayment = async (req, res) => {
             paymentId: payment.id,
             orderID,
             approveUrl,
-            currency: payCurrency
+            currencyPP: 'USD',
+            amountUSD
           }
         });
       } catch (paypalErr) {
@@ -52,7 +55,14 @@ exports.createPayment = async (req, res) => {
       }
     }
 
-    // TODO: Handle MoMo or other payment methods here
+    return res.status(200).json({
+      success: true,
+      data: {
+        paymentId: payment.id,
+        amountVND: payment.amount,
+        currency: payment.currency
+      }
+    });
 
   } catch (err) {
     console.error('createPayment error:', err);
@@ -75,12 +85,29 @@ exports.retryPayPalPayment = async (req, res) => {
     }
 
     if (payment.method === 'PayPal') {
-      const approveUrl = await createPayPalOrder(payment);
-      return res.status(200).json({ success: true, message: 'Retry initiated', data: { approveUrl }});
-    }
+      // Convert VND to USD for PayPal
+      const amountUSD = Math.ceil((payment.amount * EXCHANGE_RATE_VND_TO_USD) * 100) / 100;
 
-    // Handle other payment methods (MoMo, Cash on Delivery) 
-    //....
+      const approveUrl = await createPayPalOrder({
+        ...payment.toObject(),
+        amount: amountUSD,
+        currency: 'USD'
+      });
+
+      const urlObj = new URL(approveUrl);
+      const orderID = urlObj.searchParams.get("token");
+
+      return res.status(200).json({
+        success: true,
+        message: 'Retry initiated',
+        data: {
+          approveUrl,
+          orderID,
+          currency: 'USD',
+          amountUSD
+        }
+      });
+    }
 
     return res.status(400).json({ success: false, message: 'Unsupported payment method for retry' });
 
