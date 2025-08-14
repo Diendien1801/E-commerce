@@ -34,9 +34,7 @@ router.get("/user/:userId", orderController.getOrdersByUserId);
 
 // Get orders with filters of a specific user
 // GET http://localhost:5000/api/orders/user/:userId?status=pending&page=1&limit=5
-router.get("/orders/user/:userId", orderController.getOrdersByUserIdWithFilter);
-
-
+router.get("/orders/user/:userId/filter", orderController.getOrdersByUserIdWithFilter);
 
 // Get order detail by order ID
 //router.get("/detail/:orderId", orderController.getOrderDetailById);
@@ -57,8 +55,6 @@ router.patch('/orders/:id/deliver', orderController.deliverOrder);
 router.patch('/orders/:id/return', orderController.returnOrder);
 router.patch('/orders/:id/complete', orderController.completeOrder);
 
-
-
-
-
+// Get total orders
+router.get('/orders/total', orderController.getTotalOrders);
 module.exports = router;

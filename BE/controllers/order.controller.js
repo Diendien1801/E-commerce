@@ -700,3 +700,13 @@ exports.getOrdersByUserIdWithFilter = async (req, res) => {
 // Search orders by order ID với partial matching
 exports.searchOrdersByOrderId = async (req, res) => {
 };
+
+exports.getTotalOrders = async (req, res) => {
+  try {
+    const total = await Order.countDocuments({});
+    return res.json({ success: true, total });
+  } catch (err) {
+    console.error('getTotalOrders error', err);
+    return res.status(500).json({ success: false, message: 'Server error', error: err.message });
+  }
+};
