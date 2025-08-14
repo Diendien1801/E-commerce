@@ -57,4 +57,8 @@ router.patch('/orders/:id/complete', orderController.completeOrder);
 
 // Get total orders
 router.get('/orders/total', orderController.getTotalOrders);
+
+// Get a specific order by userId and orderId
+router.get('/orders/user/:userId/:orderId', orderController.getOrderByUserAndOrderId);
+
 module.exports = router;

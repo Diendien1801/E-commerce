@@ -710,3 +710,48 @@ exports.getTotalOrders = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Server error', error: err.message });
   }
 };
+
+// Get a specific order by userId and orderId
+exports.getOrderByUserAndOrderId = async (req, res) => {
+  try {
+    const { userId, orderId } = req.params;
+
+    // Validate parameters
+    if (!userId || !orderId) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing userId or orderId",
+        data: null
+      });
+    }
+
+    // Find a single order by userId and orderId
+    const order = await Order.findOne({
+      idUser: userId,
+      _id: orderId
+    });
+
+    // If no order is found
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+        data: null
+      });
+    }
+
+    // Success
+    return res.status(200).json({
+      success: true,
+      message: "Order retrieved successfully",
+      data: order
+    });
+  } catch (error) {
+    // Internal server error
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message
+    });
+  }
+};
