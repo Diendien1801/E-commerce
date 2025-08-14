@@ -250,9 +250,18 @@ exports.cancelOrder = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Order not found', data: null });
     }
 
+    // Only allow cancel when order is pending or picking
+    if (!['pending', 'picking'].includes(order.status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Order cannot be canceled — only orders with status "pending" or "picking" can be canceled',
+        data: null
+      });
+    }
+
     const payment = await Payment.findOne({ orderId: order.idOrder });
 
-    // If order is pending or picking, cancel it
+    // If no payment or payment not completed => cancel order immediately
     if (!payment || payment.status !== 'completed') {
       if (payment) {
         payment.status = 'canceled';
@@ -263,23 +272,31 @@ exports.cancelOrder = async (req, res) => {
       return res.status(200).json({ success: true, message: 'Order canceled', data: order });
     }
 
-    // If payment is completed, process refund
+    // Now payment exists and is completed -> require refund before cancel
     if (payment.method === 'PayPal') {
       try {
+        // processPayPalRefund should throw on failure
         await processPayPalRefund(payment);
+
+        // mark payment as refunded (optional but recommended)
+        payment.status = 'refunded';
+        await payment.save();
+
         order.status = 'canceled';
         await order.save();
+
         return res.status(200).json({
           success: true,
           message: 'Order canceled and refunded',
           data: order
         });
       } catch (refundErr) {
-        console.error('Refund error:', refundErr.message);
+        console.error('Refund error:', refundErr && refundErr.message ? refundErr.message : refundErr);
         return res.status(500).json({ success: false, message: 'Refund failed', data: null });
       }
     }
 
+    // Completed payment but method not supported for automatic refund
     return res.status(400).json({ success: false, message: 'Refund method not supported', data: null });
   } catch (err) {
     console.error('cancelOrder error:', err);
