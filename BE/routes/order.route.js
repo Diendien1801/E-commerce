@@ -36,6 +36,9 @@ router.get("/user/:userId", orderController.getOrdersByUserId);
 // GET http://localhost:5000/api/orders/user/:userId?status=pending&page=1&limit=5
 router.get("/orders/user/:userId/filter", orderController.getOrdersByUserIdWithFilter);
 
+// Search orders for a specific user by substring match on idOrder.
+router.get('/orders/user/:userId/search', orderController.searchOrdersByUser);
+
 // Get order detail by order ID
 //router.get("/detail/:orderId", orderController.getOrderDetailById);
 // Get a single order by its idOrder

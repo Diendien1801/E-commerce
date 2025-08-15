@@ -755,3 +755,69 @@ exports.getOrderByUserAndOrderId = async (req, res) => {
     });
   }
 };
+
+// Utility: escape string to safely use inside RegExp
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+//Search orders for a specific user by substring match on idOrder.
+exports.searchOrdersByUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const q = (req.query.q || '').trim();
+
+    // Pagination
+    const page = Math.max(parseInt(req.query.page || '1', 10), 1);
+    const limit = Math.max(parseInt(req.query.limit || '20', 10), 1);
+    const skip = (page - 1) * limit;
+
+    if (!userId) {
+      return res.status(400).json({ success: false, message: 'Missing userId in params.' });
+    }
+    if (!q) {
+      return res.status(400).json({ success: false, message: 'Missing search query parameter "q".' });
+    }
+
+    // Optional: limit length of q to avoid abuse
+    if (q.length > 100) {
+      return res.status(400).json({ success: false, message: 'Search query too long. Max length is 100 characters.' });
+    }
+
+    // Escape query to avoid regex injection / special char issues
+    const safeQ = escapeRegExp(q);
+
+    // Create case-insensitive regex for substring match
+    const regex = new RegExp(safeQ, 'i');
+
+    // Query: match idUser and idOrder contains `q`
+    const filter = {
+      idUser: userId,
+      idOrder: { $regex: regex }
+    };
+
+    // Total count for pagination metadata
+    const total = await Order.countDocuments(filter);
+
+    // Fetch documents with pagination; sort by newest first
+    const orders = await Order.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .exec();
+
+    return res.status(200).json({
+      success: true,
+      data: orders,
+      meta: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('searchOrdersByUser error:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error.', error: error.message });
+  }
+};
