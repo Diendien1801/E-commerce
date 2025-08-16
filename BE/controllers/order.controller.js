@@ -404,38 +404,84 @@ exports.deliverOrder = async (req, res) => {
       .json({ success: false, message: "Server error", data: null });
   }
 };
-
-// Return order: shipping or delivered -> returned
+// Return order: shipping or delivered -> returning + returning -> returned (refund if needed)
 exports.returnOrder = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
-    if (!order)
+    if (!order) {
       return res
         .status(404)
         .json({ success: false, message: "Order not found", data: null });
-
-    if (!["shipping", "delivered"].includes(order.status)) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: `Cannot return order when status is: ${order.status}`,
-          data: null,
-        });
     }
-    order.status = "returned";
-    await order.save();
-    return res
-      .status(200)
-      .json({
+
+    // If currently shipping or delivered -> start return process (returning)
+    if (["shipping", "delivered"].includes(order.status)) {
+      order.status = "returning";
+      await order.save();
+      return res.status(200).json({
         success: true,
-        message: "Order returned successfully",
+        message: "Order is starting the return process",
         data: order,
       });
+    }
+
+    // If already returning -> finalize to returned (attempt refund if needed)
+    if (order.status === "returning") {
+      const payment = await Payment.findOne({ orderId: order.idOrder });
+
+      // If no payment or payment not completed -> mark returned without refund
+      if (!payment || payment.status !== "completed") {
+        order.status = "returned";
+        await order.save();
+        return res.status(200).json({
+          success: true,
+          message: "Order marked as returned",
+          data: order,
+        });
+      }
+
+      // payment exists and is completed -> attempt refund for supported methods
+      const method = (payment.method || "").toLowerCase();
+
+      // --- PayPal refund ---
+      if (method.includes("paypal")) {
+        try {
+          const refundResult = await processPayPalRefund(payment);
+
+          // processPayPalRefund already marks payment.status='refunded' and saves payment
+          payment.status = payment.status || 'refunded';
+          payment.hasRefund = true;
+          await payment.save().catch(() => { /* ignore save error if already saved */ });
+
+          order.status = "returned";
+          await order.save();
+
+          return res.status(200).json({
+            success: true,
+            message: "Order returned and refunded",
+            data: { order, refund: refundResult },
+          });
+        } catch (refundErr) {
+          console.error("PayPal refund error:", refundErr && refundErr.message ? refundErr.message : refundErr);
+          return res.status(500).json({ success: false, message: "Refund failed", data: null });
+        }
+      }
+
+      // --- VnPay refund (if you have implementation) ---
+
+      // Completed payment but method not supported for automatic refund
+      return res.status(400).json({ success: false, message: "Refund method not supported", data: null });
+    }
+
+    // Any other status -> cannot return
+    return res.status(400).json({
+      success: false,
+      message: `Cannot return order when status is: ${order.status}`,
+      data: null,
+    });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ success: false, message: "Server error", data: null });
+    console.error("returnOrder error:", error);
+    return res.status(500).json({ success: false, message: "Server error", data: null });
   }
 };
 
