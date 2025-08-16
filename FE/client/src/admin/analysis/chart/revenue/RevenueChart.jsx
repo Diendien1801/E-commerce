@@ -24,13 +24,13 @@ const RevenueByMonth = () => {
     if (!data.length) return;
 
     const margin = { top: 50, right: 30, bottom: 50, left: 60 };
-    const width = 700 - margin.left - margin.right;
-    const height = 400 - margin.top - margin.bottom;
+    const width = 450;
+    const height = 250;
 
     const svg = d3
       .select(svgRef.current)
-      .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top + margin.bottom)
+      .attr('width', width + 300)
+      .attr('height', height + 300)
       .selectAll('*')
       .remove();
 
@@ -61,21 +61,44 @@ const RevenueByMonth = () => {
       )
       .selectAll('text')
       .attr('transform', 'rotate(-40)')
-      .style('text-anchor', 'end');
+      .style('text-anchor', 'end')
+      .style("font-size", "12px");
 
     chart.append('g').call(d3.axisLeft(y));
 
-    chart
-      .selectAll('.bar')
+    // Line chart
+    const line = d3.line()
+      .x((d) => x(d.periodData.month) + x.bandwidth() / 2)
+      .y((d) => y(d.totalRevenue));
+
+    chart.append('path')
+      .datum(data)
+      .attr('fill', 'none')
+      .attr('stroke', '#4682B4')
+      .attr('stroke-width', 3)
+      .attr('d', line);
+
+    // Dots
+    chart.selectAll('.dot')
       .data(data)
-      .enter()
-      .append('rect')
-      .attr('class', 'bar')
-      .attr('x', (d) => x(d.periodData.month))
-      .attr('y', (d) => y(d.totalRevenue))
-      .attr('width', x.bandwidth())
-      .attr('height', (d) => height - y(d.totalRevenue))
+      .join('circle')
+      .attr('class', 'dot')
+      .attr('cx', (d) => x(d.periodData.month) + x.bandwidth() / 2)
+      .attr('cy', (d) => y(d.totalRevenue))
+      .attr('r', 5)
       .attr('fill', '#4682B4');
+
+    // Count label above each dot
+    chart.selectAll('.dot-label')
+      .data(data)
+      .join('text')
+      .attr('class', 'dot-label')
+      .attr('x', (d) => x(d.periodData.month) + x.bandwidth() / 2)
+      .attr('y', (d) => y(d.totalRevenue) - 10)
+      .attr('text-anchor', 'middle')
+      .style('font-size', '12px')
+      .style('fill', '#333')
+      .text((d) => d.totalRevenue);
 
     // Title
     chart
@@ -85,7 +108,6 @@ const RevenueByMonth = () => {
       .attr('text-anchor', 'middle')
       .style('font-size', '16px')
       .style('font-weight', 'bold')
-      .text(`Monthly Revenue for ${year}`);
   }, [data]);
 
   const years = Array.from({ length: 6 }, (_, i) => 2020 + i);

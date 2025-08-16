@@ -14,7 +14,7 @@ const OrderStatus = () => {
     function drawChart(data) {
       d3.select("#chart").selectAll("*").remove();
 
-      const width = 600;
+      const width = 500;
       const height = 400;
       const margin = { top: 20, right: 30, bottom: 40, left: 50 };
 

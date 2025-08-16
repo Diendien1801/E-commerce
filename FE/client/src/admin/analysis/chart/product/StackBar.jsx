@@ -14,8 +14,8 @@ const ProductCategory = () => {
       });
 
     function drawChart(rawData) {
-      const svgWidth = 800;
-      const svgHeight = 450;
+      const svgWidth = 350;
+      const svgHeight = 350;
       const margin = { top: 30, right: 30, bottom: 60, left: 60 };
       const width = svgWidth - margin.left - margin.right;
       const height = svgHeight - margin.top - margin.bottom;
@@ -64,7 +64,8 @@ const ProductCategory = () => {
         .call(d3.axisBottom(x))
         .selectAll("text")
         .attr("transform", "rotate(-20)")
-        .style("text-anchor", "end");
+        .style("text-anchor", "end")
+        .style("font-size", "12px");
 
       // Y axis
       const y = d3
@@ -78,7 +79,10 @@ const ProductCategory = () => {
         .nice()
         .range([height, 0]);
 
-      svg.append("g").call(d3.axisLeft(y));
+      svg
+        .append("g")
+        .call(d3.axisLeft(y))
+        .style("font-size", "12px");
 
       // Stack generator
       const stackGenerator = d3.stack().keys(allSubcategories);
@@ -120,7 +124,7 @@ const ProductCategory = () => {
         })
         .on("mousemove", (event) => {
           tooltip
-            .style("top", event.pageY - 460 + "px")
+            .style("top", event.pageY - 350 + "px")
             .style("left", event.pageX - 300 + "px");
         })
         .on("mouseleave", () => tooltip.style("visibility", "hidden"));
