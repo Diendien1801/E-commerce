@@ -579,7 +579,7 @@ const clearCart = async () => {
     // Không throw error vì đây không phải lỗi critical
   }
 };
-// Hàm lấy thông tin order (sử dụng endpoint có sẵn)
+// // Hàm lấy thông tin order (sử dụng endpoint có sẵn)
 const getOrderInfo = async (orderId) => {
   try {
     const response = await fetch(`http://localhost:5000/api/orders/orders/id/${orderId}`);
@@ -663,7 +663,13 @@ const handleMoMoPayment = async (totalAmount,orderId) => {
               </div>
             ) : userInfo ? (
               <div className="account-info">
-                <div className="avatar">{getInitials(userInfo.name || userInfo.fullName)}</div>
+                <div className="avatar">
+                  <img 
+                    src={userInfo.avatar || '/avatar-default.svg'} 
+                    alt={userInfo.name || userInfo.fullName || 'Avatar'} 
+                    style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover' }}
+                  />
+                </div>
                 <div>
                   <p className="name">{userInfo.name || userInfo.fullName || 'Người dùng'}</p>
                   <p className="small">
@@ -980,14 +986,12 @@ const handleMoMoPayment = async (totalAmount,orderId) => {
             )}
           </div>
 
-          {/* Mã khuyến mãi */}
           <div className="card">
             <h3>Mã khuyến mãi</h3>
             <input className="promo-code" type="text" placeholder="Nhập mã khuyến mãi" />
             <button className="apply">Áp dụng</button>
           </div>
 
-          {/* Tóm tắt đơn hàng */}
           <div className="card">
             <h3>Tóm tắt đơn hàng</h3>
             <div className="summary-row">
@@ -1025,8 +1029,6 @@ const handleMoMoPayment = async (totalAmount,orderId) => {
         </div>
       </div>
     
-
-      {/* ✅ MapView với địa chỉ đầy đủ */}
       {showMap && (
         <MapView 
           initialAddress={
