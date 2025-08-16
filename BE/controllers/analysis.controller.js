@@ -1637,3 +1637,184 @@ exports.getOrdersCountByTime = async (req, res) => {
     });
   }
 };
+
+exports.getRevenueByCategory = async (req, res) => {
+  try {
+    const { period, startDate, endDate, statuses, sortPeriod = 'asc' } = req.query;
+    if (!period || !['year','month','day','quarter'].includes(period)) {
+      return res.status(400).json({ success: false, message: "Query param 'period' bắt buộc và phải là one of: year, month, day, quarter" });
+    }
+
+    const statusList = (statuses ? statuses.split(',') : ['delivered','completed']).map(s => s.trim());
+
+    const dateFilterObj = {};
+    if (startDate) dateFilterObj.$gte = new Date(startDate);
+    if (endDate) dateFilterObj.$lte = new Date(endDate);
+
+    const addCreatedAtDateStage = {
+      $addFields: {
+        createdAtDate: {
+          $cond: [
+            { $eq: [ { $type: "$createdAt" }, "string" ] },
+            { $dateFromString: { dateString: "$createdAt", onError: null, onNull: null } },
+            "$createdAt"
+          ]
+        }
+      }
+    };
+
+    let validPeriodExpr;
+    if (period === 'year') {
+      validPeriodExpr = { $dateToString: { format: "%Y", date: "$createdAtDate" } };
+    } else if (period === 'month') {
+      validPeriodExpr = { $dateToString: { format: "%Y-%m", date: "$createdAtDate" } };
+    } else if (period === 'day') {
+      validPeriodExpr = { $dateToString: { format: "%Y-%m-%d", date: "$createdAtDate" } };
+    } else { // quarter
+      validPeriodExpr = {
+        $let: {
+          vars: {
+            y: { $dateToString: { format: "%Y", date: "$createdAtDate" } },
+            m: { $month: "$createdAtDate" }
+          },
+          in: {
+            $concat: [
+              "$$y",
+              "-Q",
+              { $toString: { $ceil: { $divide: ["$$m", 3] } } }
+            ]
+          }
+        }
+      };
+    }
+
+    const pipeline = [
+      addCreatedAtDateStage,
+
+      {
+        $match: Object.assign(
+          { status: { $in: statusList } },
+          (Object.keys(dateFilterObj).length ? { createdAtDate: dateFilterObj } : {})
+        )
+      },
+
+      { $unwind: "$items" },
+
+      {
+        $lookup: {
+          from: Product.collection.name,
+          let: { pid: "$items.productID" },
+          pipeline: [
+            { $addFields: { productIdStr: { $toString: "$_id" } } },
+            { $match: { $expr: { $eq: ["$productIdStr", "$$pid"] } } },
+            { $project: { idCategory: 1, title: 1 } }
+          ],
+          as: "productDoc"
+        }
+      },
+      { $unwind: { path: "$productDoc", preserveNullAndEmptyArrays: true } },
+
+      {
+        $addFields: {
+          itemRevenue: { $multiply: [ "$items.price", { $ifNull: ["$items.quantity", 1] } ] },
+          periodLabel: {
+            $cond: [
+              { $eq: ["$createdAtDate", null] },
+              "unknown",
+              validPeriodExpr
+            ]
+          },
+          categoryId: {
+            $cond: [
+              { $ifNull: [ "$productDoc.idCategory", false ] },
+              "$productDoc.idCategory",
+              "unknown"
+            ]
+          }
+        }
+      },
+
+      // group theo period + category
+      {
+        $group: {
+          _id: { period: "$periodLabel", category: "$categoryId" },
+          totalRevenue: { $sum: "$itemRevenue" }
+        }
+      },
+
+      { $sort: { "_id.period": 1, totalRevenue: -1 } },
+
+      // group lại theo period, gom các category (bao gồm cả unknown)
+      {
+        $group: {
+          _id: "$_id.period",
+          categories: {
+            $push: {
+              category: "$_id.category",
+              totalRevenue: "$totalRevenue"
+            }
+          },
+          totalRevenueForPeriod: { $sum: "$totalRevenue" }
+        }
+      },
+
+      { $sort: { "_id": sortPeriod === 'desc' ? -1 : 1 } },
+
+      // merge các category unknown lại thành 1
+      {
+        $project: {
+          _id: 0,
+          period: "$_id",
+          totalRevenueForPeriod: 1,
+          categories: {
+            $let: {
+              vars: {
+                known: {
+                  $filter: {
+                    input: "$categories",
+                    as: "c",
+                    cond: { $ne: ["$$c.category", "unknown"] }
+                  }
+                },
+                unknownSum: {
+                  $sum: {
+                    $map: {
+                      input: {
+                        $filter: {
+                          input: "$categories",
+                          as: "c",
+                          cond: { $eq: ["$$c.category", "unknown"] }
+                        }
+                      },
+                      as: "u",
+                      in: "$$u.totalRevenue"
+                    }
+                  }
+                }
+              },
+              in: {
+                $concatArrays: [
+                  "$$known",
+                  {
+                    $cond: [
+                      { $gt: ["$$unknownSum", 0] },
+                      [ { category: "unknown", totalRevenue: "$$unknownSum" } ],
+                      []
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    ];
+
+    const result = await Order.aggregate(pipeline).allowDiskUse(true);
+    return res.json({ success: true, data: result });
+
+  } catch (err) {
+    console.error("revenueByCategory error:", err);
+    return res.status(500).json({ success: false, message: "Server error", error: err.message });
+  }
+};

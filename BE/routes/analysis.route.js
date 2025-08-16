@@ -61,6 +61,8 @@ router.get("/revenue/by-time", analysisController.getRevenueByTime);
 // GET http://localhost:5000/api/analysis/revenue/compare?compareType=month&currentPeriod=2024-07&previousPeriod=2024-06
 //router.get("/revenue/compare", analysisController.compareRevenue);
 
+// API: Doanh thu theo danh mục
+router.get("/revenue/by-category", analysisController.getRevenueByCategory);
 // =================================== NGƯỜI DÙNG ===================================
 // API: Trả về thông tin và số lượng người dùng chưa mua hàng (phân trang)
 // GET http://localhost:5000/api/analysis/users/no-orders?page=1&limit=10
