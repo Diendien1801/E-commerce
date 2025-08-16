@@ -2,16 +2,25 @@ const Cart = require("../models/cart.model");
 const Product = require("../models/product.model");
 const Inventory = require("../models/inventory.model");
 
-// API 1: Thêm sản phẩm vào giỏ hàng (nếu có rồi thì +1 quantity)
+// API 1: Thêm / cập nhật sản phẩm vào giỏ hàng
 exports.addToCart = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { productId } = req.body;
+    const { productId, quantity = 1 } = req.body; // quantity truyền từ client, default = 1
 
+    // Validate productId và quantity
     if (!productId) {
       return res.status(400).json({
         success: false,
         message: "Product ID is required",
+      });
+    }
+
+    const qtyToAdd = parseInt(quantity, 10);
+    if (isNaN(qtyToAdd) || qtyToAdd <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Quantity must be a positive integer",
       });
     }
 
@@ -49,24 +58,33 @@ exports.addToCart = async (req, res) => {
     );
 
     if (existingItemIndex > -1) {
-      // Sản phẩm đã có -> tăng quantity lên 1
-      const newQuantity = cart.items[existingItemIndex].quantity + 1;
+      // Sản phẩm đã có -> sẽ tăng thêm qtyToAdd
+      const currentQty = cart.items[existingItemIndex].quantity;
+      const newQuantity = currentQty + qtyToAdd;
 
-      // Kiểm tra tồn kho có đủ không
+      // Kiểm tra tồn kho có đủ không (tổng sau khi thêm)
       if (inventory.quantity < newQuantity) {
         return res.status(400).json({
           success: false,
-          message: "Insufficient stock",
+          message: `Insufficient stock. You can add up to ${inventory.quantity - currentQty} more of this product.`,
         });
       }
 
       cart.items[existingItemIndex].quantity = newQuantity;
       cart.items[existingItemIndex].priceAtTime = product.price; // Cập nhật giá mới nhất
+      cart.items[existingItemIndex].updatedAt = new Date();
     } else {
-      // Sản phẩm chưa có -> thêm mới với quantity = 1
+      // Sản phẩm chưa có -> thêm mới với quantity = qtyToAdd
+      if (inventory.quantity < qtyToAdd) {
+        return res.status(400).json({
+          success: false,
+          message: `Insufficient stock. Maximum available quantity is ${inventory.quantity}.`,
+        });
+      }
+
       cart.items.push({
         productId,
-        quantity: 1,
+        quantity: qtyToAdd,
         priceAtTime: product.price,
         addedAt: new Date(),
       });
@@ -91,6 +109,7 @@ exports.addToCart = async (req, res) => {
     });
   }
 };
+
 
 // API 2: Xóa sản phẩm khỏi giỏ hàng (giảm quantity, nếu <1 thì xóa hoàn toàn)
 exports.removeFromCart = async (req, res) => {
