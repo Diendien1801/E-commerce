@@ -77,3 +77,6 @@ router.get("/never-purchased/count", analysisController.getUsersNeverPurchasedCo
 // Get user registration statistics by time
 // GET localhost:5000/api/analysis/registration-stats?period=month&year=2024
 router.get("/registration-stats", analysisController.getUserRegistrationByTime);
+
+// Get top 10 spenders
+router.get('/top-spenders', analysisController.getTopSpenders);

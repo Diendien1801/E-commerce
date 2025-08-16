@@ -1638,11 +1638,18 @@ exports.getOrdersCountByTime = async (req, res) => {
   }
 };
 
+// Thống kê doanh thu theo danh mục
 exports.getRevenueByCategory = async (req, res) => {
   try {
-    const { period, startDate, endDate, statuses, sortPeriod = 'asc' } = req.query;
-    if (!period || !['year','month','day','quarter'].includes(period)) {
-      return res.status(400).json({ success: false, message: "Query param 'period' bắt buộc và phải là one of: year, month, day, quarter" });
+    let { period, startDate, endDate, statuses, sortPeriod = 'asc' } = req.query;
+
+    // Nếu không có period thì mặc định = "year"
+    if (!period) {
+      period = "year";
+    }
+
+    if (!['year','month','day','quarter'].includes(period)) {
+      return res.status(400).json({ success: false, message: "Query param 'period' phải là one of: year, month, day, quarter" });
     }
 
     const statusList = (statuses ? statuses.split(',') : ['delivered','completed']).map(s => s.trim());
@@ -1650,6 +1657,15 @@ exports.getRevenueByCategory = async (req, res) => {
     const dateFilterObj = {};
     if (startDate) dateFilterObj.$gte = new Date(startDate);
     if (endDate) dateFilterObj.$lte = new Date(endDate);
+
+    // Nếu period = year và không truyền startDate/endDate → mặc định lấy năm hiện tại
+    if (period === "year" && !startDate && !endDate) {
+      const now = new Date();
+      const firstDay = new Date(now.getFullYear(), 0, 1);   // 01-01 năm hiện tại
+      const lastDay  = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999); // 31-12 năm hiện tại
+      dateFilterObj.$gte = firstDay;
+      dateFilterObj.$lte = lastDay;
+    }
 
     const addCreatedAtDateStage = {
       $addFields: {
@@ -1734,7 +1750,6 @@ exports.getRevenueByCategory = async (req, res) => {
         }
       },
 
-      // group theo period + category
       {
         $group: {
           _id: { period: "$periodLabel", category: "$categoryId" },
@@ -1744,7 +1759,6 @@ exports.getRevenueByCategory = async (req, res) => {
 
       { $sort: { "_id.period": 1, totalRevenue: -1 } },
 
-      // group lại theo period, gom các category (bao gồm cả unknown)
       {
         $group: {
           _id: "$_id.period",
@@ -1760,7 +1774,6 @@ exports.getRevenueByCategory = async (req, res) => {
 
       { $sort: { "_id": sortPeriod === 'desc' ? -1 : 1 } },
 
-      // merge các category unknown lại thành 1
       {
         $project: {
           _id: 0,
@@ -1816,5 +1829,119 @@ exports.getRevenueByCategory = async (req, res) => {
   } catch (err) {
     console.error("revenueByCategory error:", err);
     return res.status(500).json({ success: false, message: "Server error", error: err.message });
+  }
+};
+
+exports.getTopSpenders = async (req, res) => {
+  try {
+    const { period = 'year', limit = 10 } = req.query;
+    const limitNum = Math.max(1, Math.min(100, parseInt(limit, 10) || 10)); 
+
+    const now = new Date();
+    const defaultYear = now.getFullYear();
+    const qYear = parseInt(req.query.year, 10) || defaultYear;
+
+    // xây hàm tính start/end theo period
+    function getRange(period, year, query) {
+      let start, end, label;
+      switch ((period || '').toLowerCase()) {
+        case 'month': {
+          const m = Math.max(1, Math.min(12, parseInt(query.month, 10) || (now.getMonth() + 1)));
+          start = new Date(year, m - 1, 1, 0, 0, 0, 0);
+          end = new Date(year, m, 1, 0, 0, 0, 0);
+          label = `${year}-M${m}`;
+          break;
+        }
+        case 'day': {
+          const m = Math.max(1, Math.min(12, parseInt(query.month, 10) || (now.getMonth() + 1)));
+          const d = Math.max(1, Math.min(31, parseInt(query.day, 10) || now.getDate()));
+          start = new Date(year, m - 1, d, 0, 0, 0, 0);
+          end = new Date(start);
+          end.setDate(end.getDate() + 1);
+          label = `${year}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+          break;
+        }
+        case 'quarter': {
+          const q = Math.max(1, Math.min(4, parseInt(query.quarter, 10) || (Math.floor(now.getMonth()/3) + 1)));
+          const startMonth = (q - 1) * 3 + 1;
+          start = new Date(year, startMonth - 1, 1, 0, 0, 0, 0);
+          end = new Date(year, startMonth - 1 + 3, 1, 0, 0, 0, 0);
+          label = `${year}-Q${q}`;
+          break;
+        }
+        case 'year':
+        default: {
+          start = new Date(year, 0, 1, 0, 0, 0, 0);
+          end = new Date(year + 1, 0, 1, 0, 0, 0, 0);
+          label = `${year}`;
+          break;
+        }
+      }
+      return { start, end, label };
+    }
+
+    const { start, end, label } = getRange(period, qYear, req.query);
+
+    const defaultStatuses = ['completed', 'delivered'];
+    let statuses;
+    if (req.query.status) {
+      statuses = req.query.status.split(',').map(s => s.trim()).filter(Boolean);
+      if (statuses.length === 0) statuses = defaultStatuses;
+    } else {
+      statuses = defaultStatuses;
+    }
+
+    // Pipeline aggregation
+    const pipeline = [
+      {
+        $match: {
+          createdAt: { $gte: start, $lt: end },
+          status: { $in: statuses }
+        }
+      },
+      { $unwind: '$items' },
+      {
+        $group: {
+          _id: '$idUser',
+          totalSpent: { $sum: { $multiply: ['$items.price', '$items.quantity'] } }
+        }
+      },
+      { $sort: { totalSpent: -1 } },
+      { $limit: limitNum },
+
+      // join với collection users
+      {
+        $lookup: {
+          from: 'users',            // tên collection user
+          localField: '_id',        // idUser trong Order
+          foreignField: '_id',      // _id trong User (nếu idUser lưu ObjectId)
+          as: 'userInfo'
+        }
+      },
+      { $unwind: { path: '$userInfo', preserveNullAndEmptyArrays: true } },
+
+      {
+        $project: {
+          _id: 0,
+          idUser: '$_id',
+          name: '$userInfo.name', // lấy name của user
+          totalSpent: { $round: ['$totalSpent', 2] }
+        }
+      }
+    ];
+
+    const results = await Order.aggregate(pipeline);
+
+    return res.json({
+      success: true,
+      period: period.toLowerCase(),
+      timeframe: label,
+      statuses,
+      count: results.length,
+      data: results
+    });
+  } catch (err) {
+    console.error('getTopSpenders error:', err);
+    return res.status(500).json({ success: false, message: 'Server error', error: err.message });
   }
 };
