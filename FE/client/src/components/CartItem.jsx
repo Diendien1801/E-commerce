@@ -1,4 +1,4 @@
-import React from 'react';
+import "./cart-item.css";
 
 const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
   const { productId, quantity, priceAtTime } = item;
@@ -14,7 +14,7 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
   };
 
   return (
-    <div className="cart-item">
+    <div className="cart-item" style={{ display: 'flex', alignItems: 'center', gap: '24px', background: '#fff', borderBottom: '1px solid #e5e7eb', padding: '16px 0' }}>
       <div className="cart-item-product">
         <div className="product-image">
           <img 
@@ -23,7 +23,7 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
           />
         </div>
         <div className="product-info">
-          <h3 className="product-title">{productId.title}</h3>
+          <h3>{productId.title}</h3>
           <p className="product-category">LTD BOXSET</p>
           <p className="product-label">Hãng Đĩa Thời Đại</p>
           <button 
