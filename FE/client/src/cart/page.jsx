@@ -4,12 +4,14 @@ import Footer from '../components/footer/footer';
 import CartItem from '../components/CartItem';
 import Breadcrumb from '../components/breadcrumb/page';
 import CartSummary from '../components/CartSummary';
+import { useAuth } from '../components/context/authcontext';
 import './cart.css';
 
 const CartPage = () => {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [note, setNote] = useState('');
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchCart();
@@ -18,7 +20,7 @@ const CartPage = () => {
   const fetchCart = async () => {
     try {
       setLoading(true);
-      const userId = localStorage.getItem('userId') || '6888ecdffb44b885381dd9e2';
+      const userId = user?._id;
       
       const response = await fetch(`http://localhost:5000/api/cart/user/${userId}`);
       const data = await response.json();
@@ -35,7 +37,7 @@ const CartPage = () => {
 
   const updateQuantity = async (productId, newQuantity) => {
     try {
-      const userId = localStorage.getItem('userId') || '6888ecdffb44b885381dd9e2';
+      const userId = user?._id || '6888ecdffb44b885381dd9e2';
       
       if (newQuantity <= 0) {
         await fetch(`http://localhost:5000/api/cart/${userId}/remove/${productId}`, {
@@ -70,7 +72,7 @@ const CartPage = () => {
 
   const removeItem = async (productId) => {
     try {
-      const userId = localStorage.getItem('userId') || '6888ecdffb44b885381dd9e2';
+      const userId = user?._id || '6888ecdffb44b885381dd9e2';
       const currentItem = cartItems.find(item => item.productId._id === productId);
       
       for (let i = 0; i < currentItem.quantity; i++) {
@@ -130,7 +132,6 @@ const CartPage = () => {
               )}
             </div>
 
-            {/* Cart Notes */}
             {cartItems.length > 0 && (
               <div className="cart-notes">
                 <label htmlFor="order-note">Thêm ghi chú cho đơn hàng...</label>
@@ -144,7 +145,6 @@ const CartPage = () => {
               </div>
             )}
 
-            {/* Cart Summary */}
             {cartItems.length > 0 && (
               <CartSummary
                 total={calculateTotal()}

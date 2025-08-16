@@ -189,15 +189,20 @@ function OrderPage() {
                                 <div style={{ color: 'red' }}>{t('error', 'Error')}: {product.error}</div>
                               ) : product?.data ? (
                                 <>
-                                  {product.data.imageUrl && product.data.imageUrl[0] && (
-                                    <img src={product.data.imageUrl[0]} alt={product.data.title} />
-                                  )}
-                                  <div className="product-info">
-                                    <div className="product-title">{product.data.title}</div>
-                                    <div className="product-desc">{product.data.description?.split('\n')[0]}</div>
-                                    <div className="product-meta">
-                                      {t('productid', 'Product ID')}: {item.productID}<br/>
-                                      {t('quantity', 'Quantity')}: {item.quantity} &nbsp;|&nbsp; {t('price', 'Price')}: ${item.price}
+                                  <div className="product-card-clickable"
+                                    onClick={() => navigate(`../view-product/${product.data._id}`)}
+                                    style={{ display: 'flex', cursor: 'pointer', gap: '1rem', alignItems: 'flex-start' }}
+                                  >
+                                    {product.data.imageUrl && product.data.imageUrl[0] && (
+                                      <img src={product.data.imageUrl[0]} alt={product.data.title} />
+                                    )}
+                                    <div className="product-info">
+                                      <div className="product-title">{product.data.title}</div>
+                                      <div className="product-desc">{product.data.description?.split('\n')[0]}</div>
+                                      <div className="product-meta">
+                                        {t('productid', 'Product ID')}: {item.productID}<br/>
+                                        {t('quantity', 'Quantity')}: {item.quantity} &nbsp;|&nbsp; {t('price', 'Price')}: ${item.price}
+                                      </div>
                                     </div>
                                   </div>
                                 </>

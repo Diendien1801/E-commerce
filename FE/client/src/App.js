@@ -30,10 +30,8 @@ import OrderManage from './admin/orders/page';
 import CategoryManagement from './admin/category/page';
 import CrawlPage from './admin/crawl/page';
 
-import Dashboard from './admin/analysis/dashboard';
 import Payment from './payment/page';
 import PaymentResult from './paymentResult/payment-result'; 
-import Cart from './cart/page';
 
 
 

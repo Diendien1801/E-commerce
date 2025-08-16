@@ -9,11 +9,10 @@ import { useTranslation } from 'react-i18next';
 
 const Home = () => {
     const [products, setProducts] = useState([]);
-    const [vinylProducts, setVinylProducts] = useState([]); // Thêm state cho vinyl
+    const [vinylProducts, setVinylProducts] = useState([]); 
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
 useEffect(() => {
-        // Track trang hiện tại là home
         sessionStorage.setItem('previousPage', '/');
     }, []);
     useEffect(() => {
@@ -45,23 +44,42 @@ useEffect(() => {
             <div className="home-page">
                 <Banner />
                 <section className="featured-images-section">
-    <div className="featured-images-grid">
-        <div className="featured-image-item large">
-            <img src="https://theme.hstatic.net/1000304920/1001307865/14/banner_3_image_1.png?v=466" alt="Vinyl Collection" />
-        </div>
-        <div className="featured-image-item medium">
-            <img src="https://theme.hstatic.net/1000304920/1001307865/14/banner_3_image_2.png?v=466" alt="Vinyl Collection" />
-        </div>
-        <div className="featured-images-right">
-            <div className="featured-image-item small">
-                <img src="https://theme.hstatic.net/1000304920/1001307865/14/banner_3_image_3_2.png?v=466" alt="CD Collection" />
-            </div>
-            <div className="featured-image-item small">
-                <img src="https://theme.hstatic.net/1000304920/1001307865/14/banner_3_image_3.png?v=466" alt="Cassette Collection" />
-            </div>
-        </div>
-    </div>
-</section>
+                    <div className="featured-images-grid">
+                        <div className="featured-image-item large" 
+                            onClick={() => navigate('/shop?category=104')} 
+                            style={{ cursor: 'pointer' }}>
+                            <img 
+                                src="https://theme.hstatic.net/1000304920/1001307865/14/banner_3_image_1.png?v=466" 
+                                alt="Vinyl Collection"/>
+                        </div>
+                        <div className="featured-image-item medium">
+                            <div className="featured-image-item large" 
+                                onClick={() => navigate('/shop?category=102')} 
+                                style={{ cursor: 'pointer' }}>
+                                <img src="https://theme.hstatic.net/1000304920/1001307865/14/banner_3_image_2.png?v=466" 
+                                    alt="CD Collection" />
+                            </div>
+                        </div>
+                        <div className="featured-images-right">
+                            <div className="featured-image-item small">
+                                <div className="featured-image-item large" 
+                                onClick={() => navigate('/shop?category=1')} 
+                                style={{ cursor: 'pointer' }}>
+                                <img src="https://theme.hstatic.net/1000304920/1001307865/14/banner_3_image_3_2.png?v=466" 
+                                    alt="Times Collection" />
+                            </div>
+                        </div>
+                        <div className="featured-image-item small">
+                            <div className="featured-image-item large" 
+                            onClick={() => navigate('/shop?category=103')} 
+                            style={{ cursor: 'pointer' }}>
+                            <img src="https://theme.hstatic.net/1000304920/1001307865/14/banner_3_image_3.png?v=466" 
+                                alt="Cassette Collection" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
                 <div className="product-sections">
                     <section className="product-section">
                         <div className="section-header">
