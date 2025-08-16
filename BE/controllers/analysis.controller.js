@@ -1834,8 +1834,8 @@ exports.getRevenueByCategory = async (req, res) => {
 
 exports.getTopSpenders = async (req, res) => {
   try {
-    const { period = 'year', limit = 10 } = req.query;
-    const limitNum = Math.max(1, Math.min(100, parseInt(limit, 10) || 10)); 
+    const { period, limit = 10 } = req.query;
+    const limitNum = Math.max(1, Math.min(100, parseInt(limit, 10) || 10));
 
     const now = new Date();
     const defaultYear = now.getFullYear();
@@ -1869,11 +1869,17 @@ exports.getTopSpenders = async (req, res) => {
           label = `${year}-Q${q}`;
           break;
         }
-        case 'year':
-        default: {
+        case 'year': {
           start = new Date(year, 0, 1, 0, 0, 0, 0);
           end = new Date(year + 1, 0, 1, 0, 0, 0, 0);
           label = `${year}`;
+          break;
+        }
+        default: {
+          // mặc định: không giới hạn thời gian (tất cả năm)
+          start = null;
+          end = null;
+          label = 'all-time';
           break;
         }
       }
@@ -1892,13 +1898,18 @@ exports.getTopSpenders = async (req, res) => {
     }
 
     // Pipeline aggregation
-    const pipeline = [
-      {
-        $match: {
-          createdAt: { $gte: start, $lt: end },
-          status: { $in: statuses }
-        }
-      },
+    const pipeline = [];
+
+    // chỉ add $match theo thời gian nếu có start/end
+    const matchStage = {
+      status: { $in: statuses }
+    };
+    if (start && end) {
+      matchStage.createdAt = { $gte: start, $lt: end };
+    }
+    pipeline.push({ $match: matchStage });
+
+    pipeline.push(
       { $unwind: '$items' },
       {
         $group: {
@@ -1908,33 +1919,30 @@ exports.getTopSpenders = async (req, res) => {
       },
       { $sort: { totalSpent: -1 } },
       { $limit: limitNum },
-
-      // join với collection users
       {
         $lookup: {
-          from: 'users',            // tên collection user
-          localField: '_id',        // idUser trong Order
-          foreignField: '_id',      // _id trong User (nếu idUser lưu ObjectId)
+          from: 'users',
+          localField: '_id',
+          foreignField: '_id', // nếu Order.idUser là ObjectId
           as: 'userInfo'
         }
       },
       { $unwind: { path: '$userInfo', preserveNullAndEmptyArrays: true } },
-
       {
         $project: {
           _id: 0,
           idUser: '$_id',
-          name: '$userInfo.name', // lấy name của user
+          name: '$userInfo.name',
           totalSpent: { $round: ['$totalSpent', 2] }
         }
       }
-    ];
+    );
 
     const results = await Order.aggregate(pipeline);
 
     return res.json({
       success: true,
-      period: period.toLowerCase(),
+      period: period ? period.toLowerCase() : 'all-time',
       timeframe: label,
       statuses,
       count: results.length,
@@ -1945,3 +1953,4 @@ exports.getTopSpenders = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Server error', error: err.message });
   }
 };
+
