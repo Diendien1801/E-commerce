@@ -9,27 +9,63 @@ const EXCHANGE_RATE_VND_TO_USD = 0.000038; // 1 VND = 0.000038 USD
 
 exports.createPayment = async (req, res) => {
   try {
-    const { orderId, userId, amount, method } = req.body;
+    // Không lấy amount từ body nữa
+    const { orderId, method } = req.body;
 
-    if (!orderId || !userId || !amount || !method) {
-      return res.status(400).json({ success: false, message: 'Missing required fields', data: null });
+    // Kiểm tra trường bắt buộc
+    if (!orderId || !method) {
+      return res.status(400).json({ success: false, message: 'Missing required fields: orderId or method', data: null });
     }
 
+    // Tìm order: ưu tiên tìm theo idOrder, nếu không có thử tìm theo _id
+    let order = await Order.findOne({ idOrder: orderId });
+    if (!order) {
+      // nếu orderId có thể là ObjectId thì thử tìm bằng _id
+      if (mongoose.Types.ObjectId.isValid(orderId)) {
+        order = await Order.findById(orderId);
+      }
+    }
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found', data: null });
+    }
+
+    // Tính tổng tiền từ thông tin order (price * quantity)
+    const totalVND = order.items && order.items.length
+      ? order.items.reduce((sum, it) => {
+          const price = Number(it.price || 0);
+          const qty = Number(it.quantity || 0);
+          return sum + price * qty;
+        }, 0)
+      : 0;
+
+    if (totalVND <= 0) {
+      return res.status(400).json({ success: false, message: 'Calculated order amount is invalid (<= 0)', data: null });
+    }
+
+    // Lấy userId từ order để tránh mismatch (ghi đè userId gửi từ client nếu có)
+    const userId = order.idUser;
+
+    // Tạo payment trong DB với amount tính được (đơn vị VND)
     const payment = await Payment.create({
       id: uuidv4(),
       userId,
-      orderId,
+      orderId,       // giữ nguyên giá trị orderId client truyền (có thể là idOrder hoặc _id)
       method,
-      amount, // VND
+      amount: totalVND,
       currency: 'VND',
       status: 'pending'
     });
 
+    // Nếu thanh toán bằng PayPal => chuyển sang USD để tạo PayPal order
     if (method === 'PayPal') {
       try {
-        // Convert VND to USD for PayPal
-        const amountUSD = Math.ceil((amount * EXCHANGE_RATE_VND_TO_USD) * 100) / 100;
-
+        // EXCHANGE_RATE_VND_TO_USD phải được định nghĩa ở nơi khác (ví dụ: từ config / env)
+        const rate = typeof EXCHANGE_RATE_VND_TO_USD !== 'undefined' ? EXCHANGE_RATE_VND_TO_USD : parseFloat(process.env.EXCHANGE_RATE_VND_TO_USD || 0);
+        if (!rate || Number(rate) <= 0) {
+          console.warn('Missing or invalid EXCHANGE_RATE_VND_TO_USD, PayPal conversion may fail.');
+        }
+        const amountUSD = Math.ceil((totalVND * (rate || 0)) * 100) / 100; // làm tròn 2 chữ số
         const approveUrl = await createPayPalOrder({
           ...payment.toObject(),
           amount: amountUSD,
@@ -45,7 +81,7 @@ exports.createPayment = async (req, res) => {
             paymentId: payment.id,
             orderID,
             approveUrl,
-            currencyPP: 'USD',
+            amountVND: totalVND,
             amountUSD
           }
         });
@@ -55,6 +91,7 @@ exports.createPayment = async (req, res) => {
       }
     }
 
+    // Trả về kết quả cho các phương thức khác (VD: MoMo, COD)
     return res.status(200).json({
       success: true,
       data: {
