@@ -24,7 +24,6 @@ const AddProduct = () => {
       try {
         const res = await fetch('http://localhost:5000/api/categories/hierarchy');
         const result = await res.json();
-        // Flatten all categories (root and children)
         const flatten = (nodes) => {
           let arr = [];
           for (let node of nodes) {

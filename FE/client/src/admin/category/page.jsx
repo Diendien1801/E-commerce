@@ -268,25 +268,56 @@ export default function CategoryManagement() {
               {showForm && (
                 <div className="modal-overlay">
                   <div className="modal-content">
-                     <h3>
+                    <h3>
                       <strong>
                         {currentParentId
                           ? "Add New Child Category"
                           : "Add New Parent Category"}
                       </strong>
                     </h3>
+                    <label htmlFor="category-image-upload" style={{ fontWeight: 500, marginBottom: 8 }}>Add Name</label>
                     <input
                       type="text"
                       placeholder="Category Name"
                       value={newName}
                       onChange={(e) => setNewName(e.target.value)}
                     />
-                    <input
-                      type="text"
-                      placeholder="Image URL"
-                      value={newImage}
-                      onChange={(e) => setNewImage(e.target.value)}
-                    />
+                    <div className="image-upload-section">
+                      <label htmlFor="category-image-upload" style={{ fontWeight: 500, marginBottom: 8 }}>Add Image</label>
+                      <div className="upload-area" style={{ marginBottom: 12 }}
+                        onDrop={e => {
+                          e.preventDefault();
+                          const files = e.dataTransfer.files;
+                          if (files.length > 0) {
+                            alert('Drag & drop upload for category image is not implemented yet.');
+                          }
+                        }}
+                        onDragOver={e => e.preventDefault()}
+                      >
+                        <div className="upload-placeholder">
+                          <div className="upload-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                              <circle cx="8.5" cy="8.5" r="1.5"/>
+                              <polyline points="21,15 16,10 5,21"/>
+                            </svg>
+                          </div>
+                          <div className="upload-text">
+                            <span>Drop your image here, or </span>
+                            <label htmlFor="category-image-upload" className="browse-link">Browse</label>
+                          </div>
+                        </div>
+                        <input
+                          type="file"
+                          id="category-image-upload"
+                          accept="image/*"
+                          style={{ display: 'none' }}
+                          onChange={e => {
+                            alert('Browse upload for category image is not implemented yet.');
+                          }}
+                        />
+                      </div>
+                    </div>
                     <div className="modal-buttons">
                       <button onClick={handleAddCategory}>Add</button>
                       <button onClick={() => setShowForm(false)}>Cancel</button>
@@ -299,18 +330,49 @@ export default function CategoryManagement() {
                 <div className="modal-overlay">
                   <div className="modal-content">
                     <h3><strong>Edit Category (ID: {editingCategory.idCategory})</strong></h3>
+                    <label htmlFor="edit-category-image-upload" style={{ fontWeight: 500, marginBottom: 8 }}>Edit Name</label>
                     <input
                       type="text"
                       placeholder="Category Name"
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
                     />
-                    <input
-                      type="text"
-                      placeholder="Image URL"
-                      value={editImage}
-                      onChange={(e) => setEditImage(e.target.value)}
-                    />
+                    <div className="image-upload-section">
+                      <label htmlFor="edit-category-image-upload" style={{ fontWeight: 500, marginBottom: 8 }}>Edit Image</label>
+                      <div className="upload-area" style={{ marginBottom: 12 }}
+                        onDrop={e => {
+                          e.preventDefault();
+                          const files = e.dataTransfer.files;
+                          if (files.length > 0) {
+                            alert('Drag & drop upload for category image is not implemented yet.');
+                          }
+                        }}
+                        onDragOver={e => e.preventDefault()}
+                      >
+                        <div className="upload-placeholder">
+                          <div className="upload-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                              <circle cx="8.5" cy="8.5" r="1.5"/>
+                              <polyline points="21,15 16,10 5,21"/>
+                            </svg>
+                          </div>
+                          <div className="upload-text">
+                            <span>Drop your image here, or </span>
+                            <label htmlFor="edit-category-image-upload" className="browse-link">Browse</label>
+                          </div>
+                        </div>
+                        <input
+                          type="file"
+                          id="edit-category-image-upload"
+                          accept="image/*"
+                          style={{ display: 'none' }}
+                          onChange={e => {
+                            alert('Browse upload for category image is not implemented yet.');
+                          }}
+                        />
+                      </div>
+                    </div>
                     <div className="modal-buttons">
                       <button onClick={handleUpdateCategory}>Save</button>
                       <button onClick={() => setEditingCategory(null)}>Cancel</button>
