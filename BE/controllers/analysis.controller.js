@@ -1922,8 +1922,17 @@ exports.getTopSpenders = async (req, res) => {
       {
         $lookup: {
           from: 'users',
-          localField: '_id',
-          foreignField: '_id', // nếu Order.idUser là ObjectId
+          let: { userId: '$_id' }, // $_id là Order.idUser (string)
+          pipeline: [
+            {
+              $addFields: {
+                idString: { $toString: '$_id' } // convert ObjectId -> string
+              }
+            },
+            {
+              $match: { $expr: { $eq: ['$idString', '$$userId'] } }
+            }
+          ],
           as: 'userInfo'
         }
       },
