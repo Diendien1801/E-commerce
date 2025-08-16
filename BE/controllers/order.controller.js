@@ -211,30 +211,63 @@ exports.createOrder = async (req, res) => {
 exports.approveOrder = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
-    if (!order)
+    if (!order) {
       return res
         .status(404)
         .json({ success: false, message: "Order not found", data: null });
+    }
 
     if (order.status !== "pending") {
-      return res
-        .status(400)
-        .json({
+      return res.status(400).json({
+        success: false,
+        message: `Cannot approve order when status is: ${order.status}`,
+        data: null,
+      });
+    }
+
+    // If payment method is VnPay or PayPal -> check that payment is completed
+    const onlineMethods = ["VnPay", "PayPal"];
+    if (onlineMethods.includes(order.paymentMethod)) {
+      // build conditions: orderId == idOrder, or orderId == _id
+      const conds = [
+        { orderId: order.idOrder },
+        { orderId: order._id.toString() }
+      ];
+      if (order.payment) {
+        conds.push({ _id: order.payment });
+      }
+
+      const payment = await Payment.findOne({ $or: conds }).sort({ createdAt: -1 });
+
+      if (!payment) {
+        return res.status(400).json({
           success: false,
-          message: `Cannot approve order when status is: ${order.status}`,
+          message:
+            "No payment record found for this order. Cannot approve order without completed payment.",
           data: null,
         });
+      }
+
+      if (payment.status !== "completed") {
+        return res.status(400).json({
+          success: false,
+          message: `Cannot approve order: payment is not completed (current status: ${payment.status}).`,
+          data: { paymentId: payment._id, paymentStatus: payment.status },
+        });
+      }
     }
+
+    // If payment is not required (COD) or already completed -> approve
     order.status = "picking";
     await order.save();
-    return res
-      .status(200)
-      .json({
-        success: true,
-        message: "Order approved successfully",
-        data: order,
-      });
+
+    return res.status(200).json({
+      success: true,
+      message: "Order approved successfully",
+      data: order,
+    });
   } catch (error) {
+    console.error("approveOrder error:", error);
     return res
       .status(500)
       .json({ success: false, message: "Server error", data: null });
