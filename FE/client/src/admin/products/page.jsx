@@ -146,6 +146,7 @@ export default function ProductManagement() {
                       <img
                         src={product.imageUrl?.[0] || 'https://via.placeholder.com/40'}
                         alt={product.title || 'Product'}
+                        style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4, display: 'block', margin: '0 auto' }}
                       />
                     </td>
                     <td>{product.title || '-'}</td>

@@ -28,15 +28,15 @@
   font-size: 1rem;
 }
 
-
-.orders-table button:hover {
-  text-decoration: underline;
+.order-table{
+  background-color: #ffffff;
 }
 
 .order-stats-table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 0.5rem;
+  background-color: #ffffff;
 }
 
 .order-stats-table th,
