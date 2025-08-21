@@ -1639,15 +1639,11 @@ exports.getOrdersCountByTime = async (req, res) => {
 };
 
 // Thống kê doanh thu theo danh mục
-exports.getRevenueByCategory = async (req, res) => {
+exports.getRevenueByCategory = async (req, res) => { 
   try {
     let { period, startDate, endDate, statuses, sortPeriod = 'asc' } = req.query;
 
-    // Nếu không có period thì mặc định = "year"
-    if (!period) {
-      period = "year";
-    }
-
+    if (!period) period = "year";
     if (!['year','month','day','quarter'].includes(period)) {
       return res.status(400).json({ success: false, message: "Query param 'period' phải là one of: year, month, day, quarter" });
     }
@@ -1658,13 +1654,10 @@ exports.getRevenueByCategory = async (req, res) => {
     if (startDate) dateFilterObj.$gte = new Date(startDate);
     if (endDate) dateFilterObj.$lte = new Date(endDate);
 
-    // Nếu period = year và không truyền startDate/endDate → mặc định lấy năm hiện tại
     if (period === "year" && !startDate && !endDate) {
       const now = new Date();
-      const firstDay = new Date(now.getFullYear(), 0, 1);   // 01-01 năm hiện tại
-      const lastDay  = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999); // 31-12 năm hiện tại
-      dateFilterObj.$gte = firstDay;
-      dateFilterObj.$lte = lastDay;
+      dateFilterObj.$gte = new Date(now.getFullYear(), 0, 1);
+      dateFilterObj.$lte = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
     }
 
     const addCreatedAtDateStage = {
@@ -1680,42 +1673,25 @@ exports.getRevenueByCategory = async (req, res) => {
     };
 
     let validPeriodExpr;
-    if (period === 'year') {
-      validPeriodExpr = { $dateToString: { format: "%Y", date: "$createdAtDate" } };
-    } else if (period === 'month') {
-      validPeriodExpr = { $dateToString: { format: "%Y-%m", date: "$createdAtDate" } };
-    } else if (period === 'day') {
-      validPeriodExpr = { $dateToString: { format: "%Y-%m-%d", date: "$createdAtDate" } };
-    } else { // quarter
-      validPeriodExpr = {
-        $let: {
-          vars: {
-            y: { $dateToString: { format: "%Y", date: "$createdAtDate" } },
-            m: { $month: "$createdAtDate" }
-          },
-          in: {
-            $concat: [
-              "$$y",
-              "-Q",
-              { $toString: { $ceil: { $divide: ["$$m", 3] } } }
-            ]
-          }
-        }
-      };
-    }
+    if (period === 'year') validPeriodExpr = { $dateToString: { format: "%Y", date: "$createdAtDate" } };
+    else if (period === 'month') validPeriodExpr = { $dateToString: { format: "%Y-%m", date: "$createdAtDate" } };
+    else if (period === 'day') validPeriodExpr = { $dateToString: { format: "%Y-%m-%d", date: "$createdAtDate" } };
+    else validPeriodExpr = {
+      $let: {
+        vars: { y: { $dateToString: { format: "%Y", date: "$createdAtDate" } }, m: { $month: "$createdAtDate" } },
+        in: { $concat: ["$$y","-Q",{ $toString: { $ceil: { $divide: ["$$m",3] } } }] }
+      }
+    };
 
     const pipeline = [
       addCreatedAtDateStage,
-
       {
         $match: Object.assign(
           { status: { $in: statusList } },
-          (Object.keys(dateFilterObj).length ? { createdAtDate: dateFilterObj } : {})
+          Object.keys(dateFilterObj).length ? { createdAtDate: dateFilterObj } : {}
         )
       },
-
       { $unwind: "$items" },
-
       {
         $lookup: {
           from: Product.collection.name,
@@ -1729,102 +1705,168 @@ exports.getRevenueByCategory = async (req, res) => {
         }
       },
       { $unwind: { path: "$productDoc", preserveNullAndEmptyArrays: true } },
-
+      {
+        $lookup: {
+          from: "categories",
+          let: { cid: "$productDoc.idCategory" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$idCategory", "$$cid"] } } },
+            { $project: { idCategory: 1, nameCategory: 1, parentID: 1 } }
+          ],
+          as: "cat"
+        }
+      },
+      { $unwind: { path: "$cat", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "categories",
+          let: { pid: "$cat.parentID" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$idCategory", "$$pid"] } } },
+            { $project: { idCategory: 1, nameCategory: 1 } }
+          ],
+          as: "parentCat"
+        }
+      },
+      { $unwind: { path: "$parentCat", preserveNullAndEmptyArrays: true } },
       {
         $addFields: {
           itemRevenue: { $multiply: [ "$items.price", { $ifNull: ["$items.quantity", 1] } ] },
-          periodLabel: {
+          periodLabel: { $cond: [ { $eq: ["$createdAtDate", null] }, "unknown", validPeriodExpr ] },
+          childCategoryId: { $ifNull: ["$cat.idCategory", "unknown"] },
+          childCategoryName: { $ifNull: ["$cat.nameCategory", "unknown"] },
+          parentCategoryId: {
             $cond: [
-              { $eq: ["$createdAtDate", null] },
-              "unknown",
-              validPeriodExpr
+              { $ifNull: ["$parentCat.idCategory", false] },
+              "$parentCat.idCategory",
+              { $cond: [ { $and: [ { $ifNull: ["$cat.idCategory", false] }, { $in: ["$cat.parentID", [0,null]] } ] }, "$cat.idCategory", "unknown" ] }
             ]
           },
-          categoryId: {
+          parentCategoryName: {
             $cond: [
-              { $ifNull: [ "$productDoc.idCategory", false ] },
-              "$productDoc.idCategory",
-              "unknown"
+              { $ifNull: ["$parentCat.nameCategory", false] },
+              "$parentCat.nameCategory",
+              { $cond: [ { $and: [ { $ifNull: ["$cat.nameCategory", false] }, { $in: ["$cat.parentID", [0,null]] } ] }, "$cat.nameCategory", "unknown" ] }
             ]
           }
         }
       },
-
       {
         $group: {
-          _id: { period: "$periodLabel", category: "$categoryId" },
-          totalRevenue: { $sum: "$itemRevenue" }
+          _id: {
+            period: "$periodLabel",
+            parentId: "$parentCategoryId",
+            parentName: "$parentCategoryName",
+            childId: "$childCategoryId",
+            childName: "$childCategoryName"
+          },
+          revenue: { $sum: "$itemRevenue" }
         }
       },
-
-      { $sort: { "_id.period": 1, totalRevenue: -1 } },
-
+      { $sort: { "_id.period": 1, "revenue": -1 } },
+      {
+        $group: {
+          _id: { period: "$_id.period", parentId: "$_id.parentId", parentName: "$_id.parentName" },
+          children: {
+            $push: { categoryId: "$_id.childId", categoryName: "$_id.childName", totalRevenue: "$revenue" }
+          },
+          totalRevenueForParent: { $sum: "$revenue" }
+        }
+      },
       {
         $group: {
           _id: "$_id.period",
-          categories: {
-            $push: {
-              category: "$_id.category",
-              totalRevenue: "$totalRevenue"
-            }
+          parents: {
+            $push: { parentId: "$_id.parentId", parentName: "$_id.parentName", totalRevenueForParent: "$totalRevenueForParent", children: "$children" }
           },
-          totalRevenueForPeriod: { $sum: "$totalRevenue" }
+          totalRevenueForPeriod: { $sum: "$totalRevenueForParent" }
         }
       },
-
       { $sort: { "_id": sortPeriod === 'desc' ? -1 : 1 } },
-
-      {
-        $project: {
-          _id: 0,
-          period: "$_id",
-          totalRevenueForPeriod: 1,
-          categories: {
-            $let: {
-              vars: {
-                known: {
-                  $filter: {
-                    input: "$categories",
-                    as: "c",
-                    cond: { $ne: ["$$c.category", "unknown"] }
-                  }
-                },
-                unknownSum: {
-                  $sum: {
-                    $map: {
-                      input: {
-                        $filter: {
-                          input: "$categories",
-                          as: "c",
-                          cond: { $eq: ["$$c.category", "unknown"] }
-                        }
-                      },
-                      as: "u",
-                      in: "$$u.totalRevenue"
-                    }
-                  }
-                }
-              },
-              in: {
-                $concatArrays: [
-                  "$$known",
-                  {
-                    $cond: [
-                      { $gt: ["$$unknownSum", 0] },
-                      [ { category: "unknown", totalRevenue: "$$unknownSum" } ],
-                      []
-                    ]
-                  }
-                ]
-              }
-            }
-          }
-        }
-      }
+      { $project: { _id: 0, period: "$_id", totalRevenueForPeriod: 1, parents: 1 } }
     ];
 
-    const result = await Order.aggregate(pipeline).allowDiskUse(true);
-    return res.json({ success: true, data: result });
+    const aggResult = await Order.aggregate(pipeline).allowDiskUse(true);
+    const allCategories = await Categories.getAllCategories();
+
+    const parentMap = new Map();
+
+    // Map parent gốc
+    for (const c of allCategories) {
+      if (!c.parentID || c.parentID === 0) {
+        parentMap.set(c.idCategory, { parentId: c.idCategory, parentName: c.nameCategory, children: [] });
+      }
+    }
+    // Map children
+    for (const c of allCategories) {
+      if (c.parentID && c.parentID !== 0) {
+        if (!parentMap.has(c.parentID)) parentMap.set(c.parentID, { parentId: c.parentID, parentName: 'unknown', children: [] });
+        parentMap.get(c.parentID).children.push({ categoryId: c.idCategory, categoryName: c.nameCategory });
+      }
+    }
+    // Parent unknown
+    if (!parentMap.has("unknown")) parentMap.set("unknown", { parentId: "unknown", parentName: "unknown", children: [{ categoryId: "unknown", categoryName: "unknown" }] });
+
+    // Tạo Map revenue
+    const revenueMap = new Map();
+    for (const periodObj of aggResult) {
+      const periodLabel = periodObj.period;
+      if (!periodObj.parents) continue;
+      for (const p of periodObj.parents) {
+        const pid = p.parentId;
+        if (!p.children) continue;
+        for (const c of p.children) {
+          revenueMap.set(`${periodLabel}|${pid}|${c.categoryId}`, c.totalRevenue || 0);
+        }
+      }
+    }
+
+    // Merge kết quả
+    const mergedResult = [];
+    for (const periodObj of aggResult) {
+      const periodLabel = periodObj.period;
+      let periodTotal = 0;
+      const parentsArr = [];
+
+      for (const [pid, pObj] of parentMap.entries()) {
+        const children = [];
+        let parentTotal = 0;
+
+        for (const ch of pObj.children) {
+          let rev = 0;
+
+          if (pid !== "unknown") {
+            const key = `${periodLabel}|${pid}|${ch.categoryId}`;
+            rev = revenueMap.has(key) ? revenueMap.get(key) : 0;
+
+            // Gộp revenue của parent gốc (parent null/0) vào child
+            const parentChildKey = `${periodLabel}|null|${ch.categoryId}`;
+            if (revenueMap.has(parentChildKey)) rev += revenueMap.get(parentChildKey);
+
+          } else {
+            const key = `${periodLabel}|unknown|${ch.categoryId}`;
+            rev = revenueMap.has(key) ? revenueMap.get(key) : 0;
+          }
+
+          children.push({ categoryId: ch.categoryId, categoryName: ch.categoryName, totalRevenue: rev });
+          parentTotal += rev;
+        }
+
+        parentsArr.push({ parentId: pid, parentName: pObj.parentName, totalRevenueForParent: parentTotal, children });
+        periodTotal += parentTotal;
+      }
+
+      parentsArr.sort((a,b) => {
+        if (a.parentId === "unknown") return 1;
+        if (b.parentId === "unknown") return -1;
+        return (a.parentId || 0) - (b.parentId || 0);
+      });
+
+      mergedResult.push({ period: periodLabel, totalRevenueForPeriod: periodTotal, parents: parentsArr });
+    }
+
+    if (mergedResult.length === 0) return res.json({ success: true, data: [] });
+    return res.json({ success: true, data: mergedResult });
 
   } catch (err) {
     console.error("revenueByCategory error:", err);
