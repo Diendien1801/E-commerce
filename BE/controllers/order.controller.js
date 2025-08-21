@@ -1,5 +1,6 @@
 const Order = require("../models/order.model");
 const User = require("../models/user.model");
+const mongoose = require('mongoose');
 
 // Helper: get user role by ID
 async function getUserRole(userId) {
@@ -769,3 +770,115 @@ exports.searchOrdersByUser = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Internal server error.', error: error.message });
   }
 };
+
+exports.searchOrdersByOrderId = async (req, res) => {
+  try {
+    const q = (req.query.query || '').trim();
+    if (!q) {
+      return res.status(400).json({ success: false, message: "Thiếu query param 'query'." });
+    }
+
+    const page = Math.max(1, parseInt(req.query.page || '1', 10));
+    const limit = Math.max(1, parseInt(req.query.limit || '20', 10));
+    const skip = (page - 1) * limit;
+
+    const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    const rawTokens = q.split(/\s+/).filter(Boolean);
+    const tokens = rawTokens.map(t => escapeRegex(t));
+
+    const isObjectId = mongoose.Types.ObjectId.isValid(q);
+    const objectId = isObjectId ? new mongoose.Types.ObjectId(q) : null;
+
+    // Tạo điều kiện $match
+    const orMatch = [
+      { idOrder: { $regex: escapeRegex(q), $options: 'i' } },
+      { _id: isObjectId ? objectId : null } // nếu query là ObjectId -> match exact _id
+    ].filter(Boolean);
+
+    tokens.forEach(t => {
+      orMatch.push({ idOrder: { $regex: t, $options: 'i' } });
+    });
+
+    // Aggregation pipeline
+    const pipeline = [
+      // 1) Thêm _idStr để search substring trên _id
+      { $addFields: { _idStr: { $toString: '$_id' } } },
+
+      // 2) $match sơ bộ
+      {
+        $match: {
+          $or: [
+            ...orMatch,
+            { _idStr: { $regex: escapeRegex(q), $options: 'i' } },
+            ...tokens.map(t => ({ _idStr: { $regex: t, $options: 'i' } }))
+          ]
+        }
+      },
+
+      // 3) Tính exactMatch và score
+      {
+        $addFields: {
+          exactMatch: {
+            $cond: [
+              isObjectId
+                ? { $or: [{ $eq: ['$idOrder', q] }, { $eq: ['$_id', objectId] }] }
+                : { $or: [{ $eq: ['$idOrder', q] }, { $eq: ['$idStr', q] }] },
+              1,
+              0
+            ]
+          },
+          score: tokens.length
+            ? {
+                $add: tokens.map(t => ({
+                  $cond: [
+                    {
+                      $or: [
+                        { $regexMatch: { input: '$idOrder', regex: t, options: 'i' } },
+                        { $regexMatch: { input: '$idStr', regex: t, options: 'i' } }
+                      ]
+                    },
+                    1,
+                    0
+                  ]
+                }))
+              }
+            : 0
+        }
+      },
+
+      // 4) Sắp xếp: exactMatch > score > createdAt
+      { $sort: { exactMatch: -1, score: -1, createdAt: -1 } },
+
+      // 5) Phân trang
+      {
+        $facet: {
+          metadata: [{ $count: 'total' }],
+          data: [{ $skip: skip }, { $limit: limit }]
+        }
+      }
+    ];
+
+    const aggResult = await Order.aggregate(pipeline);
+
+    const total = (aggResult[0].metadata[0] && aggResult[0].metadata[0].total) || 0;
+    const results = aggResult[0].data || [];
+
+    return res.json({
+      success: true,
+      data: results,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
+
+  } catch (err) {
+    console.error('searchOrdersByOrderId error:', err);
+    return res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
+  }
+};
+
+

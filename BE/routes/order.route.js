@@ -10,6 +10,9 @@ router.get('/orders', orderController.getAllOrders);
 // GET localhost:5000/api/orders/status/:status
 router.get('/orders/status/:status', orderController.getOrdersByStatus);
 
+// search orders by user ID and order ID , paginated, sorting, filtering
+// GET localhost:5000/api/orders/search?query=64b123456789&status=pending&page=1&limit=5
+router.get("/orders/search", orderController.searchOrdersByOrderId);
 
 // Get orders by user ID pagination, sorting, filtering
 // GET localhost:5000/api/orders/user/6888ecdffb44b885381dd9e2
