@@ -12,6 +12,8 @@ export default function ProductManagement() {
   const [filtered, setFiltered] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [searchPage, setSearchPage] = useState(1);
+  const [searchTotalPages, setSearchTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [categoriesMap, setCategoriesMap] = useState({});
   const navigate = useNavigate();
@@ -23,12 +25,13 @@ export default function ProductManagement() {
       const res = await fetch(`http://localhost:5000/api/products/admin?page=${pageNumber}&limit=${PAGE_SIZE}`);
       const data = await res.json();
       if (data.data && Array.isArray(data.data.products)) {
-        const { products, limit, total } = data.data;
+        const { products} = data.data;
+        console.log('Fetched products:', data.data);
         setProducts(products);
         setFiltered(products);
         const ids = [...new Set(products.map((p) => p.idCategory).filter(Boolean))];
         ids.forEach(fetchCategoryById);
-        setTotalPages(Math.ceil(total / limit));
+        setTotalPages(Math.ceil(data.data.pagination?.totalPages || 1));
       } else {
         setProducts([]);
         setFiltered([]);
@@ -44,15 +47,17 @@ export default function ProductManagement() {
     }
   };
 
-  const fetchSearchedProducts = async (query) => {
+  const fetchSearchedProducts = async (query, pageNumber = 1) => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/products/admin/search?q=${encodeURIComponent(query)}`);
+      const res = await fetch(`http://localhost:5000/api/products/admin/search?q=${encodeURIComponent(query)}&page=${pageNumber}&limit=${PAGE_SIZE}`);
       const data = await res.json();
       setFiltered(Array.isArray(data.data.products) ? data.data.products : []);
+      setSearchTotalPages(Math.ceil(data.data.pagination?.totalPages || 1));
     } catch (err) {
       console.error('Search failed:', err);
       setFiltered([]);
+      setSearchTotalPages(1);
     } finally {
       setLoading(false);
     }
@@ -81,14 +86,22 @@ export default function ProductManagement() {
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       if (search.trim()) {
-        setPage(1);
-        fetchSearchedProducts(search.trim());
+        fetchSearchedProducts(search.trim(), searchPage);
       } else {
         fetchProducts(page);
       }
     }, 300);
     return () => clearTimeout(delayDebounce);
-  }, [search, page]);
+  }, [search, searchPage, page]);
+
+  // Reset page/searchPage when switching between search and normal
+  useEffect(() => {
+    if (search.trim()) {
+      setPage(1);
+    } else {
+      setSearchPage(1);
+    }
+  }, [search]);
 
   return (
     <div className="card" style={{ padding: '1.5rem' }}>
@@ -106,7 +119,10 @@ export default function ProductManagement() {
         type="text"
         placeholder={t('searchbytitle', 'Search by title')}
         value={search}
-        onChange={(e) => setSearch(e.target.value)}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setSearchPage(1);
+        }}
         className="search-input"
       />
 
@@ -167,37 +183,94 @@ export default function ProductManagement() {
         </div>
       )}
 
-      <div className="users-pagination" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, margin: '24px 0' }}>
-        <button
-          onClick={() => setPage(page - 1)}
-          disabled={page === 1}
-          style={{
-            fontSize: 20,
-            padding: '4px 12px',
-            cursor: page === 1 ? 'not-allowed' : 'pointer',
-            opacity: page === 1 ? 0.5 : 1,
-            border: 'none',
-            background: 'none',
-          }}
-        >
-          &#8592;
-        </button>
-        <span style={{ fontWeight: 600, fontSize: 18 }}>{page}</span>
-        <button
-          onClick={() => setPage(page + 1)}
-          disabled={page === totalPages}
-          style={{
-            fontSize: 20,
-            padding: '4px 12px',
-            cursor: page === totalPages ? 'not-allowed' : 'pointer',
-            opacity: page === totalPages ? 0.5 : 1,
-            border: 'none',
-            background: 'none',
-          }}
-        >
-          &#8594;
-        </button>
-      </div>
+      {!loading && (
+        search.trim()
+          ? (searchTotalPages > 1 && (
+              <div
+                className="users-pagination"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 12,
+                  margin: '24px 0',
+                }}
+              >
+                <button
+                  onClick={() => setSearchPage(searchPage - 1)}
+                  disabled={searchPage === 1}
+                  style={{
+                    fontSize: 20,
+                    padding: '4px 12px',
+                    cursor: searchPage === 1 ? 'not-allowed' : 'pointer',
+                    opacity: searchPage === 1 ? 0.5 : 1,
+                    border: 'none',
+                    background: 'none',
+                  }}
+                >
+                  &#8592;
+                </button>
+                <span style={{ fontWeight: 600, fontSize: 18 }}>{searchPage}/{searchTotalPages}</span>
+                <button
+                  onClick={() => setSearchPage(searchPage + 1)}
+                  disabled={searchPage === searchTotalPages}
+                  style={{
+                    fontSize: 20,
+                    padding: '4px 12px',
+                    cursor: searchPage === searchTotalPages ? 'not-allowed' : 'pointer',
+                    opacity: searchPage === searchTotalPages ? 0.5 : 1,
+                    border: 'none',
+                    background: 'none',
+                  }}
+                >
+                  &#8594;
+                </button>
+              </div>
+            ))
+          : (totalPages > 1 && (
+              <div
+                className="users-pagination"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 12,
+                  margin: '24px 0',
+                }}
+              >
+                <button
+                  onClick={() => setPage(page - 1)}
+                  disabled={page === 1}
+                  style={{
+                    fontSize: 20,
+                    padding: '4px 12px',
+                    cursor: page === 1 ? 'not-allowed' : 'pointer',
+                    opacity: page === 1 ? 0.5 : 1,
+                    border: 'none',
+                    background: 'none',
+                  }}
+                >
+                  &#8592;
+                </button>
+                <span style={{ fontWeight: 600, fontSize: 18 }}>{page}/{totalPages}</span>
+                <button
+                  onClick={() => setPage(page + 1)}
+                  disabled={page === totalPages}
+                  style={{
+                    fontSize: 20,
+                    padding: '4px 12px',
+                    cursor: page === totalPages ? 'not-allowed' : 'pointer',
+                    opacity: page === totalPages ? 0.5 : 1,
+                    border: 'none',
+                    background: 'none',
+                  }}
+                >
+                  &#8594;
+                </button>
+              </div>
+            ))
+      )}
+
     </div>
   );
 }

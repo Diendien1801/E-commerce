@@ -347,7 +347,7 @@ export default function OrderManagement() {
           >
             &#8592;
           </button>
-          <span style={{ fontWeight: 600, fontSize: 18 }}>{page}</span>
+          <span style={{ fontWeight: 600, fontSize: 18 }}>{page}/{totalPages}</span>
           <button
             onClick={() => setPage(page + 1)}
             disabled={page === totalPages}

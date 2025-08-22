@@ -479,7 +479,6 @@ function UserDetail() {
                     </tbody>
                   </table>
                 </div>
-                {/* Move search pagination to bottom of search results */}
                 {searchTotalPages > 1 && (
                   <div className="orders-pagination" style={{ display: 'flex', justifyContent: 'center', gap: 12, margin: '16px 0' }}>
                     <button onClick={() => {
@@ -488,7 +487,7 @@ function UserDetail() {
                         fetchSearchPage(searchPage - 1);
                       }
                     }} disabled={searchPage === 1}>&larr;</button>
-                    <span style={{ fontWeight: 600 }}>{searchPage}</span>
+                    <span style={{ fontWeight: 600 }}>{searchPage}/{searchTotalPages}</span>
                     <button onClick={() => {
                       if (searchPage < searchTotalPages) {
                         setSearchPage(searchPage + 1);
@@ -592,7 +591,7 @@ function UserDetail() {
                   {totalPages > 1 && (
                     <div className="orders-pagination" style={{ display: 'flex', justifyContent: 'center', gap: 12, margin: '16px 0' }}>
                       <button onClick={() => setPage(page - 1)} disabled={page === 1}>&larr;</button>
-                      <span style={{ fontWeight: 600 }}>{page}</span>
+                      <span style={{ fontWeight: 600 }}>{page}/{totalPages}</span>
                       <button onClick={() => setPage(page + 1)} disabled={page === totalPages}>&rarr;</button>
                     </div>
                   )}
@@ -605,7 +604,7 @@ function UserDetail() {
                           fetchSearchPage(searchPage - 1);
                         }
                       }} disabled={searchPage === 1}>&larr;</button>
-                      <span style={{ fontWeight: 600 }}>{searchPage}</span>
+                      <span style={{ fontWeight: 600 }}>{searchPage}/{searchTotalPages}</span>
                       <button onClick={() => {
                         if (searchPage < searchTotalPages) {
                           setSearchPage(searchPage + 1);
