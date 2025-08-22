@@ -79,12 +79,30 @@ const Navbar = () => {
                             </button>
                         </Link>
                     ) : (
-                        <div style={{ position: 'relative', display: 'inline-block' }}>
-                            <button className="login-btn" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-                                onClick={() => setShowDropdown(v => !v)}>
-                                <i className="bi bi-person-circle login-icon"></i>
-                                {t('manageAccount')}
-                                <span style={{ fontSize: '1.1em'}}>&#9662;</span>
+                         <div style={{ position: 'relative', display: 'inline-block' }}>
+            <button className="login-btn" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                onClick={() => setShowDropdown(v => !v)}>
+                {/* Avatar và tên người dùng */}
+                {user?.avatar && (
+                    <img
+                        src={user.avatar}
+                        alt="avatar"
+                        style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: '50%',
+                            objectFit: 'cover',
+                            marginRight: 8,
+                            border: '1px solid #eee'
+                        }}
+                    />
+                )}
+                <span style={{ fontWeight: 500, marginRight: 4 }}>
+                    {user?.name  || 'Hoang Dien Tran'}
+                </span>
+               
+                
+                <span style={{ fontSize: '1.1em'}}>&#9662;</span>
                             </button>
                             {showDropdown && (
                                 <div style={{ position: 'absolute', top: '110%', right: '25px', background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.12)', borderRadius: '8px', minWidth: '160px', zIndex: 10 }}>

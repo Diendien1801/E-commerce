@@ -181,10 +181,47 @@ const Shop = () => {
         
         <div className="shop-container">
             <aside className="shop-categories">
-                <h3 style={{fontSize:"1.2rem"}}>{t('categories')}</h3>
-                {/* Bỏ phần "Tất cả danh mục" */}
-                {renderCategoryTree(categories)}
-            </aside>
+    <h3 style={{fontSize:"1.2rem"}}>{t('categories')}</h3>
+    {renderCategoryTree(categories)}
+    <img
+      src="https://theme.hstatic.net/1000304920/1001307865/14/ads_block.jpg?v=468"
+      alt="Quảng cáo"
+      style={{
+        width: "100%",
+        marginTop: 24,
+       
+        boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+        objectFit: "cover"
+      }}
+    />
+    {/* NOW PLAYING + Spotify */}
+<div style={{ maxWidth: 400, margin: "32px auto 0 auto",  }}>
+    <div style={{
+        fontWeight: 600,
+        fontSize: 18,
+        marginBottom: 8,
+        display: "flex",
+        
+        gap: 8,
+        
+
+    }}>
+        
+    Đang thịnh hành
+    </div>
+    <hr style={{ margin: "8px 0 16px 0" }} />
+    <iframe
+        style={{ borderRadius: 12, minHeight: 352, width: "100%", border: "none" }}
+        src="https://open.spotify.com/embed/album/5tlCVkYaDAmAtJ5YxejpWi?utm_source=generator"
+        width="100%"
+        height="750"
+        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+        loading="lazy"
+        title="Spotify Album"
+    ></iframe>
+</div>
+</aside>
+
             <main className="shop-main">
                 <div className="shop-filter-bar">
                     <span>{t('sortBy')}: </span>

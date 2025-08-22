@@ -9,6 +9,7 @@ const ProductCard = ({ product }) => {
     const formatPrice = (price) => {
         return price?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     };
+    
 const handleProductClick = () => {
         // Lưu trang hiện tại trước khi chuyển đến view-product
         sessionStorage.setItem('previousPage', window.location.pathname);
@@ -116,14 +117,39 @@ const getCurrentImageUrl = () => {
 
             {/* Product info */}
             <div className="product-info">
-                <div className="album-title">{product.title || 'FIRST IMPRESSION ON EARTH'}</div>
-                <div className="product-price">{formatPrice(product.price)}₫</div>
-            </div>
+    <div className="album-title">{product.title || 'FIRST IMPRESSION ON EARTH'}</div>
+    {product.price === 0 ? (
+        <div className="product-price sold-out-text">Bán hết</div>
+    ) : (
+        <div className="product-price">{formatPrice(product.price)}₫</div>
+    )}
+</div>
+
+{product.price === 0 && (
+    <img
+        src="https://theme.hstatic.net/1000304920/1001307865/14/sold-out.png?v=468"
+        alt="Sold out"
+        className="sold-out-image"
+        style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: 80,
+            height: "auto",
+            zIndex: 2,
+            pointerEvents: "none",
+            userSelect: "none"
+        }}
+    />
+)}
+
 
             {/* Add to cart button - appears on hover */}
-            <button className="add-to-cart-btn1" onClick={handleAddToCart}>
-                <div className="btn-text">THÊM VÀO GIỎ </div>
-            </button>
+            {product.price !== 0 && (
+  <button className="add-to-cart-btn1" onClick={handleAddToCart}>
+    <div className="btn-text">THÊM VÀO GIỎ </div>
+  </button>
+)}
         </div>
     );
 };

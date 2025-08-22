@@ -13,7 +13,7 @@ const Profile = () => {
     const { t, i18n } = useTranslation();
     const fileInputRef = useRef(null);
     const { id } = useParams();
-    const { user: loggedInUser } = useAuth();
+    const { user: loggedInUser, setUser: setUserContext } = useAuth();
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
@@ -128,20 +128,22 @@ const Profile = () => {
         const data = await res.json();
         if (!data.success) throw new Error(data.message);
 
-        setUser(prev => ({ 
-            ...prev, 
-            name: editedName, 
-            email: editedEmail,
-            phoneNumber: editedPhoneNumber,
-            dateOfBirth: editedDateOfBirth,
-            gender: editedGender,
-            address: {
-                ...prev.address,
-                country: editedCountry
-            }
-        }));
+        setUser(prev => ({
+    ...prev,
+    name: editedName,
+    email: editedEmail,
+    phoneNumber: editedPhoneNumber,
+    dateOfBirth: editedDateOfBirth,
+    gender: editedGender,
+    address: {
+        ...prev.address,
+        country: editedCountry
+    }
+}));
+
         setIsEditing(false);
         // alert(t('profileUpdated', 'Profile updated successfully!'));
+        
     } catch (err) {
         alert(t('error', 'Error') + ': ' + err.message);
     }

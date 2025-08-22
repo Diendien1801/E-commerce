@@ -197,7 +197,7 @@ function OrderPage() {
                                     <div className="product-desc">{product.data.description?.split('\n')[0]}</div>
                                     <div className="product-meta">
                                       {t('productid', 'Product ID')}: {item.productID}<br/>
-                                      {t('quantity', 'Quantity')}: {item.quantity} &nbsp;|&nbsp; {t('price', 'Price')}: ${item.price}
+                                      {t('quantity', 'Quantity')}: {item.quantity} &nbsp;|&nbsp; {t('price', 'Price')}: {item.price}VND
                                     </div>
                                   </div>
                                 </>

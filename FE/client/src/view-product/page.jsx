@@ -8,7 +8,7 @@ import Breadcrumb from '../components/breadcrumb/page'; // Import Breadcrumb
 import ProductCard from '../components/product-card/card'; // Import ProductCard
 import { useAuth } from '../components/context/authcontext';
 import './view-product.css';
-
+import YouTubePreview from '../components/YouTubePreview';
 const ViewProduct = () => {
     const { t, i18n } = useTranslation();
     const { id } = useParams();
@@ -27,7 +27,16 @@ const ViewProduct = () => {
         .then(res => res.json())
         .then(data => setProduct(data.data));
 }, [id]);
-
+const getSongName = (title) => {
+  if (!title) return "";
+  const parts = title.split("-");
+  let artist = parts.length >= 1 ? parts[0].trim() : "";
+  let song = parts.length >= 2 ? parts[1].trim() : title.trim();
+ 
+  song = song.replace(/\(.*?\)/g, "").trim();
+ 
+  return artist && song ? `${artist} ${song}` : song;
+};
 // Fetch related products khi product đã load
 useEffect(() => {
     const fetchRelatedProducts = async () => {
@@ -224,14 +233,17 @@ useEffect(() => {
                                 <span className="value">Hãng Đĩa Rung Rinh</span>
                             </div>
                         </div>
-
-                        <div className="product-pricing">
-                            <div className="current-price">{product.price}₫</div>
-
-                        </div>
+                            
+                        <div className="current-price">
+  {product.price === 0 ? (
+    <span className="sold-out-text">Hết hàng</span>
+  ) : (
+    `${formatPrice(product.price)}₫`
+  )}
+</div>
 
                         
-
+                            
                         <div className="quantity-section">
                             <div className="quantity-label">Số lượng:</div>
                             <div className="quantity-controls">
@@ -256,12 +268,25 @@ useEffect(() => {
                                 </button>
                             </div>
                         </div>
-
+                                
                         <div className="action-buttons">
-                            <button className="add-to-cart-btn">
-                                THÊM VÀO GIỎ
-                            </button>
-                        </div>
+  <button
+    className="add-to-cart-btn"
+    disabled={product.price === 0}
+    style={
+      product.price === 0
+        ? {
+            opacity: 0.5,
+            pointerEvents: "none",
+            cursor: "not-allowed",
+            filter: "grayscale(0.7)",
+          }
+        : {}
+    }
+  >
+    THÊM VÀO GIỎ
+  </button>
+</div>
 
                        
 
@@ -269,7 +294,7 @@ useEffect(() => {
                         {favSuccess && <div className="success-message">{favSuccess}</div>}
                     </div>
                 </div>
-
+               
                 {/* Product Details Tabs */}
                 <div className="product-details-tabs">
                     <div className="tab-navigation">
@@ -292,7 +317,7 @@ useEffect(() => {
                             <div className="description-content">
                                 <div className="product-info">
                                     <p>{product.description}</p>
-                                  
+                                     <YouTubePreview songName={getSongName(product.title)} />  
                                 </div>
                                 
                                

@@ -22,13 +22,13 @@ const productManagementRoutes = require("./routes/productManagement.route"); // 
 
 const vnpayRoutes = require("./routes/vnpay.route");
 
-
+const paymentRoutes = require("./routes/payment.route");
 app.use(express.json());
 
 app.use("/api/vnpay", vnpayRoutes);
 app.use("/api/categoriesManagement", categoriesManagementRoutes); // categories management
 
-
+app.use("/api", paymentRoutes);
 
 
 app.use("/api/cart", cartRoutes); // cart
@@ -37,7 +37,7 @@ app.use("/api/categories", categoriesRoutes); // categories
 app.use("/api/userManagement", userManagementRoutes); // user management
 app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
-app.use(crawlRoute);
+app.use("/api/crawl",crawlRoute);
 
 app.use('/api', require('./routes/order.route'));
 app.use(authFBRoute);

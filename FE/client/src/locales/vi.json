@@ -83,6 +83,7 @@
   "changePasswordFailed": "Đổi mật khẩu thất bại",
   "changePassword": "Đổi mật khẩu",
   "changePasswordPrompt": "Nhập mật khẩu hiện tại và mật khẩu mới bên dưới.",
+  "resetPasswordPrompt": "Nhập mật khẩu mới để đặt lại.",
   "currentPassword": "Mật khẩu hiện tại",
   "currentPasswordPlaceholder": "Nhập mật khẩu hiện tại",
   "newPassword": "Mật khẩu mới",

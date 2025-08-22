@@ -7,7 +7,7 @@ import Footer from '../../components/footer/footer';
 import facebook from './Facebook.svg'; 
 import './login.css';
 import { jwtDecode } from "jwt-decode";
-
+import { toast } from 'react-toastify';
 const getFacebookAccessToken = () => {
     return new Promise((resolve, reject) => {
         if (!window.FB) return reject("FB SDK not loaded");
@@ -33,10 +33,10 @@ const Login = () => {
     useEffect(() => {
     window.fbAsyncInit = function () {
         window.FB.init({
-            appId: '1127552465852819', 
+            appId: '1680758335909974', 
             cookie: true,
             xfbml: true,
-            version: 'v18.0'
+            version: 'v23.0'
         });
     };
 
@@ -174,7 +174,33 @@ const Login = () => {
                                 type="button"
                                 className="facebook-btn-modern"
                                 onClick={async () => {
-                                    // Facebook login logic giữ nguyên
+                                   try {
+                                    const facebookAccessToken = await getFacebookAccessToken(); 
+                                    const response = await fetch('http://localhost:5000/auth/facebook', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ access_token: facebookAccessToken })
+                                    });
+                                    const data = await response.json();
+                                    if (response.ok && data.success && data.data && data.data.token && data.data.user) {
+                                        let userInfo = data.data.user;
+                                        if (!userInfo._id && data.data.token) {
+                                            try {
+                                                const decoded = jwtDecode(data.data.token);
+                                                userInfo._id = decoded.id;
+                                                userInfo.email = decoded.email;
+                                            } catch (err) {}
+                                        }
+                                        login(data.data.token, userInfo);
+                                        navigate('/');
+                                        toast.success(t('facebookLoginSuccessful'));
+                                        navigate('/');
+                                    } else {
+                                        setError(data.message || t('facebookLoginFailed'));
+                                    }
+                                } catch (err) {
+                                    setError(t('facebookLoginError'));
+                                }
                                 }}
                             >
                                 <img src={facebook} alt="Facebook" />

@@ -35,7 +35,7 @@ const PaymentResult = () => {
         if (orderId && amount) {
           const orderData = {
             orderId: orderId,
-            amount: parseInt(amount) / 100, // VNPay trả về amount * 100
+            amount: parseInt(amount) , 
             transactionId: transactionId,
             resultCode: resultCode,
             message: message
@@ -111,7 +111,7 @@ const PaymentResult = () => {
   };
 
   const handleViewOrders = () => {
-    navigate('/orders');
+    navigate('/order');
   };
 
   if (status === 'loading') {

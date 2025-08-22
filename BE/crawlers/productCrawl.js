@@ -86,7 +86,6 @@ const categories = [
     url: "https://store.hangdiathoidai.com/collections/bang-cassette/nhac-quoc-te",
     idCategory: 305,
   },
-  
 ];
 
 // Helper function: Convert price string to number
@@ -251,6 +250,14 @@ async function crawlAllCategories() {
               ).then((docs) => docs.map((doc) => doc._id));
             }
 
+            // Nếu không tìm thấy sản phẩm liên quan, lấy 6 sản phẩm bất kỳ
+            if (related.length === 0) {
+              related = await Product.aggregate([
+                { $sample: { size: 6 } },
+                { $project: { _id: 1 } },
+              ]).then((docs) => docs.map((doc) => doc._id));
+            }
+
             // Lấy status
             let status = "available";
             try {
@@ -283,7 +290,7 @@ async function crawlAllCategories() {
 
             // Convert price string to number
             const price = convertPriceToNumber(priceString);
-
+           
             const uniqueKey = `${title}|${priceString}|${category.name}`;
             if (crawledSet.has(uniqueKey)) continue;
             crawledSet.add(uniqueKey);
@@ -336,7 +343,6 @@ async function crawlAllCategories() {
                   warehouseId: 1,
                   productId: productId,
                   quantity: 100,
-                  
                 },
               },
               { upsert: true }

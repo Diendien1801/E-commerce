@@ -19,7 +19,7 @@ const paymentSchema = new mongoose.Schema(
       type: String,
       required: true,
       enum: [
-        "Credit Card",
+        "paypal",
         "VNPay",
         "Momo",
         "ZaloPay",

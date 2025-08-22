@@ -87,6 +87,7 @@
   "changePasswordFailed": "Failed to change password",
   "changePassword": "Change Password",
   "changePasswordPrompt": "Enter your current password and new password below.",
+  "resetPasswordPrompt": "Enter your new password to reset.",
   "currentPassword": "Current Password",
   "currentPasswordPlaceholder": "Enter current password",
   "newPassword": "New Password",

@@ -3,13 +3,18 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from '../components/context/authcontext';
 // import LocationSelector from "../components/locationSelector/LocationSelector";
 import MapView from "../components/map/MapView"
+import PaymentAccount from "./component/PaymentAccount";
+import PaymentDeliveryForm from "./component/PaymentDeliveryForm";
+import PaymentShippingMethods from "./component/PaymentShippingMethods";
+import PaymentPaymentMethods from "./component/PaymentPaymentMethods";
+import PaymentCart from "./component/PaymentCart";
+import PaymentSummary from "./component/PaymentSummary";
 
 export default function Payment() {
   const { user: loggedInUser } = useAuth();
   const [activeTab, setActiveTab] = useState('delivery');
-  // const [showLocationSelector, setShowLocationSelector] = useState(false);
   const [showMap, setShowMap] = useState(false);
-  // const [selectedLocation, setSelectedLocation] = useState('');
+
 
   const [inputRect, setInputRect] = useState(null);
   const [selectedShippingMethod, setSelectedShippingMethod] = useState('');
@@ -122,44 +127,34 @@ export default function Payment() {
 
   // Fetch cart items từ API
   const fetchCartItems = async () => {
-    try {
-      setCartLoading(true);
-      const userId = getCurrentUserId();
-      
-      if (!userId) {
-        throw new Error('Vui lòng đăng nhập để xem giỏ hàng');
-      }
+  try {
+    setCartLoading(true);
+    const userId = getCurrentUserId();
 
-      const response = await fetch(`http://localhost:5000/api/cart/user/${userId}`);
-      
-      if (!response.ok) {
-        throw new Error('Không thể lấy thông tin giỏ hàng');
-      }
-      
-      const data = await response.json();
-      
-      // Xử lý response structure dựa trên format: { success: true, data: { cart: { items: [] } } }
-      if (data.success && data.data && data.data.cart) {
-        setCartItems(data.data.cart.items || []);
-      } else if (data.success && data.data && Array.isArray(data.data)) {
-        setCartItems(data.data);
-      } else if (Array.isArray(data)) {
-        setCartItems(data);
-      } else if (data.items) {
-        setCartItems(data.items);
-      } else {
-        setCartItems([]);
-      }
-      
-      setCartError(null);
-    } catch (err) {
-      console.error('Error fetching cart:', err);
-      setCartError(err.message);
-      setCartItems([]);
-    } finally {
-      setCartLoading(false);
+    if (!userId) {
+      throw new Error('Vui lòng đăng nhập để xem giỏ hàng');
     }
-  };
+
+    const response = await fetch(`http://localhost:5000/api/cart/user/${userId}`);
+
+    if (!response.ok) {
+      throw new Error('Không thể lấy thông tin giỏ hàng');
+    }
+
+    const data = await response.json();
+
+    // Lấy items từ response chuẩn
+    const items = data?.data?.cart?.items || [];
+    setCartItems(items);
+    setCartError(null);
+  } catch (err) {
+    console.error('Error fetching cart:', err);
+    setCartError(err.message);
+    setCartItems([]);
+  } finally {
+    setCartLoading(false);
+  }
+};
 
   // Fetch user info và cart khi component mount
   useEffect(() => {
@@ -289,16 +284,22 @@ const removeFromCart = async (itemId) => {
   }
 };
 
-  // Tính tổng tiền giỏ hàng
   const calculateCartTotal = () => {
-    if (!cartItems || cartItems.length === 0) return 0;
-    
-    return cartItems.reduce((total, item) => {
-      const price = item.product?.price || item.price || 0;
-      const quantity = item.quantity || 1;
-      return total + (price * quantity);
-    }, 0);
-  };
+  if (!cartItems || cartItems.length === 0) return 0;
+
+  return cartItems.reduce((total, item) => {
+    // Ưu tiên lấy priceAtTime, nếu không có thì lấy productId.price, nếu không có thì lấy price
+    const price =
+      item.priceAtTime ??
+      
+      
+      item.price ??
+      0;
+    const quantity = item.quantity || 1;
+    // Chỉ cộng tiền nếu giá > 0 (còn hàng)
+    return price > 0 ? total + price * quantity : total;
+  }, 0);
+};
 
   const updateShippingMethods = (location) => {
     const isHanoi = location.includes('Ha Noi');
@@ -360,7 +361,7 @@ const removeFromCart = async (itemId) => {
     },
     {
       id: 'momo',
-      name: 'Ví MoMo',
+      name: 'VNPAY',
       description: 'Thanh toán nhanh chóng qua ví điện tử VnPay',
       icon: 'https://vinadesign.vn/uploads/images/2023/05/vnpay-logo-vinadesign-25-12-57-55.jpg',
     }
@@ -458,14 +459,13 @@ const handlePlaceOrder = async () => {
       shippingAddress: `${formData.address ? formData.address + ', ' : ''}${formData.location}`
     };
 
-    // Debug: Log toàn bộ orderData trước khi gửi
+
     console.log('=== Order Data Before Send ===');
     console.log('Full orderData:', JSON.stringify(orderData, null, 2));
     console.log('idOrder field:', orderData.idOrder);
     console.log('typeof idOrder:', typeof orderData.idOrder);
     console.log('idOrder length:', orderData.idOrder?.length);
 
-    // Kiểm tra xem có thiếu field nào không
     const requiredFields = ['idOrder', 'idUser', 'items', 'paymentMethod', 'shippingAddress'];
     const missingFields = requiredFields.filter(field => !orderData[field]);
     
@@ -520,7 +520,7 @@ const handlePlaceOrder = async () => {
         userId: userId,
         orderId: orderId,
         method: "Cash on Delivery",
-        amount: totalAmount,
+        amount: Number(totalAmount),
         status: "pending"
       };
 
@@ -533,12 +533,12 @@ const handlePlaceOrder = async () => {
       });
 
       if (paymentResponse.ok) {
-        await clearCart();
-        window.location.href = `/order-success?orderId=${orderId}`;
-      } else {
-        const paymentError = await paymentResponse.json();
-        throw new Error(paymentError.message || 'Không thể tạo thông tin thanh toán');
-      }
+  await clearCart();
+  window.location.href = `/payment-result?status=success&orderId=${orderId}&amount=${totalAmount}`;
+} else {
+  const paymentError = await paymentResponse.json();
+  throw new Error(paymentError.message || 'Không thể tạo thông tin thanh toán');
+}
     }
 
   } catch (error) {
@@ -579,26 +579,11 @@ const clearCart = async () => {
     // Không throw error vì đây không phải lỗi critical
   }
 };
-// Hàm lấy thông tin order (sử dụng endpoint có sẵn)
-const getOrderInfo = async (orderId) => {
-  try {
-    const response = await fetch(`http://localhost:5000/api/orders/orders/id/${orderId}`);
-    
-    if (!response.ok) {
-      throw new Error('Không thể lấy thông tin đơn hàng');
-    }
-    
-    const result = await response.json();
-    return result.data || result;
-  } catch (error) {
-    console.error('Error getting order info:', error);
-    throw error;
-  }
-};
+ 
   // Xử lý thanh toán MoMo
-const handleMoMoPayment = async (totalAmount,orderId) => {
+const handleMoMoPayment = async (totalAmount, orderId) => {
   try {
-    console.log('Processing VNPay payment for order:', orderId);
+    console.log('Processing MoMo payment for order:', orderId);
 
     const paymentData = {
       amount: totalAmount,
@@ -633,352 +618,88 @@ const handleMoMoPayment = async (totalAmount,orderId) => {
 };
 
   // Xử lý thanh toán PayPal (placeholder)
-  const handlePayPalPayment = async (totalAmount) => {
-    alert('Tính năng thanh toán PayPal đang được phát triển');
-  };
+  const handlePayPalPayment = async (totalAmount, orderId) => {
+  try {
+    // 1. Gọi API tạo payment PayPal (POST /api/payments)
+    const paymentData = {
+      orderId,
+      method: "paypal"
+    };
+
+    const response = await fetch('http://localhost:5000/api/payments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(paymentData)
+    });
+
+    const result = await response.json();
+
+    if (!result.success || !result.data?.approveUrl) {
+      throw new Error(result.message || "Không thể tạo thanh toán PayPal");
+    }
+
+
+    // Redirect sang PayPal để thanh toán
+    window.location.href = result.data.approveUrl;
+  } catch (error) {
+    alert(error.message || "Có lỗi xảy ra khi tạo thanh toán PayPal");
+  }
+};
   return (
     <div className="payment-wrapper">
       <div className="payment-container">
         {/* Cột trái */}
         <div className="payment-left">
           {/* Tài khoản */}
-          <div className="card">
-            <h3>Tài khoản</h3>
-            {loading ? (
-              <div className="account-info">
-                <div className="avatar">...</div>
-                <div>
-                  <p className="name">Đang tải...</p>
-                  <p className="small">Đang lấy thông tin tài khoản</p>
-                </div>
-              </div>
-            ) : error ? (
-              <div className="account-info">
-                <div className="avatar">!</div>
-                <div>
-                  <p className="name">Lỗi</p>
-                  <p className="small" style={{color: 'red'}}>{error}</p>
-                </div>
-                <button className="logout" onClick={fetchUserInfo}>Thử lại</button>
-              </div>
-            ) : userInfo ? (
-              <div className="account-info">
-                <div className="avatar">{getInitials(userInfo.name || userInfo.fullName)}</div>
-                <div>
-                  <p className="name">{userInfo.name || userInfo.fullName || 'Người dùng'}</p>
-                  <p className="small">
-                    {userInfo.email || userInfo.gmail || 'Chưa có email'} | {userInfo.phone || userInfo.phoneNumber || 'Chưa có SĐT'}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="account-info">
-                <div className="avatar">?</div>
-                <div>
-                  <p className="name">Chưa có thông tin</p>
-                  <p className="small">Không thể lấy thông tin tài khoản</p>
-                </div>
-              </div>
-            )}
-          </div>
+          <PaymentAccount 
+            loading={loading}
+            error={error}
+            userInfo={userInfo}
+            getInitials={getInitials}
+            fetchUserInfo={fetchUserInfo}
+          />
 
           {/* Thông tin giao hàng */}
-          <div className="card">
-            <h3>Thông tin giao hàng</h3>
-            <div className="delivery-tabs">
-              <button 
-                className={`delivery-tab ${activeTab === 'delivery' ? 'active' : ''}`}
-                onClick={() => handleTabChange('delivery')}
-              >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 8H17V4H3C1.9 4 1 4.9 1 6V17H3C3 18.66 4.34 20 6 20C7.66 20 9 18.66 9 17H15C15 18.66 16.34 20 18 20C19.66 20 21 18.66 21 17H23V12L20 8ZM19.5 9.5L21.46 12H17V9.5H19.5ZM6 18C5.45 18 5 17.55 5 17C5 16.45 5.45 16 6 16C6.55 16 7 16.45 7 17C7 17.55 6.55 18 6 18ZM8.22 15C7.67 14.39 6.89 14 6 14C5.11 14 4.33 14.39 3.78 15H3V6H15V15H8.22ZM18 18C17.45 18 17 17.55 17 17C17 16.45 17.45 16 18 16C18.55 16 19 16.45 19 17C19 17.55 18.55 18 18 18Z" fill="currentColor" className="!fill-current" aria-hidden="true" focusable="false" tabIndex="-1"></path></svg>
-                Giao tận nơi
-              </button>
-            </div>
-            
-            {activeTab === 'delivery' && (
-              <div className="form-fields">
-                <div className="input-group">
-                  <input 
-                    type="text" 
-                    id="fullName"
-                    value={formData.fullName}
-                    onChange={(e) => handleInputChange('fullName', e.target.value)}
-                    className="form-input"
-                    placeholder=" "
-                  />
-                  <label htmlFor="fullName" className="form-label">Họ và tên</label>
-                  {formData.fullName && (
-                    <button 
-                      type="button" 
-                      className="clear-btn"
-                      onClick={() => handleClearField('fullName')}
-                    >
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M9 3L3 9M3 3L9 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </button>
-                  )}
-                </div>
-
-                <div className="input-group">
-                  <input 
-                    type="tel" 
-                    id="phone"
-                    value={formData.phone}
-                    onChange={(e) => handleInputChange('phone', e.target.value)}
-                    className="form-input"
-                    placeholder=" "
-                  />
-                  <label htmlFor="phone" className="form-label">Số điện thoại</label>
-                  {formData.phone && (
-                    <button 
-                      type="button" 
-                      className="clear-btn"
-                      onClick={() => handleClearField('phone')}
-                    >
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M9 3L3 9M3 3L9 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </button>
-                  )}
-                </div>
-
-                <div className="input-group">
-                  <input 
-                    type="text" 
-                    id="country"
-                    value={formData.country}
-                    className="form-input"
-                    readOnly
-                  />
-                  <label htmlFor="country" className="form-label">Quốc gia</label>
-                </div>
-
-                <div className="input-group">
-                  <input 
-                    type="text" 
-                    id="location"
-                    value={formData.location}
-                    placeholder=" "
-                    className="form-input"
-                    readOnly
-                    onClick={handleLocationInputClick}
-                    style={{ cursor: 'pointer' }}
-                  />
-                  <label htmlFor="location" className="form-label">Tỉnh/TP, Quận/Huyện, Phường/Xã</label>
-                  
-                  <div className="location-buttons">
-                    {/* ✅ Thêm nút map */}
-                    <button 
-                      type="button" 
-                      className="map-btn"
-                      onClick={handleShowMap}
-                      title="Chọn trên bản đồ"
-                    >
-                      🗺️
-                    </button>
-                    
-                    
-                  </div>
-                </div>
-                
-                
-
-                
-              </div>
-            )}
-          </div>
+          <PaymentDeliveryForm 
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            formData={formData}
+            onInputChange={handleInputChange}
+            onClearField={handleClearField}
+            onLocationInputClick={handleLocationInputClick}
+            onShowMap={handleShowMap}
+          />
 
           {/* Phương thức giao hàng */}
-          <div className="card">
-            <h3>Phương thức giao hàng</h3>
-            {!formData.location ? (
-              <div className="shipping-placeholder">
-                <div className="placeholder-icon">📍</div>
-                <p>Vui lòng nhập địa chỉ để xem các phương thức giao hàng</p>
-              </div>
-            ) : (
-              <div className="shipping-methods">
-                <div className="shipping-location">
-                  <span className="location-icon">📍</span>
-                  <span className="location-text">Giao đến: {formData.location}</span>
-                </div>
-                
-                {shippingMethods.map(method => (
-                  <label key={method.id} className={`shipping-option ${selectedShippingMethod === method.id ? 'selected' : ''}`}>
-                    <input 
-                      type="radio" 
-                      name="shipping" 
-                      value={method.id}
-                      checked={selectedShippingMethod === method.id}
-                      onChange={(e) => setSelectedShippingMethod(e.target.value)}
-                    />
-                    <div className="shipping-content">
-                      <div className="shipping-left">
-                        <span className="shipping-icon">{method.icon}</span>
-                        <div className="shipping-info">
-                          <div className="shipping-name">
-                            {method.name}
-                            {method.recommended && <span className="recommended-badge">Khuyến nghị</span>}
-                          </div>
-                          <div className="shipping-description">{method.description}</div>
-                        </div>
-                      </div>
-                      <div className="shipping-price">{formatPrice(method.price)}</div>
-                    </div>
-                  </label>
-                ))}
-              </div>
-            )}
-          </div>
+          <PaymentShippingMethods 
+            formData={formData}
+            shippingMethods={shippingMethods}
+            selectedShippingMethod={selectedShippingMethod}
+            onSelectShippingMethod={(value) => setSelectedShippingMethod(value)}
+            formatPrice={formatPrice}
+          />
 
           {/* Phương thức thanh toán */}
-          <div className="card">
-            <h3>Phương thức thanh toán</h3>
-            <div className="payment-methods">
-              {paymentMethods.map(method => (
-                <label 
-                  key={method.id} 
-                  className={`payment-method-option ${selectedPaymentMethod === method.id ? 'selected' : ''}`}
-                >
-                  <input 
-                    type="radio" 
-                    name="payment" 
-                    value={method.id}
-                    checked={selectedPaymentMethod === method.id}
-                    onChange={(e) => setSelectedPaymentMethod(e.target.value)}
-                  />
-                  <div className="payment-content">
-                    <div className="payment-icon">
-                      <img src={method.icon} alt={method.name} />
-                    </div>
-                    <div className="payment-info">
-                      <div className="payment-name">{method.name}</div>
-                      <div className="payment-description">{method.description}</div>
-                    </div>
-                    <div className="payment-radio">
-                      <div className="radio-circle"></div>
-                    </div>
-                  </div>
-                </label>
-              ))}
-            </div>
-            
-            {selectedPaymentMethod === 'paypal' && (
-              <div className="payment-extra-info">
-                <div className="paypal-info">
-                  <p>Bạn sẽ được chuyển hướng đến PayPal để hoàn tất thanh toán</p>
-                </div>
-              </div>
-            )}
-            
-            {selectedPaymentMethod === 'momo' && (
-              <div className="payment-extra-info">
-                <div className="momo-info">
-                  <p>Quét mã QR hoặc mở ứng dụng MoMo để thanh toán</p>
-                </div>
-              </div>
-            )}
-            
-            {selectedPaymentMethod === 'cod' && (
-              <div className="payment-extra-info">
-                <div className="cod-info">
-                  <div className="cod-notice">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M8 1.33333C4.32 1.33333 1.33333 4.32 1.33333 8C1.33333 11.68 4.32 14.6667 8 14.6667C11.68 14.6667 14.6667 11.68 14.6667 8C14.6667 4.32 11.68 1.33333 8 1.33333ZM8.66667 11.3333H7.33333V10H8.66667V11.3333ZM8.66667 8.66667H7.33333V4.66667H8.66667V8.66667Z" fill="#ff6b35"/>
-                    </svg>
-                    <span>Vui lòng chuẩn bị đủ tiền mặt khi nhận hàng</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+          <PaymentPaymentMethods 
+            paymentMethods={paymentMethods}
+            selectedPaymentMethod={selectedPaymentMethod}
+            onSelectPaymentMethod={(value) => setSelectedPaymentMethod(value)}
+          />
         </div>
 
         {/* Cột phải */}
         <div className="payment-right">
           {/* Giỏ hàng */}
-          <div className="card">
-            <h3>Giỏ hàng</h3>
-            {cartLoading ? (
-              <div className="cart-loading">
-                <div style={{ textAlign: 'center', padding: '20px' }}>
-                  <p>Đang tải giỏ hàng...</p>
-                </div>
-              </div>
-            ) : cartError ? (
-              <div className="cart-error">
-                <div style={{ textAlign: 'center', padding: '20px' }}>
-                  <p style={{color: 'red', marginBottom: '10px'}}>{cartError}</p>
-                  <button 
-                    onClick={fetchCartItems}
-                    style={{
-                      padding: '8px 16px',
-                      backgroundColor: '#e91e63',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Thử lại
-                  </button>
-                </div>
-              </div>
-            ) : cartItems.length === 0 ? (
-              <div className="cart-empty">
-                <div style={{ textAlign: 'center', padding: '20px' }}>
-                  <div style={{ fontSize: '48px', marginBottom: '10px' }}>🛒</div>
-                  <p style={{ color: '#666', marginBottom: '10px' }}>Giỏ hàng trống</p>
-                  <p style={{ color: '#999', fontSize: '14px' }}>Thêm sản phẩm vào giỏ hàng để tiếp tục thanh toán</p>
-                </div>
-              </div>
-            ) : (
-              <div className="cart-items">
-  {cartItems.map((item, index) => (
-    <div key={item._id || item.id || index} className="cart-item">
-      <img 
-        src={item.productId?.imageUrl[0] || '/placeholder.jpg'} 
-        alt={item.productId?.title || 'Product'}
-        onError={(e) => {
-          e.target.src = '/placeholder.jpg';
-        }}
-      />
-      <div className="cart-item-info">
-        <p className="item-name">{item.productId?.title || 'Tên sản phẩm'}</p>
-        <p className="price">{formatPrice(item.productId?.price || item.price || 0)}</p>
-      </div>
-      <div className="quantity">
-        <button 
-          className="quantity-btn decrease"
-          onClick={() => decreaseQuantity(item.productId?._id || item.productId)}
-          disabled={item.quantity <= 0}
-          title={item.quantity === 1 ? "Xóa sản phẩm" : "Giảm số lượng"}
-        >
-          -
-        </button>
-        <span className="quantity-display">{item.quantity || 1}</span>
-        <button 
-          className="quantity-btn increase"
-          onClick={() => increaseQuantity(item.productId?._id || item.productId)}
-          title="Tăng số lượng"
-        >
-          +
-        </button>
-        {/* Nút xóa sản phẩm */}
-        <button 
-          className="remove-btn"
-          onClick={() => removeFromCart(item.productId?._id || item.productId)}
-          title="Xóa sản phẩm khỏi giỏ hàng"
-        >
-          🗑️
-        </button>
-      </div>
-    </div>
-  ))}
-</div>
-            )}
-          </div>
+          <PaymentCart 
+            cartLoading={cartLoading}
+            cartError={cartError}
+            fetchCartItems={fetchCartItems}
+            cartItems={cartItems}
+            formatPrice={formatPrice}
+            decreaseQuantity={decreaseQuantity}
+            increaseQuantity={increaseQuantity}
+            removeFromCart={removeFromCart}
+          />
 
           {/* Mã khuyến mãi */}
           <div className="card">
@@ -988,40 +709,16 @@ const handleMoMoPayment = async (totalAmount,orderId) => {
           </div>
 
           {/* Tóm tắt đơn hàng */}
-          <div className="card">
-            <h3>Tóm tắt đơn hàng</h3>
-            <div className="summary-row">
-              <span>Tổng tiền hàng</span>
-              <span>{formatPrice(calculateCartTotal())}</span>
-            </div>
-            <div className="summary-row">
-              <span>Phí vận chuyển</span>
-              <span>{formData.location ? formatPrice(getSelectedShippingPrice()) : '-'}</span>
-            </div>
-            <div className="summary-row total">
-              <span>Tổng thanh toán</span>
-              <span>{formatPrice(calculateCartTotal() + getSelectedShippingPrice())}</span>
-            </div>
-            <button 
-              className="order-btn" 
-              onClick={handlePlaceOrder}
-              disabled={isProcessing || cartItems.length === 0}
-            >
-              {isProcessing ? (
-                <span>
-                  {selectedPaymentMethod === 'momo' ? 'Đang tạo thanh toán MoMo...' : 
-                   selectedPaymentMethod === 'paypal' ? 'Đang tạo thanh toán PayPal...' : 
-                   'Đang đặt hàng...'}
-                </span>
-              ) : (
-                <span>
-                  {selectedPaymentMethod === 'momo' ? 'Thanh toán MoMo' : 
-                   selectedPaymentMethod === 'paypal' ? 'Thanh toán PayPal' : 
-                   'Đặt hàng'}
-                </span>
-              )}
-            </button>
-          </div>
+          <PaymentSummary 
+            formatPrice={formatPrice}
+            calculateCartTotal={calculateCartTotal}
+            getSelectedShippingPrice={() => formData.location ? getSelectedShippingPrice() : 0}
+            hasLocation={!!formData.location}
+            handlePlaceOrder={handlePlaceOrder}
+            isProcessing={isProcessing}
+            selectedPaymentMethod={selectedPaymentMethod}
+            cartItems={cartItems}
+          />
         </div>
       </div>
     

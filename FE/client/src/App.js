@@ -2,7 +2,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { AuthProvider } from './components/context/authcontext';
 import './i18n';
 import './App.css';
-
+import ToastProvider from "./components/toast/ToastProvider.jsx";
 import Home from './home/page';
 import Login from './authentication/login/page';
 import Shop from './shop/page';
@@ -30,10 +30,9 @@ import OrderManage from './admin/orders/page';
 import CategoryManagement from './admin/category/page';
 import CrawlPage from './admin/crawl/page';
 
-import Dashboard from './admin/analysis/dashboard';
 import Payment from './payment/page';
 import PaymentResult from './paymentResult/payment-result'; 
-import Cart from './cart/page';
+
 
 
 
@@ -55,7 +54,16 @@ function App() {
     { path: "/order", element: <OrderPage /> },
     { path: "/reset", element: <ResetPasswordUI /> },
     { path: "/cart", element: <Cart /> },
-
+    
+    {
+      path: "/payment",
+      element: <Payment />
+    }
+    ,
+    {
+      path: "/payment-result",
+      element: <PaymentResult />
+    },
     // Admin routes (nested)
     {
       path: "/admin",
@@ -73,23 +81,8 @@ function App() {
       ],
     },
 
-    {
-      path: '/admin/dashboard',
-      element: <Dashboard />
-    },
-    {
-      path: "/admin/products/:id",
-      element: <ProductDetail />,
-    },
-    {
-      path: "/payment",
-      element: <Payment />
-    }
-    ,
-    {
-      path: "/payment-result",
-      element: <PaymentResult />
-    }
+    
+    
     
 
   ]);
