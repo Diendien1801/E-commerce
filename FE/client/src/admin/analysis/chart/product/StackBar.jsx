@@ -88,19 +88,19 @@ const ProductCategory = () => {
       const stackGenerator = d3.stack().keys(allSubcategories);
       const layers = stackGenerator(stackedData);
 
-      // Tooltip
+      // Tooltip (append to body, styled like RevenueByCategory)
       const tooltip = d3
-        .select(chartRef.current)
-        .append("div")
-        .style("position", "absolute")
-        .style("visibility", "hidden")
-        .style("background", "#fff")
-        .style("border", "1px solid #ccc")
-        .style("padding", "6px 10px")
-        .style("border-radius", "4px")
-        .style("font-size", "13px")
-        .style("pointer-events", "none")
-        .style("box-shadow", "0px 2px 6px rgba(0,0,0,0.1)");
+        .select('body')
+        .append('div')
+        .style('position', 'absolute')
+        .style('visibility', 'hidden')
+        .style('background', '#fff')
+        .style('border', '1px solid #ccc')
+        .style('padding', '6px 10px')
+        .style('border-radius', '4px')
+        .style('font-size', '13px')
+        .style('pointer-events', 'none')
+        .style('box-shadow', '0px 2px 6px rgba(0,0,0,0.1)');
 
       // Draw bars
       svg
@@ -120,12 +120,12 @@ const ProductCategory = () => {
           const value = d[1] - d[0];
           tooltip
             .style("visibility", "visible")
-            .text(`${category}: ${value}`);
+            .text(`${category}: ${value.toLocaleString()}`);
         })
         .on("mousemove", (event) => {
           tooltip
-            .style("top", event.pageY - 350 + "px")
-            .style("left", event.pageX - 300 + "px");
+            .style("top", `${event.pageY + 10}px`)
+            .style("left", `${event.pageX + 10}px`);
         })
         .on("mouseleave", () => tooltip.style("visibility", "hidden"));
 
