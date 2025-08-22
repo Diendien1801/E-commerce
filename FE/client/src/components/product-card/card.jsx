@@ -2,11 +2,13 @@ import './card.css';
 import { useNavigate, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/authcontext';
+import CartPopup from '../popup/popup';
 
 const ProductCard = ({ product }) => {
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [showCartPopup, setShowCartPopup] = useState(false);
   const { isLoggedIn, user } = useAuth();
 
   const formatPrice = (price) =>
@@ -20,36 +22,37 @@ const ProductCard = ({ product }) => {
     e.stopPropagation();
 
     if (!isLoggedIn) {
-        alert('Bạn cần đăng nhập để thêm sản phẩm vào giỏ hàng');
-        return;
+      alert('Bạn cần đăng nhập để thêm sản phẩm vào giỏ hàng');
+      return;
     }
 
     const token = localStorage.getItem('token');
 
     try {
-        const res = await fetch(`http://localhost:5000/api/cart/${user._id}/add`, {
+      const res = await fetch(`http://localhost:5000/api/cart/${user._id}/add`, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token || ''}`,
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token || ''}`,
         },
         body: JSON.stringify({
-            productId: product._id,
-            quantity: 1
+          productId: product._id,
+          quantity: 1
         }),
-        });
+      });
 
-        const data = await res.json().catch(() => ({}));
+      const data = await res.json().catch(() => ({}));
 
-        if (!res.ok || data?.success === false) {
+      if (!res.ok || data?.success === false) {
         throw new Error(data?.message || 'Thêm vào giỏ thất bại');
-        }
-        console.log('Cart updated:', data);
+      }
+      setShowCartPopup(true);
+      setTimeout(() => setShowCartPopup(false), 2000);
     } catch (err) {
-        console.error('Add to cart error:', err);
-        alert(err.message || 'Có lỗi xảy ra');
+      console.error('Add to cart error:', err);
+      alert(err.message || 'Có lỗi xảy ra');
     }
-    };
+  };
 
 
   // Fetch favorites -> keep heart filled on reload
@@ -191,50 +194,53 @@ const handleWishlist = async (e) => {
   const hasMultipleImages = () => getImages().length > 1;
 
   return (
-    <div
-      className="product-card"
-      onClick={() => navigate(`../view-product/${product._id}`)}
-      style={{ cursor: 'pointer' }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <Link
-        to={`/view-product/${product._id}`}
-        onClick={handleProductClick}
-        className="product-card-link"
-      ></Link>
+    <>
+      <div
+        className="product-card"
+        onClick={() => navigate(`../view-product/${product._id}`)}
+        style={{ cursor: 'pointer' }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        <Link
+          to={`/view-product/${product._id}`}
+          onClick={handleProductClick}
+          className="product-card-link"
+        ></Link>
 
-      <div className="album-covers">
-        <img
-          src={getCurrentImageUrl()}
-          alt={product?.title || 'Album Cover'}
-          className={`album-cover left ${hasMultipleImages() ? 'hover-transition' : ''}`}
-        />
-        <div className="grey-bar">
-          <button className="icon-button" onClick={handleWishlist} aria-label="Yêu thích">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill={isFavorite ? 'red' : 'none'}
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-            </svg>
-          </button>
+        <div className="album-covers">
+          <img
+            src={getCurrentImageUrl()}
+            alt={product?.title || 'Album Cover'}
+            className={`album-cover left ${hasMultipleImages() ? 'hover-transition' : ''}`}
+          />
+          <div className="grey-bar">
+            <button className="icon-button" onClick={handleWishlist} aria-label="Yêu thích">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill={isFavorite ? 'red' : 'none'}
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+              </svg>
+            </button>
+          </div>
         </div>
-      </div>
 
-      <div className="product-info">
-        <div className="album-title">{product.title || 'FIRST IMPRESSION ON EARTH'}</div>
-        <div className="product-price">{formatPrice(product.price)}₫</div>
-      </div>
+        <div className="product-info">
+          <div className="album-title">{product.title || 'FIRST IMPRESSION ON EARTH'}</div>
+          <div className="product-price">{formatPrice(product.price)}₫</div>
+        </div>
 
-      <button className="add-to-cart-btn1" onClick={handleAddToCart}>
-        <div className="btn-text">THÊM VÀO GIỎ</div>
-      </button>
-    </div>
+        <button className="add-to-cart-btn1" onClick={handleAddToCart}>
+          <div className="btn-text">THÊM VÀO GIỎ</div>
+        </button>
+      </div>
+      <CartPopup show={showCartPopup} message="Đã thêm vào giỏ hàng!" />
+    </>
   );
 };
 

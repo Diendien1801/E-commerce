@@ -4,10 +4,11 @@ import { useTranslation } from 'react-i18next';
 import Navbar from '../components/navbar/navbar';
 import Footer from '../components/footer/footer';
 import Breadcrumb from '../components/breadcrumb/page'; // Import Breadcrumb
-
+import CartPopup from '../components/popup/popup';  
 import ProductCard from '../components/product-card/card'; // Import ProductCard
 import { useAuth } from '../components/context/authcontext';
 import './view-product.css';
+import { useCart } from '../components/cart/CartContext';
 
 const ViewProduct = () => {
     const { t, i18n } = useTranslation();
@@ -19,8 +20,10 @@ const ViewProduct = () => {
     const [quantity, setQuantity] = useState(1);
     const [favLoading, setFavLoading] = useState(false);
     const [favError, setFavError] = useState('');
+    const [showCartPopup, setShowCartPopup] = useState(false);
     const [favSuccess, setFavSuccess] = useState('');
     const { user } = useAuth();
+    const { addToCart } = useCart();
 
     useEffect(() => {
     fetch(`http://localhost:5000/api/products/${id}`)
@@ -258,9 +261,25 @@ useEffect(() => {
                         </div>
 
                         <div className="action-buttons">
-                            <button className="add-to-cart-btn">
+                            <button 
+                                className="add-to-cart-btn" 
+                                onClick={async () => {
+                                    if (!user || !user._id) {
+                                        alert('Bạn cần đăng nhập để thêm vào giỏ hàng!');
+                                        return;
+                                    }
+                                    try {
+                                        await addToCart(id, quantity);  
+                                        setShowCartPopup(true);
+                                        setTimeout(() => setShowCartPopup(false), 2000);
+                                    } catch (err) {
+                                        alert('Thêm vào giỏ hàng thất bại!');
+                                    }
+                                }}
+                            >
                                 THÊM VÀO GIỎ
                             </button>
+                            <CartPopup show={showCartPopup} message="Đã thêm vào giỏ hàng!" />
                         </div>
 
                        
