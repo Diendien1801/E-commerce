@@ -212,7 +212,7 @@ export default function OrderManagement() {
         setError('');
         let url = '';
         if (searchTerm.trim()) {
-          url = `http://localhost:5000/api/orders/search?q=${encodeURIComponent(searchTerm)}&page=${page}&limit=${LIMIT}`;
+          url = `http://localhost:5000/api/orders/search?query=${encodeURIComponent(searchTerm)}&page=${page}&limit=${LIMIT}`;
           if (selectedTab !== 'all') {
             url += `&status=${selectedTab}`;
           }
@@ -222,9 +222,19 @@ export default function OrderManagement() {
         const response = await fetch(url);
         const data = await response.json();
         console.log(data);
-        if (!Array.isArray(data.data?.orders)) throw new Error(data.message || 'Unexpected response format');
-        setOrders(data.data.orders);
-        setTotalPages(data.data.pagination?.totalPages || 1);
+        let ordersArr = [];
+        let totalPagesVal = 1;
+        if (Array.isArray(data.data)) {
+          ordersArr = data.data;
+          totalPagesVal = data.meta?.pages || 1;
+        } else if (Array.isArray(data.data?.orders)) {
+          ordersArr = data.data.orders;
+          totalPagesVal = data.data.pagination?.totalPages || 1;
+        } else {
+          throw new Error(data.message || 'Unexpected response format');
+        }
+        setOrders(ordersArr);
+        setTotalPages(totalPagesVal);
       } catch (err) {
         setError(err.message || 'Failed to fetch orders');
       } finally {
