@@ -6,7 +6,7 @@ import Breadcrumb from '../components/breadcrumb/page';
 import { useTranslation } from 'react-i18next';
 import './shop.css';
 
-const products_per_page = 20;
+const products_per_page = 18;
 
 const Shop = () => {
     const [products, setProducts] = useState([]);
@@ -278,10 +278,36 @@ const Shop = () => {
                         <div className="shop-empty">{t('noProductsFound')}</div>
                     )}
                 </div>
-                <div className="shop-pagination" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, margin: '24px 0' }}>
-                    <button onClick={() => setPage(page - 1)} disabled={page === 1}>&#8592;</button>
-                    <span style={{ fontWeight: 600, fontSize: 18 }}>{page}</span>
-                    <button onClick={() => setPage(page + 1)} disabled={page === totalPages || totalPages === 0}>&#8594;</button>
+                <div className="users-pagination" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, margin: '24px 0' }}>
+                    <button
+                    onClick={() => setPage(page - 1)}
+                    disabled={page === 1}
+                    style={{
+                        fontSize: 20,
+                        padding: '4px 12px',
+                        cursor: page === 1 ? 'not-allowed' : 'pointer',
+                        opacity: page === 1 ? 0.5 : 1,
+                        border: 'none',
+                        background: 'none',
+                    }}
+                    >
+                    &#8592;
+                    </button>
+                    <span style={{ fontWeight: 600, fontSize: 18 }}>{page}/{totalPages}</span>
+                    <button
+                    onClick={() => setPage(page + 1)}
+                    disabled={page === totalPages}
+                    style={{
+                        fontSize: 20,
+                        padding: '4px 12px',
+                        cursor: page === totalPages ? 'not-allowed' : 'pointer',
+                        opacity: page === totalPages ? 0.5 : 1,
+                        border: 'none',
+                        background: 'none',
+                    }}
+                    >
+                    &#8594;
+                    </button>
                 </div>
             </main>
         </div>
