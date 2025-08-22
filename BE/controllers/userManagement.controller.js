@@ -119,10 +119,10 @@ exports.getUserDetails = async (req, res) => {
     const orderStats = {
       totalOrders: orders.length,
       pendingOrders: orders.filter((o) => o.status === "pending").length,
-      completedOrders: orders.filter((o) => o.status === "complete").length,
+      completedOrders: orders.filter((o) => o.status === "completed").length,
       canceledOrders: orders.filter((o) => o.status === "canceled").length,
       totalSpent: orders
-        .filter((o) => o.status === "complete")
+        .filter((o) => o.status === "completed")
         .reduce((total, order) => {
           const orderTotal = order.items.reduce(
             (sum, item) => sum + item.price * item.quantity,
@@ -327,29 +327,28 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
-
 // API: Tìm kiếm user theo ID hoặc tên với độ chính xác lỏng
 exports.searchUsers = async (req, res) => {
   try {
-    const { 
+    const {
       q,
       page = 1,
       limit = 10,
-      sortBy = 'createdAt',
-      sortOrder = 'desc'
+      sortBy = "createdAt",
+      sortOrder = "desc",
     } = req.query;
 
     if (!q) {
       return res.status(400).json({
         success: false,
         message: "Query parameter 'q' is required",
-        data: null
+        data: null,
       });
     }
 
     // Build search filter với độ chính xác lỏng
     const searchFilter = {
-      $or: []
+      $or: [],
     };
 
     // 1. Tìm trong ObjectId (user _id)
@@ -360,35 +359,35 @@ exports.searchUsers = async (req, res) => {
           $regexMatch: {
             input: { $toString: "$_id" },
             regex: q,
-            options: "i"
-          }
-        }
+            options: "i",
+          },
+        },
       });
     }
 
     // 2. Tìm trong fullName (partial matching)
     searchFilter.$or.push({
-      fullName: { $regex: q, $options: 'i' }
+      fullName: { $regex: q, $options: "i" },
     });
 
     // 3. Tìm trong email (partial matching)
     searchFilter.$or.push({
-      email: { $regex: q, $options: 'i' }
+      email: { $regex: q, $options: "i" },
     });
 
     // 4. Tìm trong phone number
     searchFilter.$or.push({
-      phoneNumber: { $regex: q, $options: 'i' }
+      phoneNumber: { $regex: q, $options: "i" },
     });
 
     // 5. Tìm từng từ trong fullName (split words)
     const words = q.trim().split(/\s+/);
     if (words.length > 1) {
       // Nếu query có nhiều từ, tìm cả từng từ riêng biệt
-      words.forEach(word => {
+      words.forEach((word) => {
         if (word.length > 0) {
           searchFilter.$or.push({
-            fullName: { $regex: word, $options: 'i' }
+            fullName: { $regex: word, $options: "i" },
           });
         }
       });
@@ -400,7 +399,7 @@ exports.searchUsers = async (req, res) => {
     const skip = (pageNumber - 1) * limitNumber;
 
     // Sort
-    const sortDirection = sortOrder === 'asc' ? 1 : -1;
+    const sortDirection = sortOrder === "asc" ? 1 : -1;
     const sortOptions = { [sortBy]: sortDirection };
 
     // Count total documents
@@ -415,69 +414,83 @@ exports.searchUsers = async (req, res) => {
             $switch: {
               branches: [
                 // Exact _id match - highest score
-                { 
-                  case: { 
-                    $regexMatch: { 
-                      input: { $toString: "$_id" }, 
-                      regex: `^${q}`, 
-                      options: 'i' 
-                    } 
-                  }, 
-                  then: 100 
+                {
+                  case: {
+                    $regexMatch: {
+                      input: { $toString: "$_id" },
+                      regex: `^${q}`,
+                      options: "i",
+                    },
+                  },
+                  then: 100,
                 },
                 // Exact fullName match
-                { 
-                  case: { $eq: [{ $toLower: '$fullName' }, q.toLowerCase()] }, 
-                  then: 95 
+                {
+                  case: { $eq: [{ $toLower: "$fullName" }, q.toLowerCase()] },
+                  then: 95,
                 },
                 // fullName starts with query
-                { 
-                  case: { $regexMatch: { input: '$fullName', regex: `^${q}`, options: 'i' } }, 
-                  then: 80 
+                {
+                  case: {
+                    $regexMatch: {
+                      input: "$fullName",
+                      regex: `^${q}`,
+                      options: "i",
+                    },
+                  },
+                  then: 80,
                 },
                 // Email exact match
-                { 
-                  case: { $eq: [{ $toLower: '$email' }, q.toLowerCase()] }, 
-                  then: 75 
+                {
+                  case: { $eq: [{ $toLower: "$email" }, q.toLowerCase()] },
+                  then: 75,
                 },
                 // Email starts with query
-                { 
-                  case: { $regexMatch: { input: '$email', regex: `^${q}`, options: 'i' } }, 
-                  then: 70 
+                {
+                  case: {
+                    $regexMatch: {
+                      input: "$email",
+                      regex: `^${q}`,
+                      options: "i",
+                    },
+                  },
+                  then: 70,
                 },
                 // Phone exact match
-                { 
-                  case: { $eq: ['$phoneNumber', q] }, 
-                  then: 65 
+                {
+                  case: { $eq: ["$phoneNumber", q] },
+                  then: 65,
                 },
                 // Contains in fullName
-                { 
-                  case: { $regexMatch: { input: '$fullName', regex: q, options: 'i' } }, 
-                  then: 50 
+                {
+                  case: {
+                    $regexMatch: { input: "$fullName", regex: q, options: "i" },
+                  },
+                  then: 50,
                 },
                 // Partial _id match
-                { 
-                  case: { 
-                    $regexMatch: { 
-                      input: { $toString: "$_id" }, 
-                      regex: q, 
-                      options: 'i' 
-                    } 
-                  }, 
-                  then: 40 
-                }
+                {
+                  case: {
+                    $regexMatch: {
+                      input: { $toString: "$_id" },
+                      regex: q,
+                      options: "i",
+                    },
+                  },
+                  then: 40,
+                },
               ],
-              default: 20
-            }
-          }
-        }
+              default: 20,
+            },
+          },
+        },
       },
       // Sort by relevance first, then by specified sort
-      { 
-        $sort: { 
+      {
+        $sort: {
           relevanceScore: -1,
-          [sortBy]: sortDirection 
-        } 
+          [sortBy]: sortDirection,
+        },
       },
       {
         $project: {
@@ -489,11 +502,11 @@ exports.searchUsers = async (req, res) => {
           isDeleted: 1,
           status: 1,
           createdAt: 1,
-          relevanceScore: 1
-        }
+          relevanceScore: 1,
+        },
       },
       { $skip: skip },
-      { $limit: limitNumber }
+      { $limit: limitNumber },
     ]);
 
     // Calculate pagination info
@@ -510,19 +523,17 @@ exports.searchUsers = async (req, res) => {
           totalUsers: total,
           usersPerPage: limitNumber,
           hasNextPage: pageNumber < totalPages,
-          hasPrevPage: pageNumber > 1
+          hasPrevPage: pageNumber > 1,
         },
         searchQuery: q,
-        
-      }
+      },
     });
-
   } catch (error) {
     console.error("searchUsers error:", error);
     res.status(500).json({
       success: false,
       message: "Server error while searching users",
-      data: null
+      data: null,
     });
   }
 };

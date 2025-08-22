@@ -72,11 +72,20 @@ exports.loginWithEmail = async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
-    
+
     if (!user) {
       return res.status(400).json({
         success: false,
         message: "Email not registered. Please sign up.",
+        data: null,
+      });
+    }
+
+    // Kiểm tra tài khoản đã bị xóa chưa
+    if (user.isDeleted) {
+      return res.status(403).json({
+        success: false,
+        message: "Tài khoản này đã bị xóa hoặc bị khóa. Vui lòng liên hệ quản trị viên.",
         data: null,
       });
     }

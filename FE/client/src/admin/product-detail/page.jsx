@@ -153,7 +153,7 @@ const ProductDetailView = () => {
   return (
     <div className="detail-container">
       <h2 className="page-title">{t('productDetail', 'Product Detail')}</h2>
-
+      
       <div className="product-form">
         <div className="form-left">
           <div className="image-upload-section">
@@ -257,6 +257,7 @@ const ProductDetailView = () => {
 
         <div className="form-right">
         <h3><strong>{t('productDetail', 'Product Detail')}</strong></h3>
+        <div className = "productID"><strong>Mã sản phẩm: </strong>{product._id}</div>
           {isEditing ? (
             <>
               <div className="form-group">

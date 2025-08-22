@@ -334,8 +334,8 @@ function UserDetail() {
                     <td><span className="status-badge pending">{orderStats.pendingOrders}</span></td>
                     <td><span className="status-badge completed">{orderStats.completedOrders}</span></td>
                     <td><span className="status-badge canceled">{orderStats.canceledOrders}</span></td>
-                    <td>${orderStats.totalSpent?.toFixed(2)}</td>
-                  </tr>
+                    <td>{orderStats.totalSpent ? orderStats.totalSpent.toLocaleString('vi-VN') : 0} VND</td>
+                  </tr> 
                 </tbody>
               </table>
 

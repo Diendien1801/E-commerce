@@ -163,6 +163,37 @@ const Shop = () => {
         );
     };
 
+    // sort
+    useEffect(() => {
+        if (selectedCategory === null) return;
+        let url = selectedCategory
+            ? `http://localhost:5000/api/products/category/${selectedCategory}?page=${page}&limit=${products_per_page}`
+            : `http://localhost:5000/api/products/filter-paginated?page=${page}&limit=${products_per_page}`;
+
+        if (sortOrder === 'price_low') url += '&sort=price_asc';
+        else if (sortOrder === 'price_high') url += '&sort=price_desc';
+        else if (sortOrder === 'newest') url += '&sort=newest';
+
+        fetch(url)
+            .then(res => {
+                if (!res.ok) throw new Error('Network response was not ok');
+                return res.json();
+            })
+            .then(data => {
+                console.log('Product API response:', data.data);
+                setProducts(Array.isArray(data.data.products) ? data.data.products : []);
+                if (typeof data.data.pagination.totalPages === 'number') {
+                     setTotalPages(data.data.pagination.totalPages);
+                } else {
+                    setTotalPages(1);
+                }
+            })
+            .catch(err => {
+                setProducts([]);
+                setTotalPages(1);
+                console.error('Failed to fetch products:', err);
+            });
+    }, [sortOrder, page, selectedCategory]);
    return (
     <div>
         <Navbar />

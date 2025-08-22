@@ -234,8 +234,8 @@ const Navbar = () => {
                         {cartCount > 0 && (
                             <span style={{
                                 position: 'absolute',
-                                top: '5px',
-                                right: '45px',
+                                top: '0px',
+                                right: '70px',
                                 background: 'red',
                                 color: 'white',
                                 borderRadius: '50%',

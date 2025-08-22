@@ -315,7 +315,6 @@ exports.getDashboardStats = async (req, res) => {
   }
 };
 
-
 // Sản phẩm bán chạy nhất cùng với doanh thu và thông tin về sản phẩm
 exports.getTopSellingProducts = async (req, res) => {
   try {
@@ -341,19 +340,22 @@ exports.getTopSellingProducts = async (req, res) => {
     ]);
 
     // Helper function để tìm sản phẩm
-    const mongoose = require('mongoose');
+    const mongoose = require("mongoose");
     const findProductByAnyId = async (productId) => {
-      if (mongoose.Types.ObjectId.isValid(productId) && productId.length === 24) {
+      if (
+        mongoose.Types.ObjectId.isValid(productId) &&
+        productId.length === 24
+      ) {
         const product = await Product.findById(productId);
         if (product) return product;
       }
-      
+
       return await Product.findOne({
         $or: [
           { title: productId },
           { productCode: productId },
-          { sku: productId }
-        ]
+          { sku: productId },
+        ],
       });
     };
 
@@ -361,7 +363,7 @@ exports.getTopSellingProducts = async (req, res) => {
     const result = await Promise.all(
       topProducts.map(async (tp) => {
         const product = await findProductByAnyId(tp._id);
-        
+
         return {
           // Thông tin từ aggregation
           productId: tp._id,
@@ -373,64 +375,79 @@ exports.getTopSellingProducts = async (req, res) => {
             minPrice: tp.minPrice,
             maxPrice: tp.maxPrice,
             revenuePerOrder: Math.round(tp.totalRevenue / tp.orderCount),
-            avgQuantityPerOrder: Math.round(tp.totalQuantity / tp.orderCount * 100) / 100
+            avgQuantityPerOrder:
+              Math.round((tp.totalQuantity / tp.orderCount) * 100) / 100,
           },
-          
+
           // Toàn bộ thông tin sản phẩm
-          productInfo: product ? {
-            _id: product._id,
-            title: product.title,
-            price: product.price,
-            description: product.description,
-            imageUrl: product.imageUrl,
-            idCategory: product.idCategory,
-            categoryName: product.categoryName,
-            status: product.status,
-            related: product.related,
-            createdAt: product.createdAt,
-            updatedAt: product.updatedAt
-          } : {
-            title: "Unknown Product",
-            status: "not_found"
-          },
-          
+          productInfo: product
+            ? {
+                _id: product._id,
+                title: product.title,
+                price: product.price,
+                description: product.description,
+                imageUrl: product.imageUrl,
+                idCategory: product.idCategory,
+                categoryName: product.categoryName,
+                status: product.status,
+                related: product.related,
+                createdAt: product.createdAt,
+                updatedAt: product.updatedAt,
+              }
+            : {
+                title: "Unknown Product",
+                status: "not_found",
+              },
+
           // Thông tin phân tích thêm
           performance: {
             rank: topProducts.indexOf(tp) + 1,
             marketShare: 0, // Sẽ tính sau
             growthRate: 0, // Có thể tính so với tháng trước
-            profitMargin: product ? 
-              Math.round(((tp.avgPrice - (product.price || 0)) / tp.avgPrice) * 100) : 0
-          }
+            profitMargin: product
+              ? Math.round(
+                  ((tp.avgPrice - (product.price || 0)) / tp.avgPrice) * 100
+                )
+              : 0,
+          },
         };
       })
     );
 
     // Tính market share cho từng sản phẩm
-    const totalRevenue = result.reduce((sum, item) => sum + item.salesData.totalRevenue, 0);
-    result.forEach(item => {
-      item.performance.marketShare = totalRevenue > 0 ? 
-        Math.round((item.salesData.totalRevenue / totalRevenue) * 10000) / 100 : 0;
+    const totalRevenue = result.reduce(
+      (sum, item) => sum + item.salesData.totalRevenue,
+      0
+    );
+    result.forEach((item) => {
+      item.performance.marketShare =
+        totalRevenue > 0
+          ? Math.round((item.salesData.totalRevenue / totalRevenue) * 10000) /
+            100
+          : 0;
     });
 
     // Thống kê tổng quan
     const summary = {
       totalProducts: result.length,
-      totalQuantitySold: result.reduce((sum, item) => sum + item.salesData.totalQuantity, 0),
+      totalQuantitySold: result.reduce(
+        (sum, item) => sum + item.salesData.totalQuantity,
+        0
+      ),
       totalRevenue: totalRevenue,
       avgRevenuePerProduct: Math.round(totalRevenue / result.length),
-      topCategory: result.length > 0 ? result[0].productInfo.categoryName : null,
-      dateGenerated: new Date()
+      topCategory:
+        result.length > 0 ? result[0].productInfo.categoryName : null,
+      dateGenerated: new Date(),
     };
 
     res.status(200).json({
       success: true,
       data: {
         summary,
-        products: result
-      }
+        products: result,
+      },
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -452,19 +469,19 @@ exports.getProductsByCategory = async (req, res) => {
     const categoriesWithProducts = await Promise.all(
       allCategories.map(async (category) => {
         // Đếm số sản phẩm trong category này
-        const productCount = await Product.countDocuments({ 
-          idCategory: category.idCategory 
+        const productCount = await Product.countDocuments({
+          idCategory: category.idCategory,
         });
 
         // Lấy thêm thông tin về trạng thái sản phẩm
         const availableProducts = await Product.countDocuments({
           idCategory: category.idCategory,
-          status: "available"
+          status: "available",
         });
 
         const outOfStockProducts = await Product.countDocuments({
           idCategory: category.idCategory,
-          status: "out_of_stock"
+          status: "out_of_stock",
         });
 
         return {
@@ -476,54 +493,59 @@ exports.getProductsByCategory = async (req, res) => {
             image: category.image || null,
             parentID: category.parentID || null,
             createdAt: category.createdAt,
-            updatedAt: category.updatedAt
+            updatedAt: category.updatedAt,
           },
-          
+
           // Thống kê sản phẩm
           productStats: {
             totalProducts: productCount,
             availableProducts: availableProducts,
             outOfStockProducts: outOfStockProducts,
-            stockRate: productCount > 0 ? 
-              Math.round((availableProducts / productCount) * 100) : 0
-          }
+            stockRate:
+              productCount > 0
+                ? Math.round((availableProducts / productCount) * 100)
+                : 0,
+          },
         };
       })
     );
 
     // Sắp xếp theo số lượng sản phẩm giảm dần
-    categoriesWithProducts.sort((a, b) => 
-      b.productStats.totalProducts - a.productStats.totalProducts
+    categoriesWithProducts.sort(
+      (a, b) => b.productStats.totalProducts - a.productStats.totalProducts
     );
 
     // Thống kê tổng quan
     const summary = {
       totalCategories: allCategories.length,
       totalProducts: categoriesWithProducts.reduce(
-        (sum, cat) => sum + cat.productStats.totalProducts, 0
+        (sum, cat) => sum + cat.productStats.totalProducts,
+        0
       ),
       categoriesWithProducts: categoriesWithProducts.filter(
-        cat => cat.productStats.totalProducts > 0
+        (cat) => cat.productStats.totalProducts > 0
       ).length,
       categoriesWithoutProducts: categoriesWithProducts.filter(
-        cat => cat.productStats.totalProducts === 0
+        (cat) => cat.productStats.totalProducts === 0
       ).length,
-      avgProductsPerCategory: allCategories.length > 0 ? 
-        Math.round(
-          categoriesWithProducts.reduce(
-            (sum, cat) => sum + cat.productStats.totalProducts, 0
-          ) / allCategories.length
-        ) : 0
+      avgProductsPerCategory:
+        allCategories.length > 0
+          ? Math.round(
+              categoriesWithProducts.reduce(
+                (sum, cat) => sum + cat.productStats.totalProducts,
+                0
+              ) / allCategories.length
+            )
+          : 0,
     };
 
     res.status(200).json({
       success: true,
       data: {
         summary,
-        categories: categoriesWithProducts
-      }
+        categories: categoriesWithProducts,
+      },
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -532,8 +554,6 @@ exports.getProductsByCategory = async (req, res) => {
     });
   }
 };
-
-
 
 // API: Sản phẩm tồn kho thấp
 // exports.getLowStockProducts = async (req, res) => {
@@ -559,28 +579,28 @@ exports.getProductsByCategory = async (req, res) => {
 // API: Doanh thu theo thời gian
 exports.getRevenueByTime = async (req, res) => {
   try {
-    const { 
-      period = 'month', // day, month, quarter, year
+    const {
+      period = "month", // day, month, quarter, year
       startDate,
       endDate,
       year = new Date().getFullYear(),
       month,
-      quarter
+      quarter,
     } = req.query;
 
     // Build match filter
-    let matchFilter = { status: 'completed' }; // Chỉ tính đơn hàng hoàn thành
-    
+    let matchFilter = { status: "completed" }; // Chỉ tính đơn hàng hoàn thành
+
     if (startDate && endDate) {
       matchFilter.createdAt = {
         $gte: new Date(startDate),
-        $lte: new Date(endDate)
+        $lte: new Date(endDate),
       };
     } else {
       // Nếu không có startDate/endDate, tạo filter theo year/month/quarter
       const startOfPeriod = new Date(year, 0, 1); // Đầu năm
       const endOfPeriod = new Date(year, 11, 31, 23, 59, 59); // Cuối năm
-      
+
       if (month) {
         startOfPeriod.setMonth(month - 1, 1);
         endOfPeriod.setMonth(month - 1 + 1, 0, 23, 59, 59);
@@ -589,48 +609,48 @@ exports.getRevenueByTime = async (req, res) => {
         startOfPeriod.setMonth(startMonth, 1);
         endOfPeriod.setMonth(startMonth + 3, 0, 23, 59, 59);
       }
-      
+
       matchFilter.createdAt = {
         $gte: startOfPeriod,
-        $lte: endOfPeriod
+        $lte: endOfPeriod,
       };
     }
 
     // Định nghĩa group format theo period
     let groupFormat = {};
     let sortField = "";
-    
+
     switch (period) {
-      case 'day':
+      case "day":
         groupFormat = {
           year: { $year: "$createdAt" },
           month: { $month: "$createdAt" },
-          day: { $dayOfMonth: "$createdAt" }
+          day: { $dayOfMonth: "$createdAt" },
         };
         sortField = "_id";
         break;
-        
-      case 'month':
+
+      case "month":
         groupFormat = {
           year: { $year: "$createdAt" },
-          month: { $month: "$createdAt" }
+          month: { $month: "$createdAt" },
         };
         sortField = "_id";
         break;
-        
-      case 'quarter':
+
+      case "quarter":
         groupFormat = {
           year: { $year: "$createdAt" },
           quarter: {
-            $ceil: { $divide: [{ $month: "$createdAt" }, 3] }
-          }
+            $ceil: { $divide: [{ $month: "$createdAt" }, 3] },
+          },
         };
         sortField = "_id";
         break;
-        
-      case 'year':
+
+      case "year":
         groupFormat = {
-          year: { $year: "$createdAt" }
+          year: { $year: "$createdAt" },
         };
         sortField = "_id.year";
         break;
@@ -649,11 +669,11 @@ exports.getRevenueByTime = async (req, res) => {
                 in: {
                   $add: [
                     "$$value",
-                    { $multiply: ["$$this.price", "$$this.quantity"] }
-                  ]
-                }
-              }
-            }
+                    { $multiply: ["$$this.price", "$$this.quantity"] },
+                  ],
+                },
+              },
+            },
           },
           totalOrders: { $sum: 1 },
           totalQuantity: {
@@ -661,9 +681,9 @@ exports.getRevenueByTime = async (req, res) => {
               $reduce: {
                 input: "$items",
                 initialValue: 0,
-                in: { $add: ["$$value", "$$this.quantity"] }
-              }
-            }
+                in: { $add: ["$$value", "$$this.quantity"] },
+              },
+            },
           },
           avgOrderValue: {
             $avg: {
@@ -673,43 +693,43 @@ exports.getRevenueByTime = async (req, res) => {
                 in: {
                   $add: [
                     "$$value",
-                    { $multiply: ["$$this.price", "$$this.quantity"] }
-                  ]
-                }
-              }
-            }
-          }
-        }
+                    { $multiply: ["$$this.price", "$$this.quantity"] },
+                  ],
+                },
+              },
+            },
+          },
+        },
       },
-      { $sort: { [sortField]: 1 } }
+      { $sort: { [sortField]: 1 } },
     ]);
 
     // Format response data
-    const formattedData = revenueData.map(item => {
+    const formattedData = revenueData.map((item) => {
       let periodLabel = "";
-      
+
       switch (period) {
-        case 'day':
+        case "day":
           periodLabel = `${item._id.day}/${item._id.month}/${item._id.year}`;
           break;
-        case 'month':
+        case "month":
           periodLabel = `${item._id.month}/${item._id.year}`;
           break;
-        case 'quarter':
+        case "quarter":
           periodLabel = `Q${item._id.quarter}/${item._id.year}`;
           break;
-        case 'year':
+        case "year":
           periodLabel = `${item._id.year}`;
           break;
       }
-      
+
       return {
         period: periodLabel,
         periodData: item._id,
         totalRevenue: item.totalRevenue,
         totalOrders: item.totalOrders,
         totalQuantity: item.totalQuantity,
-        avgOrderValue: Math.round(item.avgOrderValue)
+        avgOrderValue: Math.round(item.avgOrderValue),
       };
     });
 
@@ -717,85 +737,100 @@ exports.getRevenueByTime = async (req, res) => {
     const summary = {
       period: period,
       totalPeriods: formattedData.length,
-      totalRevenue: formattedData.reduce((sum, item) => sum + item.totalRevenue, 0),
-      totalOrders: formattedData.reduce((sum, item) => sum + item.totalOrders, 0),
-      totalQuantity: formattedData.reduce((sum, item) => sum + item.totalQuantity, 0),
-      avgRevenuePerPeriod: formattedData.length > 0 ? 
-        Math.round(formattedData.reduce((sum, item) => sum + item.totalRevenue, 0) / formattedData.length) : 0
+      totalRevenue: formattedData.reduce(
+        (sum, item) => sum + item.totalRevenue,
+        0
+      ),
+      totalOrders: formattedData.reduce(
+        (sum, item) => sum + item.totalOrders,
+        0
+      ),
+      totalQuantity: formattedData.reduce(
+        (sum, item) => sum + item.totalQuantity,
+        0
+      ),
+      avgRevenuePerPeriod:
+        formattedData.length > 0
+          ? Math.round(
+              formattedData.reduce((sum, item) => sum + item.totalRevenue, 0) /
+                formattedData.length
+            )
+          : 0,
     };
 
     res.status(200).json({
       success: true,
       data: {
         summary,
-        revenueData: formattedData
-      }
+        revenueData: formattedData,
+      },
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
       error: "Lỗi lấy thống kê doanh thu theo thời gian",
-      detail: error.message
+      detail: error.message,
     });
   }
 };
 // API: So sánh doanh thu theo kỳ
 exports.compareRevenue = async (req, res) => {
   try {
-    const { 
-      compareType = 'month', // month, quarter, year
+    const {
+      compareType = "month", // month, quarter, year
       currentPeriod, // Kỳ hiện tại (format: 2024-07 cho tháng, 2024-Q1 cho quý, 2024 cho năm)
-      previousPeriod // Kỳ trước (tương tự format)
+      previousPeriod, // Kỳ trước (tương tự format)
     } = req.query;
 
     // Helper function để tạo date range từ period string
     const createDateRange = (periodStr, type) => {
       let startDate, endDate;
-      
+
       switch (type) {
-        case 'month':
-          const [year, month] = periodStr.split('-');
+        case "month":
+          const [year, month] = periodStr.split("-");
           startDate = new Date(parseInt(year), parseInt(month) - 1, 1);
           endDate = new Date(parseInt(year), parseInt(month), 0, 23, 59, 59);
           break;
-          
-        case 'quarter':
-          const [qYear, quarterStr] = periodStr.split('-Q');
+
+        case "quarter":
+          const [qYear, quarterStr] = periodStr.split("-Q");
           const quarter = parseInt(quarterStr);
           const startMonth = (quarter - 1) * 3;
           startDate = new Date(parseInt(qYear), startMonth, 1);
           endDate = new Date(parseInt(qYear), startMonth + 3, 0, 23, 59, 59);
           break;
-          
-        case 'year':
+
+        case "year":
           startDate = new Date(parseInt(periodStr), 0, 1);
           endDate = new Date(parseInt(periodStr), 11, 31, 23, 59, 59);
           break;
       }
-      
+
       return { startDate, endDate };
     };
 
     // Tự động tính kỳ trước nếu không được cung cấp
     let currentRange, previousRange;
-    
+
     if (currentPeriod) {
       currentRange = createDateRange(currentPeriod, compareType);
     } else {
       // Mặc định là kỳ hiện tại
       const now = new Date();
       let currentPeriodStr;
-      
-      if (compareType === 'month') {
-        currentPeriodStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-      } else if (compareType === 'quarter') {
+
+      if (compareType === "month") {
+        currentPeriodStr = `${now.getFullYear()}-${String(
+          now.getMonth() + 1
+        ).padStart(2, "0")}`;
+      } else if (compareType === "quarter") {
         const quarter = Math.ceil((now.getMonth() + 1) / 3);
         currentPeriodStr = `${now.getFullYear()}-Q${quarter}`;
       } else {
         currentPeriodStr = `${now.getFullYear()}`;
       }
-      
+
       currentRange = createDateRange(currentPeriodStr, compareType);
     }
 
@@ -805,18 +840,47 @@ exports.compareRevenue = async (req, res) => {
       // Tự động tính kỳ trước
       const currentStart = currentRange.startDate;
       let previousStart, previousEnd;
-      
-      if (compareType === 'month') {
-        previousStart = new Date(currentStart.getFullYear(), currentStart.getMonth() - 1, 1);
-        previousEnd = new Date(currentStart.getFullYear(), currentStart.getMonth(), 0, 23, 59, 59);
-      } else if (compareType === 'quarter') {
-        previousStart = new Date(currentStart.getFullYear(), currentStart.getMonth() - 3, 1);
-        previousEnd = new Date(currentStart.getFullYear(), currentStart.getMonth(), 0, 23, 59, 59);
+
+      if (compareType === "month") {
+        previousStart = new Date(
+          currentStart.getFullYear(),
+          currentStart.getMonth() - 1,
+          1
+        );
+        previousEnd = new Date(
+          currentStart.getFullYear(),
+          currentStart.getMonth(),
+          0,
+          23,
+          59,
+          59
+        );
+      } else if (compareType === "quarter") {
+        previousStart = new Date(
+          currentStart.getFullYear(),
+          currentStart.getMonth() - 3,
+          1
+        );
+        previousEnd = new Date(
+          currentStart.getFullYear(),
+          currentStart.getMonth(),
+          0,
+          23,
+          59,
+          59
+        );
       } else {
         previousStart = new Date(currentStart.getFullYear() - 1, 0, 1);
-        previousEnd = new Date(currentStart.getFullYear() - 1, 11, 31, 23, 59, 59);
+        previousEnd = new Date(
+          currentStart.getFullYear() - 1,
+          11,
+          31,
+          23,
+          59,
+          59
+        );
       }
-      
+
       previousRange = { startDate: previousStart, endDate: previousEnd };
     }
 
@@ -825,9 +889,9 @@ exports.compareRevenue = async (req, res) => {
       const result = await Order.aggregate([
         {
           $match: {
-            status: 'complete',
-            createdAt: { $gte: startDate, $lte: endDate }
-          }
+            status: "complete",
+            createdAt: { $gte: startDate, $lte: endDate },
+          },
         },
         {
           $group: {
@@ -840,11 +904,11 @@ exports.compareRevenue = async (req, res) => {
                   in: {
                     $add: [
                       "$$value",
-                      { $multiply: ["$$this.price", "$$this.quantity"] }
-                    ]
-                  }
-                }
-              }
+                      { $multiply: ["$$this.price", "$$this.quantity"] },
+                    ],
+                  },
+                },
+              },
             },
             totalOrders: { $sum: 1 },
             totalQuantity: {
@@ -852,38 +916,49 @@ exports.compareRevenue = async (req, res) => {
                 $reduce: {
                   input: "$items",
                   initialValue: 0,
-                  in: { $add: ["$$value", "$$this.quantity"] }
-                }
-              }
-            }
-          }
-        }
+                  in: { $add: ["$$value", "$$this.quantity"] },
+                },
+              },
+            },
+          },
+        },
       ]);
-      
+
       return result[0] || { totalRevenue: 0, totalOrders: 0, totalQuantity: 0 };
     };
 
     // Lấy doanh thu cho cả 2 kỳ
     const [currentData, previousData] = await Promise.all([
       getRevenueInPeriod(currentRange.startDate, currentRange.endDate),
-      getRevenueInPeriod(previousRange.startDate, previousRange.endDate)
+      getRevenueInPeriod(previousRange.startDate, previousRange.endDate),
     ]);
 
     // Tính toán so sánh
     const revenueChange = currentData.totalRevenue - previousData.totalRevenue;
-    const revenueChangePercent = previousData.totalRevenue > 0 ? 
-      Math.round((revenueChange / previousData.totalRevenue) * 10000) / 100 : 
-      (currentData.totalRevenue > 0 ? 100 : 0);
+    const revenueChangePercent =
+      previousData.totalRevenue > 0
+        ? Math.round((revenueChange / previousData.totalRevenue) * 10000) / 100
+        : currentData.totalRevenue > 0
+        ? 100
+        : 0;
 
     const orderChange = currentData.totalOrders - previousData.totalOrders;
-    const orderChangePercent = previousData.totalOrders > 0 ? 
-      Math.round((orderChange / previousData.totalOrders) * 10000) / 100 : 
-      (currentData.totalOrders > 0 ? 100 : 0);
+    const orderChangePercent =
+      previousData.totalOrders > 0
+        ? Math.round((orderChange / previousData.totalOrders) * 10000) / 100
+        : currentData.totalOrders > 0
+        ? 100
+        : 0;
 
-    const quantityChange = currentData.totalQuantity - previousData.totalQuantity;
-    const quantityChangePercent = previousData.totalQuantity > 0 ? 
-      Math.round((quantityChange / previousData.totalQuantity) * 10000) / 100 : 
-      (currentData.totalQuantity > 0 ? 100 : 0);
+    const quantityChange =
+      currentData.totalQuantity - previousData.totalQuantity;
+    const quantityChangePercent =
+      previousData.totalQuantity > 0
+        ? Math.round((quantityChange / previousData.totalQuantity) * 10000) /
+          100
+        : currentData.totalQuantity > 0
+        ? 100
+        : 0;
 
     res.status(200).json({
       success: true,
@@ -892,54 +967,71 @@ exports.compareRevenue = async (req, res) => {
         currentPeriod: {
           dateRange: {
             startDate: currentRange.startDate,
-            endDate: currentRange.endDate
+            endDate: currentRange.endDate,
           },
           revenue: currentData.totalRevenue,
           orders: currentData.totalOrders,
           quantity: currentData.totalQuantity,
-          avgOrderValue: currentData.totalOrders > 0 ? 
-            Math.round(currentData.totalRevenue / currentData.totalOrders) : 0
+          avgOrderValue:
+            currentData.totalOrders > 0
+              ? Math.round(currentData.totalRevenue / currentData.totalOrders)
+              : 0,
         },
         previousPeriod: {
           dateRange: {
             startDate: previousRange.startDate,
-            endDate: previousRange.endDate
+            endDate: previousRange.endDate,
           },
           revenue: previousData.totalRevenue,
           orders: previousData.totalOrders,
           quantity: previousData.totalQuantity,
-          avgOrderValue: previousData.totalOrders > 0 ? 
-            Math.round(previousData.totalRevenue / previousData.totalOrders) : 0
+          avgOrderValue:
+            previousData.totalOrders > 0
+              ? Math.round(previousData.totalRevenue / previousData.totalOrders)
+              : 0,
         },
         comparison: {
           revenue: {
             change: revenueChange,
             changePercent: revenueChangePercent,
-            trend: revenueChange > 0 ? 'increase' : revenueChange < 0 ? 'decrease' : 'stable'
+            trend:
+              revenueChange > 0
+                ? "increase"
+                : revenueChange < 0
+                ? "decrease"
+                : "stable",
           },
           orders: {
             change: orderChange,
             changePercent: orderChangePercent,
-            trend: orderChange > 0 ? 'increase' : orderChange < 0 ? 'decrease' : 'stable'
+            trend:
+              orderChange > 0
+                ? "increase"
+                : orderChange < 0
+                ? "decrease"
+                : "stable",
           },
           quantity: {
             change: quantityChange,
             changePercent: quantityChangePercent,
-            trend: quantityChange > 0 ? 'increase' : quantityChange < 0 ? 'decrease' : 'stable'
-          }
-        }
-      }
+            trend:
+              quantityChange > 0
+                ? "increase"
+                : quantityChange < 0
+                ? "decrease"
+                : "stable",
+          },
+        },
+      },
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
       error: "Lỗi so sánh doanh thu theo kỳ",
-      detail: error.message
+      detail: error.message,
     });
   }
 };
-
 
 // API: Trả về thông tin và số lượng người dùng chưa mua hàng (phân trang)
 exports.getUsersWithNoOrders = async (req, res) => {
@@ -986,8 +1078,6 @@ exports.getUsersWithNoOrders = async (req, res) => {
         ? Math.round((totalUsersWithNoOrders / totalUsers) * 100)
         : 0;
 
-    
-
     res.status(200).json({
       success: true,
       data: {
@@ -997,15 +1087,12 @@ exports.getUsersWithNoOrders = async (req, res) => {
           totalPages: totalPages,
           totalUsers: totalUsersWithNoOrders,
           limit: limitNumber,
-          
         },
         statistics: {
           totalUsersWithNoOrders,
           totalUsersWithOrders,
           totalUsers,
-          
         },
-       
       },
     });
   } catch (error) {
@@ -1021,31 +1108,30 @@ exports.getUsersWithNoOrders = async (req, res) => {
 exports.getUsersNeverPurchasedCount = async (req, res) => {
   try {
     const Order = require("../models/order.model");
-    
+
     // Lấy danh sách userID đã từng đặt hàng
     const userIdsWithOrders = await Order.distinct("idUser");
-    
+
     // Đếm số user chưa từng mua (không có trong danh sách userID đã đặt hàng)
     const neverPurchasedCount = await User.countDocuments({
       _id: { $nin: userIdsWithOrders },
-      isDeleted: { $ne: true } // Chỉ đếm user chưa bị xóa
+      isDeleted: { $ne: true }, // Chỉ đếm user chưa bị xóa
     });
-    
+
     res.status(200).json({
       success: true,
       message: "Users never purchased count retrieved successfully",
       data: {
-        count: neverPurchasedCount
-      }
+        count: neverPurchasedCount,
+      },
     });
-    
   } catch (error) {
     console.error("Error getting users never purchased count:", error);
     res.status(500).json({
       success: false,
       message: "Server error",
       data: null,
-      detail: error.message
+      detail: error.message,
     });
   }
 };
@@ -1054,40 +1140,40 @@ exports.getUsersNeverPurchasedCount = async (req, res) => {
 exports.getUserRegistrationByTime = async (req, res) => {
   try {
     const { period = "month", year, month } = req.query;
-    
+
     let matchStage = {
-      isDeleted: { $ne: true } // Chỉ tính user chưa bị xóa
+      isDeleted: { $ne: true }, // Chỉ tính user chưa bị xóa
     };
-    
+
     // Thêm filter theo năm nếu có
     if (year) {
       const startOfYear = new Date(parseInt(year), 0, 1);
       const endOfYear = new Date(parseInt(year) + 1, 0, 1);
       matchStage.createdAt = {
         $gte: startOfYear,
-        $lt: endOfYear
+        $lt: endOfYear,
       };
     }
-    
+
     // Thêm filter theo tháng nếu có
     if (month && year) {
       const startOfMonth = new Date(parseInt(year), parseInt(month) - 1, 1);
       const endOfMonth = new Date(parseInt(year), parseInt(month), 1);
       matchStage.createdAt = {
         $gte: startOfMonth,
-        $lt: endOfMonth
+        $lt: endOfMonth,
       };
     }
-    
+
     let groupStage;
     let sortStage;
-    
+
     if (period === "year") {
       // Group theo năm
       groupStage = {
         _id: { $year: "$createdAt" },
         count: { $sum: 1 },
-        year: { $first: { $year: "$createdAt" } }
+        year: { $first: { $year: "$createdAt" } },
       };
       sortStage = { year: 1 };
     } else {
@@ -1095,59 +1181,61 @@ exports.getUserRegistrationByTime = async (req, res) => {
       groupStage = {
         _id: {
           year: { $year: "$createdAt" },
-          month: { $month: "$createdAt" }
+          month: { $month: "$createdAt" },
         },
         count: { $sum: 1 },
         year: { $first: { $year: "$createdAt" } },
-        month: { $first: { $month: "$createdAt" } }
+        month: { $first: { $month: "$createdAt" } },
       };
       sortStage = { year: 1, month: 1 };
     }
-    
+
     const registrationData = await User.aggregate([
       { $match: matchStage },
       { $group: groupStage },
-      { $sort: sortStage }
+      { $sort: sortStage },
     ]);
-    
+
     // Format response data
-    const formattedData = registrationData.map(item => {
+    const formattedData = registrationData.map((item) => {
       if (period === "year") {
         return {
           year: item.year,
           count: item.count,
-          period: `${item.year}`
+          period: `${item.year}`,
         };
       } else {
         return {
           year: item.year,
           month: item.month,
           count: item.count,
-          period: `${item.year}-${String(item.month).padStart(2, '0')}`
+          period: `${item.year}-${String(item.month).padStart(2, "0")}`,
         };
       }
     });
-    
+
     // Tính tổng
-    const totalRegistrations = formattedData.reduce((sum, item) => sum + item.count, 0);
-    
+    const totalRegistrations = formattedData.reduce(
+      (sum, item) => sum + item.count,
+      0
+    );
+
     res.status(200).json({
       success: true,
       message: `User registrations by ${period} retrieved successfully`,
       data: {
         period: period,
         totalRegistrations: totalRegistrations,
-        registrations: formattedData
-      }
+        registrations: formattedData,
+      },
     });
-    
   } catch (error) {
     console.error("Error getting user registrations by time:", error);
     res.status(500).json({
       success: false,
       message: "Server error",
       data: null,
-      detail: error.message
+      detail: error.message,
     });
   }
 };
@@ -1157,87 +1245,94 @@ exports.getProductsByCategory = async (req, res) => {
   try {
     const Product = require("../models/product.model");
     const Category = require("../models/categories.model");
-    
+
     // Aggregate để đếm sản phẩm theo idCategory
     const productsByCategory = await Product.aggregate([
       {
         $group: {
           _id: "$idCategory",
-          productCount: { $sum: 1 }
-        }
+          productCount: { $sum: 1 },
+        },
       },
       {
         $lookup: {
           from: "categories", // Tên collection của Category
           localField: "_id",
-          foreignField: "idCategory", 
-          as: "categoryInfo"
-        }
+          foreignField: "idCategory",
+          as: "categoryInfo",
+        },
       },
       {
         $project: {
           idCategory: "$_id",
           productCount: 1,
-          categoryName: { 
-            $arrayElemAt: ["$categoryInfo.nameCategory", 0] 
+          categoryName: {
+            $arrayElemAt: ["$categoryInfo.nameCategory", 0],
           },
-          parentID: { 
-            $arrayElemAt: ["$categoryInfo.parentID", 0] 
-          }
-        }
+          parentID: {
+            $arrayElemAt: ["$categoryInfo.parentID", 0],
+          },
+        },
       },
       {
-        $sort: { idCategory: 1 }
-      }
+        $sort: { idCategory: 1 },
+      },
     ]);
-    
+
     // Tính tổng số sản phẩm
-    const totalProducts = productsByCategory.reduce((sum, cat) => sum + cat.productCount, 0);
-    
+    const totalProducts = productsByCategory.reduce(
+      (sum, cat) => sum + cat.productCount,
+      0
+    );
+
     // Group theo parent category để tạo stack chart data
     const parentCategories = {};
-    
+
     for (const item of productsByCategory) {
-      const parentId = item.parentID || 'other';
-      
+      const parentId = item.parentID || "other";
+
       if (!parentCategories[parentId]) {
         // Lấy thông tin parent category
-        let parentName = 'Other';
+        let parentName = "Other";
         if (item.parentID) {
           const parent = await Category.findOne({ idCategory: item.parentID });
           parentName = parent ? parent.nameCategory : `Parent ${item.parentID}`;
         }
-        
+
         parentCategories[parentId] = {
           parentID: item.parentID,
           parentName: parentName,
           totalProducts: 0,
-          categories: []
+          categories: [],
         };
       }
-      
+
       parentCategories[parentId].totalProducts += item.productCount;
       parentCategories[parentId].categories.push({
         idCategory: item.idCategory,
         categoryName: item.categoryName || `Category ${item.idCategory}`,
-        productCount: item.productCount
+        productCount: item.productCount,
       });
     }
-    
+
     // Chuyển đổi thành array và sắp xếp
-    const stackChartData = Object.values(parentCategories).map(parent => ({
-      ...parent,
-      categories: parent.categories.sort((a, b) => a.idCategory - b.idCategory)
-    })).sort((a, b) => (a.parentID || 999) - (b.parentID || 999));
-    
+    const stackChartData = Object.values(parentCategories)
+      .map((parent) => ({
+        ...parent,
+        categories: parent.categories.sort(
+          (a, b) => a.idCategory - b.idCategory
+        ),
+      }))
+      .sort((a, b) => (a.parentID || 999) - (b.parentID || 999));
+
     // Data cho simple chart (nếu frontend cần)
-    const simpleChartData = productsByCategory.map(item => ({
+    const simpleChartData = productsByCategory.map((item) => ({
       idCategory: item.idCategory,
       categoryName: item.categoryName || `Category ${item.idCategory}`,
       productCount: item.productCount,
-      percentage: Math.round((item.productCount / totalProducts) * 100)
+      percentage: Math.round((item.productCount / totalProducts) * 100),
     }));
-    
+
     res.status(200).json({
       success: true,
       message: "Products by category retrieved successfully",
@@ -1247,18 +1342,17 @@ exports.getProductsByCategory = async (req, res) => {
         simpleChart: simpleChartData,
         summary: {
           totalCategories: productsByCategory.length,
-          totalParentCategories: Object.keys(parentCategories).length
-        }
-      }
+          totalParentCategories: Object.keys(parentCategories).length,
+        },
+      },
     });
-    
   } catch (error) {
     console.error("Error getting products by category:", error);
     res.status(500).json({
       success: false,
       message: "Server error",
       data: null,
-      detail: error.message
+      detail: error.message,
     });
   }
 };
@@ -1268,31 +1362,31 @@ exports.getTopStockProducts = async (req, res) => {
   try {
     const Inventory = require("../models/inventory.model");
     const Product = require("../models/product.model");
-    
+
     const limit = parseInt(req.query.limit) || 10;
-    
+
     // Lấy top products với tồn kho cao nhất
     const topStockProducts = await Inventory.aggregate([
       {
         $match: {
-          quantity: { $gt: 0 } // Chỉ lấy sản phẩm có tồn kho > 0
-        }
+          quantity: { $gt: 0 }, // Chỉ lấy sản phẩm có tồn kho > 0
+        },
       },
       {
         $lookup: {
           from: "products",
           localField: "productId",
           foreignField: "_id",
-          as: "productInfo"
-        }
+          as: "productInfo",
+        },
       },
       {
-        $unwind: "$productInfo"
+        $unwind: "$productInfo",
       },
       {
         $match: {
-          "productInfo.isDeleted": { $ne: true } // Chỉ lấy sản phẩm chưa bị xóa
-        }
+          "productInfo.isDeleted": { $ne: true }, // Chỉ lấy sản phẩm chưa bị xóa
+        },
       },
       {
         $project: {
@@ -1301,37 +1395,39 @@ exports.getTopStockProducts = async (req, res) => {
           currentStock: "$quantity",
           productImage: { $arrayElemAt: ["$productInfo.imageUrl", 0] },
           status: "$productInfo.status",
-          idCategory: "$productInfo.idCategory"
-        }
+          idCategory: "$productInfo.idCategory",
+        },
       },
       {
-        $sort: { currentStock: -1 } // Sắp xếp theo số lượng giảm dần
+        $sort: { currentStock: -1 }, // Sắp xếp theo số lượng giảm dần
       },
       {
-        $limit: limit
-      }
+        $limit: limit,
+      },
     ]);
-    
+
     // Tính tổng tồn kho của top products
-    const totalStockValue = topStockProducts.reduce((sum, product) => sum + product.currentStock, 0);
-    
+    const totalStockValue = topStockProducts.reduce(
+      (sum, product) => sum + product.currentStock,
+      0
+    );
+
     res.status(200).json({
       success: true,
       message: `Top ${limit} highest stock products retrieved successfully`,
       data: {
         totalProducts: topStockProducts.length,
         totalStockValue: totalStockValue,
-        products: topStockProducts
-      }
+        products: topStockProducts,
+      },
     });
-    
   } catch (error) {
     console.error("Error getting top stock products:", error);
     res.status(500).json({
       success: false,
       message: "Server error",
       data: null,
-      detail: error.message
+      detail: error.message,
     });
   }
 };
@@ -1340,30 +1436,30 @@ exports.getTopStockProducts = async (req, res) => {
 exports.getTotalCanceledOrders = async (req, res) => {
   try {
     const Order = require("../models/order.model");
-    
+
     const { year, startDate, endDate } = req.query;
-    
+
     let matchStage = {
-      status: "canceled"
+      status: "canceled",
     };
-    
+
     // Filter theo thời gian nếu có
     if (startDate && endDate) {
       matchStage.createdAt = {
         $gte: new Date(startDate),
-        $lte: new Date(endDate)
+        $lte: new Date(endDate),
       };
     } else if (year) {
       const startOfYear = new Date(parseInt(year), 0, 1);
       const endOfYear = new Date(parseInt(year) + 1, 0, 1);
       matchStage.createdAt = {
         $gte: startOfYear,
-        $lt: endOfYear
+        $lt: endOfYear,
       };
     }
-    
+
     const canceledCount = await Order.countDocuments(matchStage);
-    
+
     // Tính tổng giá trị đơn hàng bị hủy
     const canceledValue = await Order.aggregate([
       { $match: matchStage },
@@ -1375,32 +1471,37 @@ exports.getTotalCanceledOrders = async (req, res) => {
               $reduce: {
                 input: "$items",
                 initialValue: 0,
-                in: { $add: ["$$value", { $multiply: ["$$this.quantity", "$$this.price"] }] }
-              }
-            }
-          }
-        }
-      }
+                in: {
+                  $add: [
+                    "$$value",
+                    { $multiply: ["$$this.quantity", "$$this.price"] },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
     ]);
-    
-    const totalCanceledAmount = canceledValue.length > 0 ? canceledValue[0].totalAmount : 0;
-    
+
+    const totalCanceledAmount =
+      canceledValue.length > 0 ? canceledValue[0].totalAmount : 0;
+
     res.status(200).json({
       success: true,
       message: "Total canceled orders retrieved successfully",
       data: {
         totalCanceledOrders: canceledCount,
-        totalCanceledAmount: totalCanceledAmount
-      }
+        totalCanceledAmount: totalCanceledAmount,
+      },
     });
-    
   } catch (error) {
     console.error("Error getting total canceled orders:", error);
     res.status(500).json({
       success: false,
       message: "Server error",
       data: null,
-      detail: error.message
+      detail: error.message,
     });
   }
 };
@@ -1409,30 +1510,30 @@ exports.getTotalCanceledOrders = async (req, res) => {
 exports.getTotalCompletedOrders = async (req, res) => {
   try {
     const Order = require("../models/order.model");
-    
+
     const { year, startDate, endDate } = req.query;
-    
+
     let matchStage = {
-      status: "completed"
+      status: "completed",
     };
-    
+
     // Filter theo thời gian nếu có
     if (startDate && endDate) {
       matchStage.createdAt = {
         $gte: new Date(startDate),
-        $lte: new Date(endDate)
+        $lte: new Date(endDate),
       };
     } else if (year) {
       const startOfYear = new Date(parseInt(year), 0, 1);
       const endOfYear = new Date(parseInt(year) + 1, 0, 1);
       matchStage.createdAt = {
         $gte: startOfYear,
-        $lt: endOfYear
+        $lt: endOfYear,
       };
     }
-    
+
     const completedCount = await Order.countDocuments(matchStage);
-    
+
     // Tính tổng giá trị đơn hàng hoàn thành
     const completedValue = await Order.aggregate([
       { $match: matchStage },
@@ -1444,32 +1545,722 @@ exports.getTotalCompletedOrders = async (req, res) => {
               $reduce: {
                 input: "$items",
                 initialValue: 0,
-                in: { $add: ["$$value", { $multiply: ["$$this.quantity", "$$this.price"] }] }
-              }
-            }
-          }
-        }
-      }
+                in: {
+                  $add: [
+                    "$$value",
+                    { $multiply: ["$$this.quantity", "$$this.price"] },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
     ]);
-    
-    const totalCompletedAmount = completedValue.length > 0 ? completedValue[0].totalAmount : 0;
-    
+
+    const totalCompletedAmount =
+      completedValue.length > 0 ? completedValue[0].totalAmount : 0;
+
     res.status(200).json({
       success: true,
       message: "Total completed orders retrieved successfully",
       data: {
         totalCompletedOrders: completedCount,
-        totalCompletedAmount: totalCompletedAmount
-      }
+        totalCompletedAmount: totalCompletedAmount,
+      },
     });
-    
   } catch (error) {
     console.error("Error getting total completed orders:", error);
     res.status(500).json({
       success: false,
       message: "Server error",
       data: null,
-      detail: error.message
+      detail: error.message,
     });
+  }
+};
+
+//API: TỔNG SỐ ORDER VÀ TỔNG ORDER THEO THỜI GIAN
+exports.getOrdersCountByTime = async (req, res) => {
+  try {
+    const {
+      period = "month",
+      startDate,
+      endDate,
+      year = new Date().getFullYear(),
+      month,
+      quarter,
+      status, // optional
+    } = req.query;
+
+    // --- Xây dựng filter match ---
+    let matchFilter = {};
+    if (status) {
+      matchFilter.status = status;
+    }
+
+    if (startDate && endDate) {
+      // dùng khoảng thời gian cụ thể nếu có
+      matchFilter.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate),
+      };
+    } else {
+      // nếu không có start/end -> build theo year/month/quarter
+      const startOfPeriod = new Date(Number(year), 0, 1, 0, 0, 0);
+      const endOfPeriod = new Date(Number(year), 11, 31, 23, 59, 59);
+
+      if (month) {
+        const m = Number(month) - 1;
+        startOfPeriod.setMonth(m, 1);
+        // end: last day of that month
+        endOfPeriod.setMonth(m + 1, 0, 23, 59, 59);
+      } else if (quarter) {
+        const q = Number(quarter);
+        const startMonth = (q - 1) * 3;
+        startOfPeriod.setMonth(startMonth, 1);
+        endOfPeriod.setMonth(startMonth + 3, 0, 23, 59, 59);
+      }
+
+      matchFilter.createdAt = {
+        $gte: startOfPeriod,
+        $lte: endOfPeriod,
+      };
+    }
+
+    // --- Định nghĩa group format theo period ---
+    let groupFormat = {};
+    let sortField = "_id";
+
+    switch (period) {
+      case "day":
+        groupFormat = {
+          year: { $year: "$createdAt" },
+          month: { $month: "$createdAt" },
+          day: { $dayOfMonth: "$createdAt" },
+        };
+        sortField = "_id";
+        break;
+      case "month":
+        groupFormat = {
+          year: { $year: "$createdAt" },
+          month: { $month: "$createdAt" },
+        };
+        sortField = "_id";
+        break;
+      case "quarter":
+        groupFormat = {
+          year: { $year: "$createdAt" },
+          quarter: {
+            $ceil: { $divide: [{ $month: "$createdAt" }, 3] },
+          },
+        };
+        sortField = "_id";
+        break;
+      case "year":
+        groupFormat = {
+          year: { $year: "$createdAt" },
+        };
+        sortField = "_id.year";
+        break;
+      default:
+        // fallback to month
+        groupFormat = {
+          year: { $year: "$createdAt" },
+          month: { $month: "$createdAt" },
+        };
+        sortField = "_id";
+        break;
+    }
+
+    // --- Aggregation: tính tổng orders theo group + tổng overall (count) ---
+    const ordersByTime = await Order.aggregate([
+      { $match: matchFilter },
+      {
+        $group: {
+          _id: groupFormat,
+          totalOrders: { $sum: 1 },
+        },
+      },
+      { $sort: { [sortField]: 1 } },
+    ]);
+
+    // Tổng số đơn (overall) trong khoảng filter
+    const totalOrdersOverallResult = await Order.aggregate([
+      { $match: matchFilter },
+      { $count: "total" },
+    ]);
+    const totalOrdersOverall =
+      totalOrdersOverallResult.length > 0
+        ? totalOrdersOverallResult[0].total
+        : 0;
+
+    // Format kết quả readable
+    const formatted = ordersByTime.map((item) => {
+      let periodLabel = "";
+      switch (period) {
+        case "day":
+          periodLabel = `${item._id.day}/${item._id.month}/${item._id.year}`;
+          break;
+        case "month":
+          periodLabel = `${item._id.month}/${item._id.year}`;
+          break;
+        case "quarter":
+          periodLabel = `Q${item._id.quarter}/${item._id.year}`;
+          break;
+        case "year":
+          periodLabel = `${item._id.year}`;
+          break;
+        default:
+          periodLabel = `${item._id.month}/${item._id.year}`;
+          break;
+      }
+      return {
+        period: periodLabel,
+        periodData: item._id,
+        totalOrders: item.totalOrders,
+      };
+    });
+
+    // Summary: tổng các period, tổng orders (từ aggregate hoặc tổng derived)
+    const summary = {
+      period: period,
+      totalPeriods: formatted.length,
+      totalOrders: totalOrdersOverall,
+    };
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        summary,
+        ordersByTime: formatted,
+      },
+    });
+  } catch (error) {
+    console.error("getOrdersCountByTime error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy thống kê số đơn theo thời gian",
+      detail: error.message,
+    });
+  }
+};
+
+// Thống kê doanh thu theo danh mục
+exports.getRevenueByCategory = async (req, res) => {
+  try {
+    let {
+      period,
+      startDate,
+      endDate,
+      statuses,
+      sortPeriod = "asc",
+    } = req.query;
+
+    if (!period) period = "year";
+    if (!["year", "month", "day", "quarter"].includes(period)) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message:
+            "Query param 'period' phải là one of: year, month, day, quarter",
+        });
+    }
+
+    const statusList = (
+      statuses ? statuses.split(",") : ["delivered", "completed"]
+    ).map((s) => s.trim());
+
+    const dateFilterObj = {};
+    if (startDate) dateFilterObj.$gte = new Date(startDate);
+    if (endDate) dateFilterObj.$lte = new Date(endDate);
+
+    if (period === "year" && !startDate && !endDate) {
+      const now = new Date();
+      dateFilterObj.$gte = new Date(now.getFullYear(), 0, 1);
+      dateFilterObj.$lte = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+    }
+
+    const addCreatedAtDateStage = {
+      $addFields: {
+        createdAtDate: {
+          $cond: [
+            { $eq: [{ $type: "$createdAt" }, "string"] },
+            {
+              $dateFromString: {
+                dateString: "$createdAt",
+                onError: null,
+                onNull: null,
+              },
+            },
+            "$createdAt",
+          ],
+        },
+      },
+    };
+
+    let validPeriodExpr;
+    if (period === "year")
+      validPeriodExpr = {
+        $dateToString: { format: "%Y", date: "$createdAtDate" },
+      };
+    else if (period === "month")
+      validPeriodExpr = {
+        $dateToString: { format: "%Y-%m", date: "$createdAtDate" },
+      };
+    else if (period === "day")
+      validPeriodExpr = {
+        $dateToString: { format: "%Y-%m-%d", date: "$createdAtDate" },
+      };
+    else
+      validPeriodExpr = {
+        $let: {
+          vars: {
+            y: { $dateToString: { format: "%Y", date: "$createdAtDate" } },
+            m: { $month: "$createdAtDate" },
+          },
+          in: {
+            $concat: [
+              "$$y",
+              "-Q",
+              { $toString: { $ceil: { $divide: ["$$m", 3] } } },
+            ],
+          },
+        },
+      };
+
+    const pipeline = [
+      addCreatedAtDateStage,
+      {
+        $match: Object.assign(
+          { status: { $in: statusList } },
+          Object.keys(dateFilterObj).length
+            ? { createdAtDate: dateFilterObj }
+            : {}
+        ),
+      },
+      { $unwind: "$items" },
+      {
+        $lookup: {
+          from: Product.collection.name,
+          let: { pid: "$items.productID" },
+          pipeline: [
+            { $addFields: { productIdStr: { $toString: "$_id" } } },
+            { $match: { $expr: { $eq: ["$productIdStr", "$$pid"] } } },
+            { $project: { idCategory: 1, title: 1 } },
+          ],
+          as: "productDoc",
+        },
+      },
+      { $unwind: { path: "$productDoc", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "categories",
+          let: { cid: "$productDoc.idCategory" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$idCategory", "$$cid"] } } },
+            { $project: { idCategory: 1, nameCategory: 1, parentID: 1 } },
+          ],
+          as: "cat",
+        },
+      },
+      { $unwind: { path: "$cat", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "categories",
+          let: { pid: "$cat.parentID" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$idCategory", "$$pid"] } } },
+            { $project: { idCategory: 1, nameCategory: 1 } },
+          ],
+          as: "parentCat",
+        },
+      },
+      { $unwind: { path: "$parentCat", preserveNullAndEmptyArrays: true } },
+      {
+        $addFields: {
+          itemRevenue: {
+            $multiply: ["$items.price", { $ifNull: ["$items.quantity", 1] }],
+          },
+          periodLabel: {
+            $cond: [
+              { $eq: ["$createdAtDate", null] },
+              "unknown",
+              validPeriodExpr,
+            ],
+          },
+          childCategoryId: { $ifNull: ["$cat.idCategory", "unknown"] },
+          childCategoryName: { $ifNull: ["$cat.nameCategory", "unknown"] },
+          parentCategoryId: {
+            $cond: [
+              { $ifNull: ["$parentCat.idCategory", false] },
+              "$parentCat.idCategory",
+              {
+                $cond: [
+                  {
+                    $and: [
+                      { $ifNull: ["$cat.idCategory", false] },
+                      { $in: ["$cat.parentID", [0, null]] },
+                    ],
+                  },
+                  "$cat.idCategory",
+                  "unknown",
+                ],
+              },
+            ],
+          },
+          parentCategoryName: {
+            $cond: [
+              { $ifNull: ["$parentCat.nameCategory", false] },
+              "$parentCat.nameCategory",
+              {
+                $cond: [
+                  {
+                    $and: [
+                      { $ifNull: ["$cat.nameCategory", false] },
+                      { $in: ["$cat.parentID", [0, null]] },
+                    ],
+                  },
+                  "$cat.nameCategory",
+                  "unknown",
+                ],
+              },
+            ],
+          },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            period: "$periodLabel",
+            parentId: "$parentCategoryId",
+            parentName: "$parentCategoryName",
+            childId: "$childCategoryId",
+            childName: "$childCategoryName",
+          },
+          revenue: { $sum: "$itemRevenue" },
+        },
+      },
+      { $sort: { "_id.period": 1, revenue: -1 } },
+      {
+        $group: {
+          _id: {
+            period: "$_id.period",
+            parentId: "$_id.parentId",
+            parentName: "$_id.parentName",
+          },
+          children: {
+            $push: {
+              categoryId: "$_id.childId",
+              categoryName: "$_id.childName",
+              totalRevenue: "$revenue",
+            },
+          },
+          totalRevenueForParent: { $sum: "$revenue" },
+        },
+      },
+      {
+        $group: {
+          _id: "$_id.period",
+          parents: {
+            $push: {
+              parentId: "$_id.parentId",
+              parentName: "$_id.parentName",
+              totalRevenueForParent: "$totalRevenueForParent",
+              children: "$children",
+            },
+          },
+          totalRevenueForPeriod: { $sum: "$totalRevenueForParent" },
+        },
+      },
+      { $sort: { _id: sortPeriod === "desc" ? -1 : 1 } },
+      {
+        $project: {
+          _id: 0,
+          period: "$_id",
+          totalRevenueForPeriod: 1,
+          parents: 1,
+        },
+      },
+    ];
+
+    const aggResult = await Order.aggregate(pipeline).allowDiskUse(true);
+    const allCategories = await Categories.getAllCategories();
+
+    const parentMap = new Map();
+
+    // Map parent gốc
+    for (const c of allCategories) {
+      if (!c.parentID || c.parentID === 0) {
+        parentMap.set(c.idCategory, {
+          parentId: c.idCategory,
+          parentName: c.nameCategory,
+          children: [],
+        });
+      }
+    }
+    // Map children
+    for (const c of allCategories) {
+      if (c.parentID && c.parentID !== 0) {
+        if (!parentMap.has(c.parentID))
+          parentMap.set(c.parentID, {
+            parentId: c.parentID,
+            parentName: "unknown",
+            children: [],
+          });
+        parentMap
+          .get(c.parentID)
+          .children.push({
+            categoryId: c.idCategory,
+            categoryName: c.nameCategory,
+          });
+      }
+    }
+    // Parent unknown
+    if (!parentMap.has("unknown"))
+      parentMap.set("unknown", {
+        parentId: "unknown",
+        parentName: "unknown",
+        children: [{ categoryId: "unknown", categoryName: "unknown" }],
+      });
+
+    // Tạo Map revenue
+    const revenueMap = new Map();
+    for (const periodObj of aggResult) {
+      const periodLabel = periodObj.period;
+      if (!periodObj.parents) continue;
+      for (const p of periodObj.parents) {
+        const pid = p.parentId;
+        if (!p.children) continue;
+        for (const c of p.children) {
+          revenueMap.set(
+            `${periodLabel}|${pid}|${c.categoryId}`,
+            c.totalRevenue || 0
+          );
+        }
+      }
+    }
+
+    // Merge kết quả
+    const mergedResult = [];
+    for (const periodObj of aggResult) {
+      const periodLabel = periodObj.period;
+      let periodTotal = 0;
+      const parentsArr = [];
+
+      for (const [pid, pObj] of parentMap.entries()) {
+        const children = [];
+        let parentTotal = 0;
+
+        for (const ch of pObj.children) {
+          let rev = 0;
+
+          if (pid !== "unknown") {
+            const key = `${periodLabel}|${pid}|${ch.categoryId}`;
+            rev = revenueMap.has(key) ? revenueMap.get(key) : 0;
+
+            // Gộp revenue của parent gốc (parent null/0) vào child
+            const parentChildKey = `${periodLabel}|null|${ch.categoryId}`;
+            if (revenueMap.has(parentChildKey))
+              rev += revenueMap.get(parentChildKey);
+          } else {
+            const key = `${periodLabel}|unknown|${ch.categoryId}`;
+            rev = revenueMap.has(key) ? revenueMap.get(key) : 0;
+          }
+
+          children.push({
+            categoryId: ch.categoryId,
+            categoryName: ch.categoryName,
+            totalRevenue: rev,
+          });
+          parentTotal += rev;
+        }
+
+        parentsArr.push({
+          parentId: pid,
+          parentName: pObj.parentName,
+          totalRevenueForParent: parentTotal,
+          children,
+        });
+        periodTotal += parentTotal;
+      }
+
+      parentsArr.sort((a, b) => {
+        if (a.parentId === "unknown") return 1;
+        if (b.parentId === "unknown") return -1;
+        return (a.parentId || 0) - (b.parentId || 0);
+      });
+
+      mergedResult.push({
+        period: periodLabel,
+        totalRevenueForPeriod: periodTotal,
+        parents: parentsArr,
+      });
+    }
+
+    if (mergedResult.length === 0) return res.json({ success: true, data: [] });
+    return res.json({ success: true, data: mergedResult });
+  } catch (err) {
+    console.error("revenueByCategory error:", err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error", error: err.message });
+  }
+};
+
+exports.getTopSpenders = async (req, res) => {
+  try {
+    const { period, limit = 10 } = req.query;
+    const limitNum = Math.max(1, Math.min(100, parseInt(limit, 10) || 10));
+
+    const now = new Date();
+    const defaultYear = now.getFullYear();
+    const qYear = parseInt(req.query.year, 10) || defaultYear;
+
+    // xây hàm tính start/end theo period
+    function getRange(period, year, query) {
+      let start, end, label;
+      switch ((period || "").toLowerCase()) {
+        case "month": {
+          const m = Math.max(
+            1,
+            Math.min(12, parseInt(query.month, 10) || now.getMonth() + 1)
+          );
+          start = new Date(year, m - 1, 1, 0, 0, 0, 0);
+          end = new Date(year, m, 1, 0, 0, 0, 0);
+          label = `${year}-M${m}`;
+          break;
+        }
+        case "day": {
+          const m = Math.max(
+            1,
+            Math.min(12, parseInt(query.month, 10) || now.getMonth() + 1)
+          );
+          const d = Math.max(
+            1,
+            Math.min(31, parseInt(query.day, 10) || now.getDate())
+          );
+          start = new Date(year, m - 1, d, 0, 0, 0, 0);
+          end = new Date(start);
+          end.setDate(end.getDate() + 1);
+          label = `${year}-${String(m).padStart(2, "0")}-${String(d).padStart(
+            2,
+            "0"
+          )}`;
+          break;
+        }
+        case "quarter": {
+          const q = Math.max(
+            1,
+            Math.min(
+              4,
+              parseInt(query.quarter, 10) || Math.floor(now.getMonth() / 3) + 1
+            )
+          );
+          const startMonth = (q - 1) * 3 + 1;
+          start = new Date(year, startMonth - 1, 1, 0, 0, 0, 0);
+          end = new Date(year, startMonth - 1 + 3, 1, 0, 0, 0, 0);
+          label = `${year}-Q${q}`;
+          break;
+        }
+        case "year": {
+          start = new Date(year, 0, 1, 0, 0, 0, 0);
+          end = new Date(year + 1, 0, 1, 0, 0, 0, 0);
+          label = `${year}`;
+          break;
+        }
+        default: {
+          // mặc định: không giới hạn thời gian (tất cả năm)
+          start = null;
+          end = null;
+          label = "all-time";
+          break;
+        }
+      }
+      return { start, end, label };
+    }
+
+    const { start, end, label } = getRange(period, qYear, req.query);
+
+    const defaultStatuses = ["completed", "delivered"];
+    let statuses;
+    if (req.query.status) {
+      statuses = req.query.status
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (statuses.length === 0) statuses = defaultStatuses;
+    } else {
+      statuses = defaultStatuses;
+    }
+
+    // Pipeline aggregation
+    const pipeline = [];
+
+    // chỉ add $match theo thời gian nếu có start/end
+    const matchStage = {
+      status: { $in: statuses },
+    };
+    if (start && end) {
+      matchStage.createdAt = { $gte: start, $lt: end };
+    }
+    pipeline.push({ $match: matchStage });
+
+    pipeline.push(
+      { $unwind: "$items" },
+      {
+        $group: {
+          _id: "$idUser",
+          totalSpent: {
+            $sum: { $multiply: ["$items.price", "$items.quantity"] },
+          },
+        },
+      },
+      { $sort: { totalSpent: -1 } },
+      { $limit: limitNum },
+      {
+        $lookup: {
+          from: "users",
+          let: { userId: "$_id" }, // $_id là Order.idUser (string)
+          pipeline: [
+            {
+              $addFields: {
+                idString: { $toString: "$_id" }, // convert ObjectId -> string
+              },
+            },
+            {
+              $match: { $expr: { $eq: ["$idString", "$$userId"] } },
+            },
+          ],
+          as: "userInfo",
+        },
+      },
+      { $unwind: { path: "$userInfo", preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          _id: 0,
+          idUser: "$_id",
+          name: "$userInfo.name",
+          totalSpent: { $round: ["$totalSpent", 2] },
+        },
+      }
+    );
+
+    const results = await Order.aggregate(pipeline);
+
+    return res.json({
+      success: true,
+      period: period ? period.toLowerCase() : "all-time",
+      timeframe: label,
+      statuses,
+      count: results.length,
+      data: results,
+    });
+  } catch (err) {
+    console.error("getTopSpenders error:", err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error", error: err.message });
   }
 };

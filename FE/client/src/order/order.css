@@ -230,5 +230,42 @@
   cursor: not-allowed;
   opacity: 0.5;
 }
+.order-product-list ul {
+  padding: 0;
+  margin: 0;
+}
+
+.order-product-list ul li {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  padding: 16px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-start;
+  transition: box-shadow 0.2s;
+}
+
+.order-product-list ul li:hover {
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+}
+
+.product-card-clickable {
+  width: 100%;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  cursor: pointer;
+}
+.product-card-clickable img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.product-info {
+  flex: 1;
+}
 
 @import url('https://fonts.googleapis.com/css2?family=Fugaz+One&display=swap');
