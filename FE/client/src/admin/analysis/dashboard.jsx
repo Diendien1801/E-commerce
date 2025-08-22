@@ -8,6 +8,8 @@ import TopSale from './chart/product/TopSale';
 import TopStock from './chart/product/TopStock';
 import RevenueByMonth from './chart/revenue/RevenueChart';
 import UserRegistration from './chart/user/UserChart';
+import RevenueByCategory from './chart/revenue/RevenueByCategory';
+import TopUser from './chart/user/TopUser';
 import './dashboard.css';
 
 export default function DashboardContent() {
@@ -85,7 +87,7 @@ export default function DashboardContent() {
                 borderRadius: '6px',
                 minWidth: '80px',
                 height: '2rem',
-                background: activeTab === tab ? '#e0e7ef' : '#f5f5f5',
+                background: activeTab === tab ? '#e0e7ef' : '#ffffff',
                 border: '1px solid #d1d5db',
                 color: '#333',
                 fontWeight: activeTab === tab ? 'bold' : 'normal',
@@ -142,19 +144,20 @@ export default function DashboardContent() {
       )}
 
       {activeTab === 'Users' && userSummary && (
-        <div
-          className="dashboard-user-summary"
-          style={{
-            top: 0,
-            zIndex: 10,
-            width: '100%',
-            display: 'flex',
-            gap: '1.5rem',
-            padding: '1rem 0',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-          }}
-        >
+        <>
+          <div
+            className="dashboard-user-summary"
+            style={{
+              top: 0,
+              zIndex: 10,
+              width: '100%',
+              display: 'flex',
+              gap: '1.5rem',
+              padding: '1rem 0',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+            }}
+          >
             <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
               <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
                 <div className="card-block-style">
@@ -171,7 +174,18 @@ export default function DashboardContent() {
                 </div>
               </div>
             </div>
-        </div>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="dashboard-card">
+              <h2>{t('userRegistration')}</h2>
+              <UserRegistration />
+            </div>
+            <div className="dashboard-card">
+              <h2>{t('topUsers')}</h2>
+              <TopUser />
+            </div>
+          </div>
+        </>
       )}
 
 
@@ -244,18 +258,17 @@ export default function DashboardContent() {
                 </div>
               </div>
             )}
-            <div className="dashboard-card">
-              <h2>{t('revenueByMonth')}</h2>
-              <RevenueByMonth />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="dashboard-card">
+                <h2>{t('revenueByMonth')}</h2>
+                <RevenueByMonth />
+              </div>
+              <div className="dashboard-card">
+                <h2>{t('revenueByCategory')}</h2>
+                <RevenueByCategory />
+              </div>
             </div>
           </>
-        )}
-
-        {activeTab === 'Users' && (
-          <div className="dashboard-card">
-            <h2>{t('userRegistration')}</h2>
-            <UserRegistration />
-          </div>
         )}
       </div>
   );

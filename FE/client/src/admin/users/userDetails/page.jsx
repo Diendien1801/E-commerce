@@ -1,3 +1,7 @@
+  // Add fetchOrdersPage for default orders pagination
+  const fetchOrdersPage = (pageNum) => {
+    setPage(pageNum);
+  };
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import defaultAvatar from "./avatar-default.svg";
@@ -377,23 +381,6 @@ function UserDetail() {
               />
               {searchLoading && <span style={{ marginLeft: 8 }}>Searching...</span>}
               {searchError && <span style={{ color: '#d8000c', marginLeft: 8 }}>{searchError}</span>}
-              {searchResults.length > 0 && searchTotalPages > 1 && (
-                <div className="orders-pagination" style={{ display: 'flex', justifyContent: 'center', gap: 12, margin: '8px 0' }}>
-                  <button onClick={() => {
-                    if (searchPage > 1) {
-                      setSearchPage(searchPage - 1);
-                      fetchSearchPage(searchPage - 1);
-                    }
-                  }} disabled={searchPage === 1}>&larr;</button>
-                  <span style={{ fontWeight: 600 }}>{searchPage}</span>
-                  <button onClick={() => {
-                    if (searchPage < searchTotalPages) {
-                      setSearchPage(searchPage + 1);
-                      fetchSearchPage(searchPage + 1);
-                    }
-                  }} disabled={searchPage === searchTotalPages}>&rarr;</button>
-                </div>
-              )}
             </div>
 
             <div className="order-tabs" style={{ marginBottom: "1rem" }}>
@@ -411,149 +398,64 @@ function UserDetail() {
               ))}
             </div>
 
-            {searchResults.length > 0 && (
-              <div className="table-wrapper">
-                <table className="order-table">
-                  <thead style={{ background: '#f0f0f0' }}>
-                    <tr>
-                      <th>{t('orderId', 'Order ID')}</th>
-                      <th>{t('shippingAddress', 'Shipping Address')}</th>
-                      <th>{t('status1', 'Status')}</th>
-                      <th>{t('payment', 'Payment')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {searchResults.map((searchResult) => {
-                      const isExpanded = expandedOrders.includes(searchResult._id);
-                      return (
-                        <React.Fragment key={searchResult._id}>
-                          <tr>
-                            <td>
-                              <button
-                                onClick={() => toggleOrder(searchResult._id)}
-                                style={{
-                                  background: "none",
-                                  border: "none",
-                                  cursor: "pointer",
-                                  fontSize: "1rem",
-                                  color: "#444",
-                                  marginRight: "0.5rem"
-                                }}
-                              >
-                                {isExpanded ? "▼" : "▶"}
-                              </button>
-                              {searchResult.idOrder}
-                            </td>
-                            <td>{searchResult.shippingAddress}</td>
-                            <td><span className={statusBadgeClass(searchResult.status)}>{searchResult.status}</span></td>
-                            <td>{searchResult.paymentMethod}</td>
-                          </tr>
-                          {isExpanded && searchResult.items?.length > 0 && (
-                            <tr>
-                              <td colSpan="5">
-                                <table className="product-table-order">
-                                  <thead>
-                                    <tr>
-                                      <th>{t('productid', 'Product ID')}</th>
-                                      <th>{t('productname', 'Product Name')}</th>
-                                      <th style={{ textAlign: "center" }}>{t('image', 'Image')}</th>
-                                      <th style={{ textAlign: "center" }}>{t('quantity', 'Quantity')}</th>
-                                      <th style={{ textAlign: "center" }}>{t('price', 'Price')}</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {searchResult.items.map((item, idx2) => (
-                                      <tr key={idx2}>
-                                        <td>{item.productID}</td>
-                                        <td>{productDetailsMap[item.productID]?.name || item.productID}</td>
-                                        <td style={{ textAlign: "center" }}>
-                                          {productDetailsMap[item.productID]?.image && (
-                                            <img
-                                              src={productDetailsMap[item.productID].image}
-                                              alt={productDetailsMap[item.productID].name || item.productID}
-                                              style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4, display: 'block', margin: '0 auto' }}
-                                            />
-                                          )}
-                                        </td>
-                                        <td style={{ textAlign: "center" }}>{item.quantity}</td>
-                                        <td style={{ textAlign: "center" }}>{item.price} VND</td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </td>
-                            </tr>
-                          )}
-                        </React.Fragment>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-              {orders.length === 0 ? (
-                <div className="no-orders">{t('noOrdersFound', 'No orders found.')}</div>
-              ) : (
+            {/* Only render one table: search results if available, else default orders */}
+            {searchResults.length > 0 ? (
+              <>
                 <div className="table-wrapper">
                   <table className="order-table">
                     <thead style={{ background: '#f0f0f0' }}>
-                    <tr>
-                      <th>{t('orderId', 'Order ID')}</th>
-                      <th>{t('address', 'Address')}</th>
-                      <th style={{ textAlign: "center" }}>{t('status1', 'Status')}</th>
-                      <th style={{ textAlign: "center" }}>{t('payment', 'Payment')}</th>
-                    </tr>
+                      <tr>
+                        <th>{t('orderId', 'Order ID')}</th>
+                        <th>{t('shippingAddress', 'Shipping Address')}</th>
+                        <th>{t('status1', 'Status')}</th>
+                        <th>{t('payment', 'Payment')}</th>
+                      </tr>
                     </thead>
-                <tbody>
-                  {orders.map((order) => {
-                    const isExpanded = expandedOrders.includes(order._id);
-                    return (
-                      <React.Fragment key={order._id}>
-                        <tr>
-                          <td>
-                            <button
-                              onClick={() => toggleOrder(order._id)}
-                              style={{
-                                background: "none",
-                                border: "none",
-                                cursor: "pointer",
-                                fontSize: "1rem",
-                                color: "#444",
-                                marginRight: "0.5rem"
-                              }}
-                            >
-                              {isExpanded ? "▼" : "▶"}
-                            </button>
-                            {order.idOrder}</td>
-                          <td>{order.shippingAddress}</td>
-                          <td style={{ textAlign: "center" }}>
-                            <span className={statusBadgeClass(order.status)}>
-                              {order.status}
-                            </span>
-                          </td>
-                          <td style={{ textAlign: "center" }}>{order.paymentMethod}</td>
-                        </tr>
-
-                        {isExpanded && (
-                          <tr>
-                            <td colSpan="4">
-                              {order.items?.length > 0 ? (
-                                <table className="product-table-order">
-                                  <thead>
-                                    <tr>
-                                      <th>{t('productid', 'Product ID')}</th>
-                                      <th>{t('productname', 'Product Name')}</th>
-                                      <th style={{ textAlign: "center" }}>{t('image', 'Image')}</th>
-                                      <th style={{ textAlign: "center" }}>{t('quantity', 'Quantity')}</th>
-                                      <th style={{ textAlign: "center" }}>{t('price', 'Price')}</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {order.items.map((item, idx) => (
-                                      <tr key={idx}>
-                                        <td style={{ textAlign: "center" }}>{item.productID}</td>
-                                        <td>{productDetailsMap[item.productID]?.name || item.productID}</td>
-                                        <td style={{ textAlign: "center" }}>
+                    <tbody>
+                      {searchResults.map((searchResult) => {
+                        const isExpanded = expandedOrders.includes(searchResult._id);
+                        return (
+                          <React.Fragment key={searchResult._id}>
+                            <tr>
+                              <td>
+                                <button
+                                  onClick={() => toggleOrder(searchResult._id)}
+                                  style={{
+                                    background: "none",
+                                    border: "none",
+                                    cursor: "pointer",
+                                    fontSize: "1rem",
+                                    color: "#444",
+                                    marginRight: "0.5rem"
+                                  }}
+                                >
+                                  {isExpanded ? "▼" : "▶"}
+                                </button>
+                                {searchResult.idOrder}
+                              </td>
+                              <td>{searchResult.shippingAddress}</td>
+                              <td><span className={statusBadgeClass(searchResult.status)}>{searchResult.status}</span></td>
+                              <td>{searchResult.paymentMethod}</td>
+                            </tr>
+                            {isExpanded && searchResult.items?.length > 0 && (
+                              <tr>
+                                <td colSpan="5">
+                                  <table className="product-table-order">
+                                    <thead>
+                                      <tr>
+                                        <th>{t('productid', 'Product ID')}</th>
+                                        <th>{t('productname', 'Product Name')}</th>
+                                        <th style={{ textAlign: "center" }}>{t('image', 'Image')}</th>
+                                        <th style={{ textAlign: "center" }}>{t('quantity', 'Quantity')}</th>
+                                        <th style={{ textAlign: "center" }}>{t('price', 'Price')}</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {searchResult.items.map((item, idx2) => (
+                                        <tr key={idx2}>
+                                          <td>{item.productID}</td>
+                                          <td>{productDetailsMap[item.productID]?.name || item.productID}</td>
+                                          <td style={{ textAlign: "center" }}>
                                             {productDetailsMap[item.productID]?.image && (
                                               <img
                                                 src={productDetailsMap[item.productID].image}
@@ -561,37 +463,163 @@ function UserDetail() {
                                                 style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4, display: 'block', margin: '0 auto' }}
                                               />
                                             )}
-                                        </td>
-                                        <td style={{ textAlign: "center" }}>{item.quantity}</td>
-                                        <td style={{ textAlign: "center" }}>{item.price} VND</td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              ) : (
-                                <span style={{ color: "#888" }}>{t('noProducts', 'No products')}</span>
-                              )}
-                            </td>
-                          </tr>
-                        )}
-                      </React.Fragment>
-                    );
-                  })}
-                </tbody>
-              </table>
-
+                                          </td>
+                                          <td style={{ textAlign: "center" }}>{item.quantity}</td>
+                                          <td style={{ textAlign: "center" }}>{item.price} VND</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
-              )}
+                {/* Move search pagination to bottom of search results */}
+                {searchTotalPages > 1 && (
+                  <div className="orders-pagination" style={{ display: 'flex', justifyContent: 'center', gap: 12, margin: '16px 0' }}>
+                    <button onClick={() => {
+                      if (searchPage > 1) {
+                        setSearchPage(searchPage - 1);
+                        fetchSearchPage(searchPage - 1);
+                      }
+                    }} disabled={searchPage === 1}>&larr;</button>
+                    <span style={{ fontWeight: 600 }}>{searchPage}</span>
+                    <button onClick={() => {
+                      if (searchPage < searchTotalPages) {
+                        setSearchPage(searchPage + 1);
+                        fetchSearchPage(searchPage + 1);
+                      }
+                    }} disabled={searchPage === searchTotalPages}>&rarr;</button>
+                  </div>
+                )}
+              </>
+            ) : (
+              orders.length === 0 ? (
+                <div className="no-orders">{t('noOrdersFound', 'No orders found.')}</div>
+              ) : (
+                <>
+                  <div className="table-wrapper">
+                    <table className="order-table">
+                      <thead style={{ background: '#f0f0f0' }}>
+                        <tr>
+                          <th>{t('orderId', 'Order ID')}</th>
+                          <th>{t('address', 'Address')}</th>
+                          <th style={{ textAlign: "center" }}>{t('status1', 'Status')}</th>
+                          <th style={{ textAlign: "center" }}>{t('payment', 'Payment')}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {orders.map((order) => {
+                          const isExpanded = expandedOrders.includes(order._id);
+                          return (
+                            <React.Fragment key={order._id}>
+                              <tr>
+                                <td>
+                                  <button
+                                    onClick={() => toggleOrder(order._id)}
+                                    style={{
+                                      background: "none",
+                                      border: "none",
+                                      cursor: "pointer",
+                                      fontSize: "1rem",
+                                      color: "#444",
+                                      marginRight: "0.5rem"
+                                    }}
+                                  >
+                                    {isExpanded ? "▼" : "▶"}
+                                  </button>
+                                  {order.idOrder}</td>
+                                <td>{order.shippingAddress}</td>
+                                <td style={{ textAlign: "center" }}>
+                                  <span className={statusBadgeClass(order.status)}>
+                                    {order.status}
+                                  </span>
+                                </td>
+                                <td style={{ textAlign: "center" }}>{order.paymentMethod}</td>
+                              </tr>
+
+                              {isExpanded && (
+                                <tr>
+                                  <td colSpan="4">
+                                    {order.items?.length > 0 ? (
+                                      <table className="product-table-order">
+                                        <thead>
+                                          <tr>
+                                            <th>{t('productid', 'Product ID')}</th>
+                                            <th>{t('productname', 'Product Name')}</th>
+                                            <th style={{ textAlign: "center" }}>{t('image', 'Image')}</th>
+                                            <th style={{ textAlign: "center" }}>{t('quantity', 'Quantity')}</th>
+                                            <th style={{ textAlign: "center" }}>{t('price', 'Price')}</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {order.items.map((item, idx) => (
+                                            <tr key={idx}>
+                                              <td style={{ textAlign: "center" }}>{item.productID}</td>
+                                              <td>{productDetailsMap[item.productID]?.name || item.productID}</td>
+                                              <td style={{ textAlign: "center" }}>
+                                                  {productDetailsMap[item.productID]?.image && (
+                                                    <img
+                                                      src={productDetailsMap[item.productID].image}
+                                                      alt={productDetailsMap[item.productID].name || item.productID}
+                                                      style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4, display: 'block', margin: '0 auto' }}
+                                                    />
+                                                  )}
+                                              </td>
+                                              <td style={{ textAlign: "center" }}>{item.quantity}</td>
+                                              <td style={{ textAlign: "center" }}>{item.price} VND</td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    ) : (
+                                      <span style={{ color: "#888" }}>{t('noProducts', 'No products')}</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              )}
+                            </React.Fragment>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  {totalPages > 1 && (
+                    <div className="orders-pagination" style={{ display: 'flex', justifyContent: 'center', gap: 12, margin: '16px 0' }}>
+                      <button onClick={() => setPage(page - 1)} disabled={page === 1}>&larr;</button>
+                      <span style={{ fontWeight: 600 }}>{page}</span>
+                      <button onClick={() => setPage(page + 1)} disabled={page === totalPages}>&rarr;</button>
+                    </div>
+                  )}
+                  
+                    {searchTotalPages > 1 && (
+                    <div className="orders-pagination" style={{ display: 'flex', justifyContent: 'center', gap: 12, margin: '8px 0' }}>
+                      <button onClick={() => {
+                        if (searchPage > 1) {
+                          setSearchPage(searchPage - 1);
+                          fetchSearchPage(searchPage - 1);
+                        }
+                      }} disabled={searchPage === 1}>&larr;</button>
+                      <span style={{ fontWeight: 600 }}>{searchPage}</span>
+                      <button onClick={() => {
+                        if (searchPage < searchTotalPages) {
+                          setSearchPage(searchPage + 1);
+                          fetchSearchPage(searchPage + 1);
+                        }
+                      }} disabled={searchPage === searchTotalPages}>&rarr;</button>
+                    </div>
+                  )}
+                </>
+              )
+            )}
           </>
         )}
       </div>
-      {!loading && totalPages > 1 && (
-        <div className="orders-pagination" style={{ display: 'flex', justifyContent: 'center', gap: 12, margin: '16px 0' }}>
-          <button onClick={() => setPage(page - 1)} disabled={page === 1}>&larr;</button>
-          <span style={{ fontWeight: 600 }}>{page}</span>
-          <button onClick={() => setPage(page + 1)} disabled={page === totalPages}>&rarr;</button>
-        </div>
-      )}
     </div>
   );
 }

@@ -6,6 +6,7 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { useCart } from '../cart/CartContext';
 
 const Navbar = () => {
     const [search, setSearch] = useState("");
@@ -15,7 +16,7 @@ const Navbar = () => {
     const [error, setError] = useState(null);
     const [showDropdown, setShowDropdown] = useState(false);
     const [userRole, setUserRole] = useState(null);
-    const [cartCount, setCartCount] = useState(0); 
+    const { cartCount, setCartCount } = useCart(); 
     const navigate = useNavigate();
 
     const { isLoggedIn, user, logout } = useAuth();
@@ -38,21 +39,21 @@ const Navbar = () => {
     fetchUserRole();
     }, [userId]);
 
-    useEffect(() => {
-        const fetchCartCount = async () => {
-            if (!userId) return;
-            try {
-                const res = await fetch(`http://localhost:5000/api/cart/user/${userId}`);
-                if (!res.ok) throw new Error("Failed to fetch cart");
-                const data = await res.json();
-                console.log(data);
-                setCartCount(data?.data?.summary?.totalItems || 0);
-            } catch (err) {
-                console.error("Error fetching cart:", err);
-            }
-        };
-        fetchCartCount();
-    }, [userId]);
+    // useEffect(() => {
+    //     const fetchCartCount = async () => {
+    //         if (!userId) return;
+    //         try {
+    //             const res = await fetch(`http://localhost:5000/api/cart/user/${userId}`);
+    //             if (!res.ok) throw new Error("Failed to fetch cart");
+    //             const data = await res.json();
+    //             console.log(data);
+    //             setCartCount(data?.data?.summary?.totalItems || 0);
+    //         } catch (err) {
+    //             console.error("Error fetching cart:", err);
+    //         }
+    //     };
+    //     fetchCartCount();
+    // }, [userId]);
 
     const handleSearch = async (e) => {
         const value = e.target.value;
