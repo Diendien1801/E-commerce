@@ -1,5 +1,6 @@
 import "./payment.css";
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from '../components/context/authcontext';
 // import LocationSelector from "../components/locationSelector/LocationSelector";
 import MapView from "../components/map/MapView"
@@ -11,6 +12,7 @@ import PaymentCart from "./component/PaymentCart";
 import PaymentSummary from "./component/PaymentSummary";
 
 export default function Payment() {
+  const navigate = useNavigate();
   const { user: loggedInUser } = useAuth();
   const [activeTab, setActiveTab] = useState('delivery');
   const [showMap, setShowMap] = useState(false);
@@ -664,6 +666,25 @@ const handleMoMoPayment = async (totalAmount, orderId) => {
 };
   return (
     <div className="payment-wrapper">
+      {/* Back button */}
+      <button
+        className="back-to-cart-btn"
+        style={{
+          margin: '16px 0',
+          padding: '8px 20px',
+          fontSize: '16px',
+          borderRadius: '6px',
+          border: 'none',
+          cursor: 'pointer',
+          fontWeight: 500,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8
+        }}
+        onClick={() => navigate('/cart')}
+      >
+        <span style={{fontSize: 20, marginTop: -5}}>&#8592;</span> Quay lại giỏ hàng
+      </button>
       <div className="payment-container">
         {/* Cột trái */}
         <div className="payment-left">
