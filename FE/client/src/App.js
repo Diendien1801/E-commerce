@@ -32,6 +32,7 @@ import CrawlPage from './admin/crawl/page';
 
 import Payment from './payment/page';
 import PaymentResult from './paymentResult/payment-result'; 
+import { CartProvider } from './components/cart/CartContext';
 
 
 
@@ -94,7 +95,9 @@ function App() {
 
   return (
     <AuthProvider>
-      <RouterProvider router={router} />
+      <CartProvider>
+        <RouterProvider router={router} />
+      </CartProvider>
     </AuthProvider>
   );
 }
