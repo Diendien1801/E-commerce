@@ -83,15 +83,13 @@ const Shop = () => {
     }, [selectedCategory, categories]);
 
     useEffect(() => {
-        let url = selectedCategory
-            ? `http://localhost:5000/api/products/category/${selectedCategory}?page=${page}&limit=${products_per_page}`
-            : `http://localhost:5000/api/products/filter-paginated?page=${page}&limit=${products_per_page}`;
+        if (!selectedCategory) return;
+        let url = `http://localhost:5000/api/products/category/${selectedCategory}?page=${page}&limit=${products_per_page}`;
 
-        if (!selectedCategory) {
-            if (sortOrder === 'price_low') url += '&sort=price_asc';
-            else if (sortOrder === 'price_high') url += '&sort=price_desc';
-            else if (sortOrder === 'newest') url += '&sort=newest';
-        }
+        // Nếu muốn sort trong category, có thể thêm sort param nếu API hỗ trợ
+        if (sortOrder === 'price_low') url += '&sort=price_asc';
+        else if (sortOrder === 'price_high') url += '&sort=price_desc';
+        else if (sortOrder === 'newest') url += '&sort=newest';
 
         fetch(url)
             .then(res => {
@@ -100,7 +98,9 @@ const Shop = () => {
             })
             .then(data => {
                 setProducts(Array.isArray(data.data.products) ? data.data.products : []);
-                if (typeof data.data.total === 'number' && typeof data.data.limit === 'number') {
+                if (data.data?.pagination?.totalPages) {
+                    setTotalPages(data.data.pagination.totalPages);
+                } else if (typeof data.data.total === 'number' && typeof data.data.limit === 'number') {
                     setTotalPages(Math.ceil(data.data.total / data.data.limit));
                 } else {
                     setTotalPages(1);
