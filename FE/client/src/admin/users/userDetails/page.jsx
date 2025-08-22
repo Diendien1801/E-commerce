@@ -156,7 +156,7 @@ function UserDetail() {
   const fetchSearchPage = async (pageNum) => {
     setSearchLoading(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/orders/user/${userId}/search?q=${encodeURIComponent(orderSearch.trim())}&page=${pageNum}&limit=5`);
+      const res = await fetch(`http://localhost:5000/api/o/user/${userId}/search?q=${encodeURIComponent(orderSearch.trim())}&page=${pageNum}&limit=5`);
       const data = await res.json();
       if (!data.success || !Array.isArray(data.data)) throw new Error(data.message || 'Order not found');
       setSearchResults(data.data);
