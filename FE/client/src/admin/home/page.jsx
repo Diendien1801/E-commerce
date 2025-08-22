@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet, useNavigate} from 'react-router-dom';
 import { useAuth } from '../../components/context/authcontext'; 
 import logo from './logo.png';
+import './home.css';
 
 const SIDEBAR_ITEMS = [
   { id: 'analytics', icon: BarChart3, label: 'Analytics', path: '/admin/dashboard' },
@@ -57,25 +58,24 @@ export default function AdminDashboard() {
           <img src={logo} alt="Logo" className="logo-img" />
         </div>
         <nav>
-          <p className="section-title">{t('mainMenu', 'Main Menu')}</p>
+          <p className="menu-title">{t('mainMenu', 'Main Menu')}</p>
           {SIDEBAR_ITEMS.map(item => (
             <NavLink
               key={item.id}
               to={item.path}
               className={({ isActive }) =>
                 `sidebar-item ${isActive ? 'active' : ''}`
-              }
-            >
-              <item.icon className="icon" /> {item.label}
+              }>
+              <item.icon /> {item.label}
             </NavLink>
           ))}
         </nav>
         <div className="sidebar-footer">
           <button onClick={() => { navigate('/'); }}>
-            <Home className="icon" />{t('home1', 'Home')}
+            <Home/>{t('home1', 'Home')}
           </button>
           <button onClick={() => { logout(); navigate('/'); }}>
-            <User className="icon" />{t('logOut', 'Log Out')}
+            <User/>{t('logOut', 'Log Out')}
           </button>
         </div>
       </aside>

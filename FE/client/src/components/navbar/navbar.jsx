@@ -15,6 +15,7 @@ const Navbar = () => {
     const [error, setError] = useState(null);
     const [showDropdown, setShowDropdown] = useState(false);
     const [userRole, setUserRole] = useState(null);
+    const [cartCount, setCartCount] = useState(0); 
     const navigate = useNavigate();
 
     const { isLoggedIn, user, logout } = useAuth();
@@ -35,6 +36,22 @@ const Navbar = () => {
         };
 
     fetchUserRole();
+    }, [userId]);
+
+    useEffect(() => {
+        const fetchCartCount = async () => {
+            if (!userId) return;
+            try {
+                const res = await fetch(`http://localhost:5000/api/cart/user/${userId}`);
+                if (!res.ok) throw new Error("Failed to fetch cart");
+                const data = await res.json();
+                console.log(data);
+                setCartCount(data?.data?.summary?.totalItems || 0);
+            } catch (err) {
+                console.error("Error fetching cart:", err);
+            }
+        };
+        fetchCartCount();
     }, [userId]);
 
     const handleSearch = async (e) => {
@@ -210,9 +227,25 @@ const Navbar = () => {
                         <img src={logo} alt="E-commerce Logo" className="logo-img" />
                     </a>
                 </div>
-                <div className="header-col header-cart">
-                    <button className="cart-btn" onClick={() => navigate('/cart')}>
+                <div className="header-col header-cart" style={{ position: 'relative' }}>
+                    <button className="cart-btn" onClick={() => navigate('/cart')} style={{ position: 'relative' }}>
                         <i className="bi bi-cart2 cart-icon"></i> {t('cart')}
+                        {cartCount > 0 && (
+                            <span style={{
+                                position: 'absolute',
+                                top: '5px',
+                                right: '45px',
+                                background: 'red',
+                                color: 'white',
+                                borderRadius: '50%',
+                                padding: '1px 5px',
+                                fontSize: '12px',
+                                fontWeight: 'semibold',
+                                lineHeight: 1
+                            }}>
+                                {cartCount}
+                            </span>
+                        )}
                     </button>
                 </div>
             </div>

@@ -579,7 +579,24 @@ const clearCart = async () => {
     // Không throw error vì đây không phải lỗi critical
   }
 };
- 
+
+// // Hàm lấy thông tin order (sử dụng endpoint có sẵn)
+const getOrderInfo = async (orderId) => {
+  try {
+    const response = await fetch(`http://localhost:5000/api/orders/orders/id/${orderId}`);
+    
+    if (!response.ok) {
+      throw new Error('Không thể lấy thông tin đơn hàng');
+    }
+    
+    const result = await response.json();
+    return result.data || result;
+  } catch (error) {
+    console.error('Error getting order info:', error);
+    throw error;
+  }
+};
+
   // Xử lý thanh toán MoMo
 const handleMoMoPayment = async (totalAmount, orderId) => {
   try {
@@ -651,6 +668,7 @@ const handleMoMoPayment = async (totalAmount, orderId) => {
         {/* Cột trái */}
         <div className="payment-left">
           {/* Tài khoản */}
+
           <PaymentAccount 
             loading={loading}
             error={error}
@@ -658,6 +676,7 @@ const handleMoMoPayment = async (totalAmount, orderId) => {
             getInitials={getInitials}
             fetchUserInfo={fetchUserInfo}
           />
+
 
           {/* Thông tin giao hàng */}
           <PaymentDeliveryForm 
@@ -701,12 +720,12 @@ const handleMoMoPayment = async (totalAmount, orderId) => {
             removeFromCart={removeFromCart}
           />
 
-          {/* Mã khuyến mãi */}
           <div className="card">
             <h3>Mã khuyến mãi</h3>
             <input className="promo-code" type="text" placeholder="Nhập mã khuyến mãi" />
             <button className="apply">Áp dụng</button>
           </div>
+
 
           {/* Tóm tắt đơn hàng */}
           <PaymentSummary 
@@ -719,11 +738,10 @@ const handleMoMoPayment = async (totalAmount, orderId) => {
             selectedPaymentMethod={selectedPaymentMethod}
             cartItems={cartItems}
           />
+
         </div>
       </div>
     
-
-      {/* ✅ MapView với địa chỉ đầy đủ */}
       {showMap && (
         <MapView 
           initialAddress={

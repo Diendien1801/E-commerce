@@ -42,12 +42,12 @@ body {
   color: #111827;
 }
 
-.section-title {
+.menu-title {
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
   color: #6b7280;
-  margin: 0 0 10px 20px;
+  margin: 10px 10px 10px 20px;
 }
 
 .sidebar-item {

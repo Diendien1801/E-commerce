@@ -37,7 +37,6 @@ import PaymentResult from './paymentResult/payment-result';
 
 
 
-
 function App() {
   const router = createBrowserRouter([
     // Public routes

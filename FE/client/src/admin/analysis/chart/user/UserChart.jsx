@@ -37,15 +37,15 @@ const UserRegistration = () => {
     if (!data.length) return;
 
     const margin = { top: 40, right: 30, bottom: 50, left: 60 };
-    const width = 700 - margin.left - margin.right;
-    const height = 400 - margin.top - margin.bottom;
+    const width = 450;
+    const height = 250;
 
     d3.select(svgRef.current).selectAll("*").remove(); 
 
     const svg = d3
       .select(svgRef.current)
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom)
+      .attr("width", width + 300)
+      .attr("height", height + 300)
       .append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
@@ -76,26 +76,38 @@ const UserRegistration = () => {
 
     svg.append("g").call(d3.axisLeft(y)).style("font-size", "12px");
 
-    svg
-      .selectAll(".bar")
-      .data(data)
-      .enter()
-      .append("rect")
-      .attr("x", (d) => x(d.month))
-      .attr("y", (d) => y(d.count))
-      .attr("width", x.bandwidth())
-      .attr("height", (d) => height - y(d.count))
-      .attr("fill", "#4682B4");
+    // Line chart
+    const line = d3.line()
+      .x((d) => x(d.month) + x.bandwidth() / 2)
+      .y((d) => y(d.count));
 
-    svg
-      .selectAll(".label")
+    svg.append('path')
+      .datum(data)
+      .attr('fill', 'none')
+      .attr('stroke', '#4682B4')
+      .attr('stroke-width', 3)
+      .attr('d', line);
+
+    // Dots
+    svg.selectAll('.dot')
       .data(data)
-      .enter()
-      .append("text")
-      .attr("x", (d) => x(d.month) + x.bandwidth() / 2)
-      .attr("y", (d) => y(d.count) - 5)
-      .attr("text-anchor", "middle")
-      .style("font-size", "11px")
+      .join('circle')
+      .attr('class', 'dot')
+      .attr('cx', (d) => x(d.month) + x.bandwidth() / 2)
+      .attr('cy', (d) => y(d.count))
+      .attr('r', 5)
+      .attr('fill', '#4682B4');
+
+    // Count label above each dot
+    svg.selectAll('.dot-label')
+      .data(data)
+      .join('text')
+      .attr('class', 'dot-label')
+      .attr('x', (d) => x(d.month) + x.bandwidth() / 2)
+      .attr('y', (d) => y(d.count) - 10)
+      .attr('text-anchor', 'middle')
+      .style('font-size', '12px')
+      .style('fill', '#333')
       .text((d) => d.count);
 
     svg

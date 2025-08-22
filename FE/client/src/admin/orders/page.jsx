@@ -39,6 +39,42 @@ const OrderRow = ({ order, handleStatusChange, t, expanded, toggleExpand }) => {
 
   const action = actionByStatus[order.status];
   const canCancel = ['pending', 'picking', 'shipping'].includes(order.status);
+  const [productDetails, setProductDetails] = useState([]);
+
+  useEffect(() => {
+    if (expanded && order.items?.length > 0) {
+      const fetchDetails = async () => {
+        const promises = order.items.map(async (item) => {
+          const prodId = item.productID || item.productId;
+          try {
+            const res = await fetch(`http://localhost:5000/api/products/admin/${prodId}`);
+            const data = await res.json();
+            const prod = data.data;
+            return {
+              productId: prodId,
+              productName: prod?.title || '',
+              productImage: Array.isArray(prod?.imageUrl) ? prod.imageUrl[0] : '',
+              quantity: item.quantity,
+              price: item.price
+            };
+          } catch {
+            return {
+              productId: prodId,
+              productName: '',
+              productImage: '',
+              quantity: item.quantity,
+              price: item.price
+            };
+          }
+        });
+        const details = await Promise.all(promises);
+        setProductDetails(details);
+      };
+      fetchDetails();
+    } else {
+      setProductDetails([]);
+    }
+  }, [expanded, order.items]);
 
   return (
     <>
@@ -57,7 +93,7 @@ const OrderRow = ({ order, handleStatusChange, t, expanded, toggleExpand }) => {
               onClick={() => toggleExpand(order._id)}>
               {expanded ? '▼' : '▶'}
             </button>
-            <span>{order._id}</span>
+            <span>{order.idOrder}</span>
           </div>
         </td>
         <td>{order.idUser}</td>
@@ -109,18 +145,40 @@ const OrderRow = ({ order, handleStatusChange, t, expanded, toggleExpand }) => {
               <thead>
                 <tr>
                   <th>{t('productid', 'Product ID')}</th>
-                  <th>{t('quantity', 'Quantity')}</th>
-                  <th>{t('price', 'Price')}</th>
+                  <th>{t('productname', 'Product Name')}</th>
+                  <th style={{ textAlign: 'center'}}>{t('productimage', 'Product Image')}</th>
+                  <th style={{ textAlign: 'center'}}>{t('quantity', 'Quantity')}</th>
+                  <th style={{ textAlign: 'center'}}>{t('price', 'Price')}</th>
                 </tr>
               </thead>
               <tbody>
-                {order.items.map((item, idx) => (
-                  <tr key={idx}>
-                    <td>{item.productId}</td>
-                    <td>{item.quantity}</td>
-                    <td>{item.price} VND</td>
-                  </tr>
-                ))}
+                {productDetails.length > 0
+                  ? productDetails.map((item, idx) => (
+                      <tr key={idx}>
+                        <td>{item.productId}</td>
+                        <td>{item.productName}</td>
+                        <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+                          {item.productImage ? (
+                            <img src={item.productImage} alt={item.productName || ''} 
+                              style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4, display: 'block', margin: '0 auto' }}/>
+                          ) : null}
+                        </td>
+                        <td style={{ textAlign: 'center'}}>{item.quantity}</td>
+                        <td style={{ textAlign: 'center'}}>{item.price} VND</td>
+                      </tr>
+                    ))
+                  : order.items.map((item, idx) => {
+                      const prodId = item.productID || item.productId;
+                      return (
+                        <tr key={idx}>
+                          <td>{prodId}</td>
+                          <td></td>
+                          <td></td>
+                          <td>{item.quantity}</td>
+                          <td>{item.price} VND</td>
+                        </tr>
+                      );
+                    })}
               </tbody>
             </table>
           </td>
@@ -163,6 +221,7 @@ export default function OrderManagement() {
         }
         const response = await fetch(url);
         const data = await response.json();
+        console.log(data);
         if (!Array.isArray(data.data?.orders)) throw new Error(data.message || 'Unexpected response format');
         setOrders(data.data.orders);
         setTotalPages(data.data.pagination?.totalPages || 1);
