@@ -182,6 +182,7 @@ const Login = () => {
                                         body: JSON.stringify({ access_token: facebookAccessToken })
                                     });
                                     const data = await response.json();
+                                    
                                     if (response.ok && data.success && data.data && data.data.token && data.data.user) {
                                         let userInfo = data.data.user;
                                         if (!userInfo._id && data.data.token) {

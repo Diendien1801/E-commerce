@@ -1,501 +1,503 @@
-"use client";
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import './crawl.css';
 
-const CrawlPage = () => {
-  const [categories, setCategories] = useState([]);
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [isCrawling, setIsCrawling] = useState(false);
-  const [logs, setLogs] = useState([]);
-  const [stats, setStats] = useState({
-    newProducts: 0,
-    updatedProducts: 0,
-    failedProducts: 0,
-    processedCategories: 0,
-    totalCategories: 0
-  });
-  const [progress, setProgress] = useState({
+const CrawlerPage = () => {
+  const [crawlerStatus, setCrawlerStatus] = useState({
+    isRunning: false,
+    startTime: null,
+    endTime: null,
+    progress: 0,
     currentCategory: '',
-    currentPage: 0,
-    currentProduct: '',
-    processedProducts: 0
+    totalProducts: 0,
+    processedProducts: 0,
+    errors: []
   });
-  const [connectionStatus, setConnectionStatus] = useState('disconnected');
-  const [testResults, setTestResults] = useState(null);
+  
+  const [categories, setCategories] = useState([]);
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [productStats, setProductStats] = useState({
+    totalProducts: 0,
+    availableProducts: 0,
+    outOfStockProducts: 0,
+    avgPrice: 0,
+    todayProducts: 0
+  });
+  useEffect(() => {
+  const interval = setInterval(() => {
+    fetchLogs();
+  }, 3000);
+  return () => clearInterval(interval);
+}, []);
 
-  const eventSourceRef = useRef(null);
-  const logsEndRef = useRef(null);
+  // Log filtering states
+  const [logFilter, setLogFilter] = useState({
+    level: '',
+    type: '',
+    limit: 100
+  });
 
   // API base URL
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+  const API_BASE = 'http://localhost:5000/api/crawl';
 
-  // Kết nối SSE
-  const connectSSE = () => {
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-    }
-
+  // Fetch crawler status
+  const fetchStatus = async () => {
     try {
-      eventSourceRef.current = new EventSource(`${API_BASE}/crawl/stream`);
-      
-      eventSourceRef.current.onopen = () => {
-        setConnectionStatus('connected');
-        addLog('🌊 Kết nối real-time thành công', 'success');
-      };
-
-      eventSourceRef.current.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          handleSSEMessage(data);
-        } catch (error) {
-          console.error('Error parsing SSE data:', error);
-        }
-      };
-
-      eventSourceRef.current.onerror = () => {
-        setConnectionStatus('error');
-        addLog('❌ Lỗi kết nối real-time', 'error');
-        
-        // Thử kết nối lại sau 5 giây
-        setTimeout(() => {
-          if (eventSourceRef.current) {
-            eventSourceRef.current.close();
-          }
-          connectSSE();
-        }, 5000);
-      };
-    } catch (error) {
-      setConnectionStatus('error');
-      addLog(`❌ Lỗi khởi tạo SSE: ${error.message}`, 'error');
-    }
-  };
-
-  // Xử lý tin nhắn SSE
-  const handleSSEMessage = (data) => {
-    switch (data.type) {
-      case 'connected':
-        setConnectionStatus('connected');
-        setIsCrawling(data.isCrawling || false);
-        break;
-      case 'log':
-        addLog(data.message, data.logType);
-        break;
-      case 'progress':
-        setProgress(prev => ({ ...prev, ...data }));
-        break;
-      case 'stats':
-        setStats(data.stats);
-        break;
-      case 'complete':
-        setIsCrawling(false);
-        addLog('✅ ' + data.result.message, 'success');
-        break;
-      case 'error':
-        setIsCrawling(false);
-        addLog(`❌ Lỗi: ${data.message}`, 'error');
-        break;
-    }
-  };
-
-  // Thêm log
-  const addLog = (message, type = 'info') => {
-    const logEntry = {
-      id: Date.now(),
-      message,
-      type,
-      timestamp: new Date().toLocaleTimeString()
-    };
-    setLogs(prev => [...prev.slice(-99), logEntry]); // Giữ tối đa 100 logs
-  };
-
-  // Scroll xuống cuối logs
-  const scrollToBottom = () => {
-    logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [logs]);
-
-  // Load categories
-  const loadCategories = async () => {
-    try {
-      const response = await fetch(`${API_BASE}/crawl/categories`);
+      const response = await fetch(`${API_BASE}/status`);
       const data = await response.json();
-      if (data.success && data.categories) {
-        setCategories(data.categories);
-        addLog(`✅ Tải thành công ${data.categories.length} categories`, 'success');
-      } else {
-        addLog('⚠️ Lỗi tải categories từ server', 'warning');
-      }
-    } catch (error) {
-      addLog(`❌ Lỗi tải categories: ${error.message}`, 'error');
-    }
-  };
-
-  // Test kết nối
-  const testConnection = async () => {
-    try {
-      addLog('🔍 Đang test kết nối...', 'info');
-      const response = await fetch(`${API_BASE}/crawl/test`);
-      const data = await response.json();
-      setTestResults(data.tests);
-      
       if (data.success) {
-        addLog('✅ Test kết nối hoàn thành', 'success');
-      } else {
-        addLog(`❌ Test thất bại: ${data.error}`, 'error');
+        setCrawlerStatus(data.data);
       }
     } catch (error) {
-      addLog(`❌ Lỗi test: ${error.message}`, 'error');
+      console.error('Error fetching status:', error);
     }
   };
 
-  // Bắt đầu crawl
-  const startCrawl = async () => {
+  // Fetch categories
+  const fetchCategories = async () => {
     try {
-      const response = await fetch(`${API_BASE}/crawl`, {
+      const response = await fetch(`${API_BASE}/categories`);
+      const data = await response.json();
+      if (data.success) {
+        setCategories(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
+  // Fetch product statistics
+  const fetchProductStats = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/products/stats`);
+      const data = await response.json();
+      if (data.success) {
+        setProductStats(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching product stats:', error);
+    }
+  };
+
+  // Fetch logs with filtering
+  const fetchLogs = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (logFilter.level) params.append('level', logFilter.level);
+      if (logFilter.type) params.append('type', logFilter.type);
+      if (logFilter.limit) params.append('limit', logFilter.limit);
+
+      const response = await fetch(`${API_BASE}/logs?${params.toString()}`);
+      const data = await response.json();
+      if (data.success) {
+        setLogs(data.data.logs);
+      }
+    } catch (error) {
+      console.error('Error fetching logs:', error);
+    }
+  };
+
+  // Start crawler
+  const startCrawler = async () => {
+    setLoading(true);
+    setMessage('');
+    
+    try {
+      const response = await fetch(`${API_BASE}/start`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          categories: selectedCategories.length > 0 ? selectedCategories : null
-        }),
       });
-
+      
       const data = await response.json();
       
       if (data.success) {
-        setIsCrawling(true);
-        addLog('🚀 ' + data.message, 'success');
-        // Không xóa logs cũ nữa để người dùng có thể xem lại
+        setMessage(data.message);
+        startStatusPolling();
       } else {
-        addLog(`❌ ${data.message}`, 'error');
+        setMessage(data.message);
       }
     } catch (error) {
-      addLog(`❌ Lỗi bắt đầu crawl: ${error.message}`, 'error');
+      setMessage('Lỗi kết nối: ' + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Dừng crawl
-  const stopCrawl = async () => {
-    try {
-      const response = await fetch(`${API_BASE}/crawl/stop`, {
-        method: 'POST',
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        addLog('🛑 ' + data.message, 'warning');
-      } else {
-        addLog(`❌ ${data.message}`, 'error');
-      }
-    } catch (error) {
-      addLog(`❌ Lỗi dừng crawl: ${error.message}`, 'error');
-    }
-  };
-
-  // Chọn/bỏ chọn category
-  const toggleCategory = (categoryId) => {
-    setSelectedCategories(prev => 
-      prev.includes(categoryId)
-        ? prev.filter(id => id !== categoryId)
-        : [...prev, categoryId]
-    );
-  };
-
-  // Chọn/bỏ chọn cả nhóm
-  const toggleGroup = (groupCategories) => {
-    const groupIds = groupCategories.map(cat => cat.idCategory);
-    const allSelected = groupIds.every(id => selectedCategories.includes(id));
+  // Stop crawler
+  const stopCrawler = async () => {
+    setLoading(true);
+    setMessage('');
     
-    if (allSelected) {
-      setSelectedCategories(prev => prev.filter(id => !groupIds.includes(id)));
-    } else {
-      setSelectedCategories(prev => [...new Set([...prev, ...groupIds])]);
+    try {
+      const response = await fetch(`${API_BASE}/stop`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setMessage(data.message);
+        stopStatusPolling();
+        fetchStatus();
+      } else {
+        setMessage(data.message);
+      }
+    } catch (error) {
+      setMessage('Lỗi kết nối: ' + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Chọn tất cả
-  const selectAll = () => {
-    setSelectedCategories(categories.map(cat => cat.idCategory));
+  // Status polling
+  let statusInterval = null;
+
+  const startStatusPolling = () => {
+    statusInterval = setInterval(() => {
+      fetchStatus();
+      fetchLogs(); // Also fetch logs for real-time updates
+    }, 2000);
   };
 
-  // Bỏ chọn tất cả
-  const clearAll = () => {
-    setSelectedCategories([]);
+  const stopStatusPolling = () => {
+    if (statusInterval) {
+      clearInterval(statusInterval);
+      statusInterval = null;
+    }
   };
 
-  // Xóa logs
-  const clearLogs = () => {
-    setLogs([]);
-    addLog('🧹 Đã xóa logs', 'info');
+  // Format date
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleString('vi-VN');
   };
 
+  // Format duration
+  const formatDuration = (startTime, endTime) => {
+    if (!startTime || !endTime) return 'N/A';
+    
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+    const diff = end - start;
+    
+    const minutes = Math.floor(diff / 60000);
+    const seconds = Math.floor((diff % 60000) / 1000);
+    
+    return `${minutes}m ${seconds}s`;
+  };
+
+  // Format price
+  const formatPrice = (price) => {
+    if (!price) return '0₫';
+    return new Intl.NumberFormat('vi-VN').format(price) + '₫';
+  };
+
+  // Get status indicator class
+  const getStatusClass = () => {
+    if (crawlerStatus.isRunning) return 'status-running';
+    if (crawlerStatus.startTime && !crawlerStatus.endTime) return 'status-pending';
+    return 'status-stopped';
+  };
+
+  // Get status text
+  const getStatusText = () => {
+    if (crawlerStatus.isRunning) return 'Đang chạy';
+    if (crawlerStatus.startTime && !crawlerStatus.endTime) return 'Đang xử lý';
+    return 'Đã dừng';
+  };
+
+  // Get log level class
+  const getLogLevelClass = (level) => {
+    switch (level) {
+      case 'success': return 'log-success';
+      case 'error': return 'log-error';
+      case 'warning': return 'log-warning';
+      case 'info': return 'log-info';
+      default: return 'log-info';
+    }
+  };
+
+  // Get log type icon
+  const getLogTypeIcon = (type) => {
+    switch (type) {
+      case 'product': return '🎵';
+      case 'category': return '📁';
+      case 'page': return '📄';
+      case 'inventory': return '📦';
+      case 'system': return '⚙️';
+      case 'summary': return '📊';
+      default: return 'ℹ️';
+    }
+  };
+
+  // Handle log filter change
+  const handleLogFilterChange = (field, value) => {
+    setLogFilter(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Initialize data
   useEffect(() => {
-    loadCategories();
-    connectSSE();
-
-    // Kiểm tra trạng thái crawl khi component mount
-    fetch(`${API_BASE}/crawl/status`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          setIsCrawling(data.isCrawling);
-          if (data.stats) {
-            setStats(data.stats);
-          }
-        }
-      })
-      .catch(err => {
-        console.error('Error fetching crawl status:', err);
-      });
-
+    fetchStatus();
+    fetchCategories();
+    fetchProductStats();
+    fetchLogs();
+    
     return () => {
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-      }
+      stopStatusPolling();
     };
   }, []);
 
-  // Nhóm categories theo group
-  const groupedCategories = categories.reduce((acc, category) => {
-    const group = category.group || 'Khác';
-    if (!acc[group]) acc[group] = [];
-    acc[group].push(category);
-    return acc;
-  }, {});
-
-  const getLogColor = (type) => {
-    switch (type) {
-      case 'success': return 'text-green-400';
-      case 'error': return 'text-red-400';
-      case 'warning': return 'text-yellow-400';
-      default: return 'text-green-400';
-    }
-  };
-
-  const getConnectionStatusColor = () => {
-    switch (connectionStatus) {
-      case 'connected': return 'text-green-600';
-      case 'error': return 'text-red-600';
-      default: return 'text-gray-600';
-    }
-  };
+  // Fetch logs when filter changes
+  useEffect(() => {
+    fetchLogs();
+  }, [logFilter]);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Product Crawler</h1>
-              <p className="text-gray-600 mt-2">Crawl sản phẩm từ website Hàng Đĩa Thời Đại</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className={`flex items-center ${getConnectionStatusColor()}`}>
-                <div className={`w-3 h-3 rounded-full mr-2 ${
-                  connectionStatus === 'connected' ? 'bg-green-500' : 
-                  connectionStatus === 'error' ? 'bg-red-500' : 'bg-gray-500'
-                }`}></div>
-                {connectionStatus === 'connected' ? 'Đã kết nối' : 
-                 connectionStatus === 'error' ? 'Lỗi kết nối' : 'Đang kết nối'}
-              </div>
-              <button
-                onClick={testConnection}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
-              >
-                Test Kết Nối
-              </button>
-            </div>
+    <div className="container">
+      {/* Product Statistics */}
+      <div className="stats-section">
+        <h2>Thống kê Sản phẩm</h2>
+        
+        <div className="stats-grid">
+          <div className="stat-card">
+            <div className="stat-value">{productStats.totalProducts.toLocaleString()}</div>
+            <div className="stat-label">Tổng sản phẩm</div>
           </div>
-
-          {/* Test Results */}
-          {testResults && (
-            <div className="mt-4 p-4 bg-gray-50 rounded-md">
-              <h3 className="font-semibold mb-2">Kết quả test:</h3>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
-                <div className={`${testResults.mongodb ? 'text-green-600' : 'text-red-600'}`}>
-                  MongoDB: {testResults.mongodb ? '✅' : '❌'}
-                </div>
-                <div className={`${testResults.selenium ? 'text-green-600' : 'text-red-600'}`}>
-                  Selenium: {testResults.selenium ? '✅' : '❌'}
-                </div>
-                <div>Categories: {testResults.categoriesCount}</div>
-                <div>Crawling: {testResults.isCrawling ? 'Có' : 'Không'}</div>
-                <div>Clients: {testResults.connectedClients}</div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Categories Selection */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Chọn Categories</h2>
-              <div className="space-x-2">
-                <button
-                  onClick={selectAll}
-                  className="text-blue-600 hover:text-blue-800 text-sm"
-                >
-                  Chọn tất cả
-                </button>
-                <button
-                  onClick={clearAll}
-                  className="text-red-600 hover:text-red-800 text-sm"
-                >
-                  Bỏ chọn
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-4 max-h-96 overflow-y-auto">
-              {Object.entries(groupedCategories).map(([groupName, groupCategories]) => (
-                <div key={groupName} className="border rounded-md p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-medium text-gray-900">{groupName}</h3>
-                    <button
-                      onClick={() => toggleGroup(groupCategories)}
-                      className="text-sm text-blue-600 hover:text-blue-800"
-                    >
-                      {groupCategories.every(cat => selectedCategories.includes(cat.idCategory)) 
-                        ? 'Bỏ chọn nhóm' : 'Chọn nhóm'}
-                    </button>
-                  </div>
-                  <div className="space-y-1">
-                    {groupCategories.map((category) => (
-                      <label key={category.idCategory} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={selectedCategories.includes(category.idCategory)}
-                          onChange={() => toggleCategory(category.idCategory)}
-                          className="mr-2"
-                        />
-                        <span className="text-sm">{category.name}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-4 pt-4 border-t">
-              <p className="text-sm text-gray-600 mb-3">
-                Đã chọn: {selectedCategories.length}/{categories.length}
-              </p>
-              <div className="space-y-2">
-                <button
-                  onClick={startCrawl}
-                  disabled={isCrawling}
-                  className={`w-full py-2 px-4 rounded-md ${
-                    isCrawling
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-green-600 hover:bg-green-700'
-                  } text-white`}
-                >
-                  {isCrawling ? 'Đang Crawl...' : 'Bắt Đầu Crawl'}
-                </button>
-                {isCrawling && (
-                  <button
-                    onClick={stopCrawl}
-                    className="w-full py-2 px-4 rounded-md bg-red-600 hover:bg-red-700 text-white"
-                  >
-                    Dừng Crawl
-                  </button>
-                )}
-              </div>
-            </div>
+          
+        
+          
+          <div className="stat-card">
+            <div className="stat-value">{formatPrice(productStats.avgPrice)}</div>
+            <div className="stat-label">Giá trung bình</div>
           </div>
-
-          {/* Progress & Stats */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Stats */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold mb-4">Thống Kê</h2>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <div className="bg-green-50 p-3 rounded-md text-center">
-                  <div className="text-2xl font-bold text-green-600">{stats.newProducts}</div>
-                  <div className="text-sm text-gray-600">Tạo mới</div>
-                </div>
-                <div className="bg-blue-50 p-3 rounded-md text-center">
-                  <div className="text-2xl font-bold text-blue-600">{stats.updatedProducts}</div>
-                  <div className="text-sm text-gray-600">Cập nhật</div>
-                </div>
-                <div className="bg-red-50 p-3 rounded-md text-center">
-                  <div className="text-2xl font-bold text-red-600">{stats.failedProducts}</div>
-                  <div className="text-sm text-gray-600">Lỗi</div>
-                </div>
-                <div className="bg-purple-50 p-3 rounded-md text-center">
-                  <div className="text-2xl font-bold text-purple-600">
-                    {stats.processedCategories}/{stats.totalCategories || '?'}
-                  </div>
-                  <div className="text-sm text-gray-600">Categories</div>
-                </div>
-                <div className="bg-yellow-50 p-3 rounded-md text-center">
-                  <div className="text-2xl font-bold text-yellow-600">{progress.processedProducts || 0}</div>
-                  <div className="text-sm text-gray-600">Sản phẩm</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Current Progress */}
-            {isCrawling && (
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-xl font-semibold mb-4">Tiến Trình</h2>
-                <div className="space-y-3">
-                  {progress.currentCategory && (
-                    <div>
-                      <span className="font-medium">Category:</span> {progress.currentCategory}
-                    </div>
-                  )}
-                  {progress.currentPage > 0 && (
-                    <div>
-                      <span className="font-medium">Trang:</span> {progress.currentPage}
-                    </div>
-                  )}
-                  {progress.currentProduct && (
-                    <div>
-                      <span className="font-medium">Sản phẩm:</span> {progress.currentProduct}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Logs */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Logs</h2>
-                <button
-                  onClick={clearLogs}
-                  className="text-sm text-gray-600 hover:text-gray-800 px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded"
-                >
-                  Xóa logs
-                </button>
-              </div>
-              
-              <div className="bg-gray-900 text-green-400 p-4 rounded-md h-96 overflow-y-auto font-mono text-sm">
-                {logs.length === 0 && (
-                  <div className="text-gray-500">Chờ logs...</div>
-                )}
-                {logs.map((log) => (
-                  <div key={log.id} className="mb-1">
-                    <span className="text-gray-500">[{log.timestamp}]</span>{' '}
-                    <span className={getLogColor(log.type)}>{log.message}</span>
-                  </div>
-                ))}
-                <div ref={logsEndRef} />
-              </div>
-            </div>
+          
+          <div className="stat-card">
+            <div className="stat-value">{productStats.todayProducts.toLocaleString()}</div>
+            <div className="stat-label">Thêm hôm nay</div>
+          </div>
+          
+          <div className="stat-card">
+            <div className="stat-value">{formatDate(productStats.lastUpdated)}</div>
+            <div className="stat-label">Cập nhật lần cuối</div>
           </div>
         </div>
       </div>
+
+      {/* Control Panel */}
+      <div className="control-section">
+        <h2>Điều khiển Crawler</h2>
+        
+        {message && (
+          <div className={`message ${message.includes('thành công') ? 'success' : 'error'}`}>
+            {message}
+          </div>
+        )}
+
+        <div className="control-buttons">
+          <button
+            className="btn btn-primary"
+            onClick={startCrawler}
+            disabled={crawlerStatus.isRunning || loading}
+          >
+            {loading ? 'Đang xử lý...' : 'Bắt đầu Crawl'}
+          </button>
+          
+          <button
+            className="btn btn-secondary"
+            onClick={stopCrawler}
+            disabled={!crawlerStatus.isRunning || loading}
+          >
+            {loading ? 'Đang xử lý...' : 'Dừng Crawl'}
+          </button>
+        </div>
+
+        <div className="status-display">
+          <span className={`status-badge ${getStatusClass()}`}>
+            {getStatusText()}
+          </span>
+        </div>
+      </div>
+
+      {/* Crawler Status */}
+      <div className="status-section">
+        <h2>Trạng thái Crawler</h2>
+        
+        <div className="status-grid">
+          <div className="status-item">
+            <div className="status-label">Thời gian bắt đầu</div>
+            <div className="status-value">{formatDate(crawlerStatus.startTime)}</div>
+          </div>
+          
+          <div className="status-item">
+            <div className="status-label">Thời gian kết thúc</div>
+            <div className="status-value">{formatDate(crawlerStatus.endTime)}</div>
+          </div>
+          
+          <div className="status-item">
+            <div className="status-label">Thời gian chạy</div>
+            <div className="status-value">
+              {formatDuration(crawlerStatus.startTime, crawlerStatus.endTime)}
+            </div>
+          </div>
+          
+          
+          
+          
+          
+          <div className="status-item">
+            <div className="status-label">Lỗi</div>
+            <div className="status-value">
+              {crawlerStatus.errors.length}
+            </div>
+          </div>
+        </div>
+
+        
+      </div>
+
+      {/* Categories */}
+      <div className="categories-section">
+        <h2>Danh mục sản phẩm</h2>
+        
+        <div className="categories-grid">
+          {categories.map((category) => (
+            <div key={category.id} className="category-card">
+              <div className="category-header">
+                <h3>{category.name}</h3>
+                <span className="category-count">{category.count.toLocaleString()}</span>
+              </div>
+              <div className="category-details">
+                <span className="category-id">ID: {category.id}</span>
+                {category.parentId && (
+                  <span className="category-parent">Parent: {category.parentId}</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Logs Section */}
+      <div className="logs-section">
+        <h2>Log hoạt động Crawler</h2>
+        
+        {/* Log Filters */}
+        <div className="log-filters">
+          <div className="filter-group">
+            <label>Level:</label>
+            <select 
+              value={logFilter.level} 
+              onChange={(e) => handleLogFilterChange('level', e.target.value)}
+            >
+              <option value="">Tất cả</option>
+              <option value="success">Success</option>
+              <option value="info">Info</option>
+              <option value="warning">Warning</option>
+              <option value="error">Error</option>
+            </select>
+          </div>
+          
+          <div className="filter-group">
+            <label>Type:</label>
+            <select 
+              value={logFilter.type} 
+              onChange={(e) => handleLogFilterChange('type', e.target.value)}
+            >
+              <option value="">Tất cả</option>
+              <option value="product">Product</option>
+              <option value="category">Category</option>
+              <option value="page">Page</option>
+              <option value="inventory">Inventory</option>
+              <option value="system">System</option>
+              <option value="summary">Summary</option>
+            </select>
+          </div>
+          
+          <div className="filter-group">
+            <label>Limit:</label>
+            <select 
+              value={logFilter.limit} 
+              onChange={(e) => handleLogFilterChange('limit', e.target.value)}
+            >
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+              <option value={200}>200</option>
+              <option value={500}>500</option>
+            </select>
+          </div>
+          
+          <button 
+            className="btn btn-secondary btn-sm"
+            onClick={() => {
+              setLogFilter({ level: '', type: '', limit: 100 });
+            }}
+          >
+            Reset
+          </button>
+        </div>
+
+        {/* Logs Display */}
+        {logs.length === 0 ? (
+          <div className="empty-logs">
+            Chưa có log hoạt động
+          </div>
+        ) : (
+          <div className="logs-list">
+            {logs.map((log, index) => (
+              <div key={index} className={`log-item ${getLogLevelClass(log.level)}`}>
+                <div className="log-header">
+                  <span className="log-type-icon">{getLogTypeIcon(log.type)}</span>
+                  <span className={`log-level ${getLogLevelClass(log.level)}`}>
+                    {log.level.toUpperCase()}
+                  </span>
+                  <span className="log-timestamp">
+                    {formatDate(log.timestamp)}
+                  </span>
+                </div>
+                <div className="log-message">
+                  {log.message}
+                </div>
+                {log.data && (
+                  <div className="log-data">
+                    <details>
+                      <summary>Chi tiết</summary>
+                      <pre>{JSON.stringify(log.data, null, 2)}</pre>
+                    </details>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        
+        <div className="logs-footer">
+          <span>Hiển thị {logs.length} log gần nhất</span>
+          <button 
+            className="btn btn-primary btn-sm"
+            onClick={fetchLogs}
+          >
+            Làm mới
+          </button>
+        </div>
+      </div>
+
+      {/* Loading Overlay */}
+      {loading && (
+        <div className="loading-overlay">
+          <div className="loading-spinner"></div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default CrawlPage;
+export default CrawlerPage;
