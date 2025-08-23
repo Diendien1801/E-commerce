@@ -1,0 +1,19 @@
+.text-page-center {
+  max-width: 700px;
+  margin: 40px auto;
+  padding: 32px 16px;
+  display: block;
+  background: none;
+}
+.text-page-center h2 {
+  text-align: left;
+  margin-bottom: 18px;
+  font-size: 18px;
+}
+.text-page-center ul {
+  margin: 0 auto 16px auto;
+  padding-left: 20px;
+}
+.text-page-center p {
+  text-align: left;
+}
