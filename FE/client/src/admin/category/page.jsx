@@ -19,7 +19,7 @@ const CategoryRow = ({ category, expanded, toggleExpand, t, setCurrentParentId, 
                 }}
               onClick={() => toggleExpand(category.idCategory)}
             >
-              {expanded ? "▼" : "▶"}
+              {expanded ? t("collapse", "▼") : t("expand", "▶")}
             </button>
           )}
           {category.idCategory}
@@ -37,7 +37,7 @@ const CategoryRow = ({ category, expanded, toggleExpand, t, setCurrentParentId, 
             className="action-button  action-edit"
             onClick={() => onEdit(category)} 
           >
-            Edit
+            {t("edit", "Edit")}
           </button>
         </td>
       </tr>
@@ -81,7 +81,7 @@ const CategoryRow = ({ category, expanded, toggleExpand, t, setCurrentParentId, 
                         className="action-button  action-edit-child"
                         onClick={() => onEdit(child)}
                       >
-                        Edit
+                        {t("edit", "Edit")}
                       </button>
                     </td>
                   </tr>
@@ -96,7 +96,7 @@ const CategoryRow = ({ category, expanded, toggleExpand, t, setCurrentParentId, 
                   }}
                 >
                   <td colSpan="4" style={{ fontSize: "16px", color: "#2196F3", textAlign: "center" }}>
-                    + Add child category
+                    {t("addChildCategory", "+ Add child category")}
                   </td>
                 </tr>
               </tbody>
@@ -261,7 +261,7 @@ export default function CategoryManagement() {
                 }}
               >
                 <td colSpan="4" style={{ fontSize: "16px", color: "#4CAF50", textAlign: "center" }}>
-                  + Add new parent category
+                  {t("addParentCategory", "+ Add new parent category")}
                 </td>
               </tr>
 
@@ -271,19 +271,19 @@ export default function CategoryManagement() {
                     <h3>
                       <strong>
                         {currentParentId
-                          ? "Add New Child Category"
-                          : "Add New Parent Category"}
+                          ? t("addNewChildCategory", "Add New Child Category")
+                          : t("addNewParentCategory", "Add New Parent Category")}
                       </strong>
                     </h3>
-                    <label htmlFor="category-image-upload" style={{ fontWeight: 500, marginBottom: 8 }}>Add Name</label>
+                    <label htmlFor="category-image-upload" style={{ fontWeight: 500, marginBottom: 8 }}>{t("addName", "Add Name")}</label>
                     <input
                       type="text"
-                      placeholder="Category Name"
+                      placeholder={t("categoryName", "Category Name")}
                       value={newName}
                       onChange={(e) => setNewName(e.target.value)}
                     />
                     <div className="image-upload-section">
-                      <label htmlFor="category-image-upload" style={{ fontWeight: 500, marginBottom: 8 }}>Add Image</label>
+                      <label htmlFor="category-image-upload" style={{ fontWeight: 500, marginBottom: 8 }}>{t("addImage", "Add Image")}</label>
                       <div className="upload-area" style={{ marginBottom: 12 }}
                         onDrop={e => {
                           e.preventDefault();
@@ -303,8 +303,8 @@ export default function CategoryManagement() {
                             </svg>
                           </div>
                           <div className="upload-text">
-                            <span>Drop your image here, or </span>
-                            <label htmlFor="category-image-upload" className="browse-link">Browse</label>
+                            <span>{t("dropImageHere", "Drop your image here, or ")}</span>
+                            <label htmlFor="category-image-upload" className="browse-link">{t("browse", "Browse")}</label>
                           </div>
                         </div>
                         <input
@@ -319,8 +319,8 @@ export default function CategoryManagement() {
                       </div>
                     </div>
                     <div className="modal-buttons">
-                      <button onClick={handleAddCategory}>Add</button>
-                      <button onClick={() => setShowForm(false)}>Cancel</button>
+                      <button onClick={handleAddCategory}>{t("add", "Add")}</button>
+                      <button onClick={() => setShowForm(false)}>{t("cancel", "Cancel")}</button>
                     </div>
                   </div>
                 </div>
@@ -329,16 +329,16 @@ export default function CategoryManagement() {
               {editingCategory && (
                 <div className="modal-overlay">
                   <div className="modal-content">
-                    <h3><strong>Edit Category (ID: {editingCategory.idCategory})</strong></h3>
-                    <label htmlFor="edit-category-image-upload" style={{ fontWeight: 500, marginBottom: 8 }}>Edit Name</label>
+                    <h3><strong>{t("editCategory", "Edit Category")} (ID: {editingCategory.idCategory})</strong></h3>
+                    <label htmlFor="edit-category-image-upload" style={{ fontWeight: 500, marginBottom: 8 }}>{t("editName", "Edit Name")}</label>
                     <input
                       type="text"
-                      placeholder="Category Name"
+                      placeholder={t("categoryName", "Category Name")}
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
                     />
                     <div className="image-upload-section">
-                      <label htmlFor="edit-category-image-upload" style={{ fontWeight: 500, marginBottom: 8 }}>Edit Image</label>
+                      <label htmlFor="edit-category-image-upload" style={{ fontWeight: 500, marginBottom: 8 }}>{t("editImage", "Edit Image")}</label>
                       <div className="upload-area" style={{ marginBottom: 12 }}
                         onDrop={e => {
                           e.preventDefault();
@@ -358,8 +358,8 @@ export default function CategoryManagement() {
                             </svg>
                           </div>
                           <div className="upload-text">
-                            <span>Drop your image here, or </span>
-                            <label htmlFor="edit-category-image-upload" className="browse-link">Browse</label>
+                            <span>{t("dropImageHere", "Drop your image here, or ")}</span>
+                            <label htmlFor="edit-category-image-upload" className="browse-link">{t("browse", "Browse")}</label>
                           </div>
                         </div>
                         <input
@@ -374,8 +374,8 @@ export default function CategoryManagement() {
                       </div>
                     </div>
                     <div className="modal-buttons">
-                      <button onClick={handleUpdateCategory}>Save</button>
-                      <button onClick={() => setEditingCategory(null)}>Cancel</button>
+                      <button onClick={handleUpdateCategory}>{t("save", "Save")}</button>
+                      <button onClick={() => setEditingCategory(null)}>{t("cancel", "Cancel")}</button>
                     </div>
                   </div>
                 </div>

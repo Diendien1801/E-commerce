@@ -23,31 +23,27 @@ const Footer = () => {
 
                 {/* Cột 1: THÔNG TIN */}
                 <div className="footer-col footer-info-col">
-                    <h3 className="footer-heading">THÔNG TIN</h3>
+                    <h3 className="footer-heading">{t('info')}</h3>
                     <ul className="footer-list">
-                        <li><a href="/dieu-khoan">Điều Khoản Giao Dịch</a></li>
-                        <li><a href="/huong-dan">Hướng Dẫn Thanh Toán</a></li>
-                        <li><a href="/chinh-sach-thanh-toan">Chính Sách Thanh Toán</a></li>
-                        <li><a href="/chinh-sach-giao-hang">Chính Sách Giao Hàng</a></li>
-                        <li><a href="/chinh-sach-bao-mat">Chính Sách Bảo Mật</a></li>
-                        <li><a href="/cau-hoi">Câu Hỏi Thường Gặp</a></li>
-                        <li><a href="/international">International Order</a></li>
-                        <li><a href="/lien-he">Liên Hệ</a></li>
+                        <li><a href="/payment-guide">{t('paymentGuide')}</a></li>
+                        <li><a href="/payment-policy">{t('paymentPolicy')}</a></li>
+                        <li><a href="/shipping-policy">{t('shippingPolicy')}</a></li>
+                        <li><a href="/privacy-policy">{t('privacyPolicy')}</a></li>
+                        <li><a href="/faq">{t('faq')}</a></li>
+                        <li><a href="/contact">{t('contact')}</a></li>
                     </ul>
                 </div>
 
                 {/* Cột 2: SẢN PHẨM */}
                 <div className="footer-col footer-product-col">
-                    <h3 className="footer-heading">SẢN PHẨM</h3>
+                    <h3 className="footer-heading">{t('products')}</h3>
                     <ul className="footer-list">
-                        <li><a href="/times-exclusives">Times Exclusives</a></li>
-                        <li><a href="/new-arrivals">New Arrivals</a></li>
-                        <li><a href="/cd-dvd">Đĩa CD / DVD</a></li>
-                        <li><a href="/vinyl">Đĩa than (Vinyl)</a></li>
-                        <li><a href="/cassette">Băng Cassette</a></li>
-                        <li><a href="/trending">Trending</a></li>
-                        <li><a href="/indie-city">+84 Indie City</a></li>
-                        <li><a href="/sale">Sale</a></li>
+                        <li><a href="/shop?category=1">{t('footerTimesExclusives')}</a></li>
+                        <li><a href="/shop?category=1">{t('footerNewArrivals')}</a></li>
+                        <li><a href="/shop?category=102">{t('footerCdDvd')}</a></li>
+                        <li><a href="/shop?category=104">{t('footerVinyl')}</a></li>
+                        <li><a href="/shop?category=103">{t('footerCassette')}</a></li>
+                        <li><a href="/shop?category=1">{t('footerIndieCity')}</a></li>
                     </ul>
                 </div>
 
