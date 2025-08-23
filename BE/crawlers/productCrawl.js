@@ -4,6 +4,9 @@ const path = require("path");
 const mongoose = require("mongoose");
 const Product = require("../models/product.model");
 const Inventory = require("../models/inventory.model");
+const testlog = require("./testLog")
+// Import logging function
+const { addLog } = require("../utils/log");
 
 const categories = [
   // ÂN BẢN THỜI ĐẠI (parentID: 1)
@@ -105,13 +108,38 @@ async function crawlAllCategories() {
       useUnifiedTopology: true,
     }
   );
+
+  
+
   const driver = await new Builder().forBrowser("chrome").build();
+  
+
   const crawledSet = new Set();
+  let totalProcessed = 0;
+  let totalSuccess = 0;
+  let totalErrors = 0;
 
   try {
     for (const category of categories) {
+      addLog(
+        "info",
+        `📁 Bắt đầu crawl danh mục: ${category.name}`,
+        "category",
+        { categoryId: category.id, categoryName: category.name }
+      );
+
       let page = 1;
+      let categoryProcessed = 0;
+      let categorySuccess = 0;
+
       while (true) {
+        addLog(
+          "info",
+          `📄 Đang crawl trang ${page} của danh mục ${category.name}`,
+          "page",
+          { categoryId: category.id, page, categoryName: category.name }
+        );
+
         await driver.get(`${category.url}?page=${page}`);
         await driver.sleep(2000);
 
@@ -119,7 +147,27 @@ async function crawlAllCategories() {
         const productElements = await driver.findElements(
           By.css(".product-container")
         );
-        if (productElements.length === 0) break;
+
+        if (productElements.length === 0) {
+          addLog(
+            "info",
+            `🏁 Kết thúc danh mục ${category.name} - không còn sản phẩm mới`,
+            "category",
+            { categoryId: category.id, categoryName: category.name }
+          );
+          break;
+        }
+
+        addLog(
+          "info",
+          `🔍 Tìm thấy ${productElements.length} sản phẩm trên trang ${page}`,
+          "page",
+          {
+            categoryId: category.id,
+            page,
+            productCount: productElements.length,
+          }
+        );
 
         // Lưu lại link chi tiết và element thumbnail để lấy ảnh fallback nếu cần
         let productLinks = [];
@@ -191,14 +239,25 @@ async function crawlAllCategories() {
           priceString,
         } of productLinks) {
           try {
+            totalProcessed++;
+            categoryProcessed++;
+
             // Kiểm tra productUrl trước khi get
             if (!productUrl || typeof productUrl !== "string") {
-              console.warn(
-                "⚠️ Bỏ qua sản phẩm vì productUrl không hợp lệ:",
-                productUrl
+              addLog(
+                "warning",
+                `⚠️ Bỏ qua sản phẩm vì productUrl không hợp lệ: ${title}`,
+                "product",
+                { title, categoryName: category.name }
               );
               continue;
             }
+
+            addLog("info", `🎵 Đang crawl chi tiết: ${title}`, "product", {
+              title,
+              categoryName: category.name,
+              categoryId: category.id,
+            });
 
             // --- Crawl chi tiết sản phẩm ---
             await driver.get(productUrl);
@@ -290,9 +349,17 @@ async function crawlAllCategories() {
 
             // Convert price string to number
             const price = convertPriceToNumber(priceString);
-           
+
             const uniqueKey = `${title}|${priceString}|${category.name}`;
-            if (crawledSet.has(uniqueKey)) continue;
+            if (crawledSet.has(uniqueKey)) {
+              addLog("info", `🔄 Sản phẩm đã tồn tại: ${title}`, "product", {
+                title,
+                categoryName: category.name,
+                status: "duplicate",
+              });
+              continue;
+            }
+
             crawledSet.add(uniqueKey);
             foundNew = true;
 
@@ -317,6 +384,23 @@ async function crawlAllCategories() {
             if (result.upsertedId) {
               // Product mới được tạo
               productId = result.upsertedId;
+              totalSuccess++;
+              categorySuccess++;
+
+              addLog(
+                "success",
+                `✅ Tạo mới thành công: ${title} | ${price}₫ | ${category.name}`,
+                "product",
+                {
+                  title,
+                  price,
+                  categoryName: category.name,
+                  categoryId: category.id,
+                  status: "created",
+                  productId: productId.toString(),
+                }
+              );
+
               console.log(
                 `✅ Tạo mới: ${title} | ${price}₫ | ${category.name}`
               );
@@ -327,6 +411,23 @@ async function crawlAllCategories() {
                 idCategory: category.idCategory,
               });
               productId = existingProduct._id;
+              totalSuccess++;
+              categorySuccess++;
+
+              addLog(
+                "success",
+                `✅ Cập nhật thành công: ${title} | ${price}₫ | ${category.name}`,
+                "product",
+                {
+                  title,
+                  price,
+                  categoryName: category.name,
+                  categoryId: category.id,
+                  status: "updated",
+                  productId: productId.toString(),
+                }
+              );
+
               console.log(
                 `✅ Cập nhật: ${title} | ${price}₫ | ${category.name}`
               );
@@ -348,21 +449,90 @@ async function crawlAllCategories() {
               { upsert: true }
             );
 
+            addLog(
+              "info",
+              `📦 Cập nhật inventory cho sản phẩm: ${title}`,
+              "inventory",
+              { title, productId: productId.toString() }
+            );
             console.log(`📦 Inventory updated for product: ${title}`);
           } catch (err) {
+            totalErrors++;
+            addLog(
+              "error",
+              `❌ Lỗi crawl sản phẩm: ${title} - ${err.message}`,
+              "product",
+              {
+                title,
+                categoryName: category.name,
+                error: err.message,
+                status: "failed",
+              }
+            );
             console.warn("⚠️ Lỗi từng sản phẩm:", err.message);
             continue;
           }
         }
-        if (!foundNew) break;
+
+        if (!foundNew) {
+          addLog(
+            "info",
+            `🏁 Không tìm thấy sản phẩm mới trên trang ${page}, chuyển sang trang tiếp theo`,
+            "page",
+            { categoryId: category.id, page, categoryName: category.name }
+          );
+          break;
+        }
+
+        addLog(
+          "info",
+          `📊 Trang ${page} hoàn thành - ${categorySuccess} sản phẩm thành công`,
+          "page",
+          {
+            categoryId: category.id,
+            page,
+            categoryName: category.name,
+            successCount: categorySuccess,
+            processedCount: categoryProcessed,
+          }
+        );
+
         page++;
       }
+
+      addLog(
+        "success",
+        `🏁 Hoàn thành danh mục ${category.name} - ${categorySuccess}/${categoryProcessed} sản phẩm thành công`,
+        "category",
+        {
+          categoryId: category.id,
+          categoryName: category.name,
+          successCount: categorySuccess,
+          processedCount: categoryProcessed,
+        }
+      );
     }
+
+    addLog(
+      "success",
+      `🎉 Crawling hoàn thành! Tổng cộng: ${totalSuccess}/${totalProcessed} sản phẩm thành công, ${totalErrors} lỗi`,
+      "summary",
+      {
+        totalSuccess,
+        totalProcessed,
+        totalErrors,
+      }
+    );
   } catch (error) {
+    addLog("error", `💥 Lỗi nghiêm trọng: ${error.message}`, "system", {
+      error: error.message,
+    });
     console.error("Lỗi crawl:", error);
   } finally {
     await driver.quit();
+    addLog("info", "🔒 Đóng Chrome browser", "system");
     await mongoose.disconnect();
+    addLog("info", "🔌 Ngắt kết nối MongoDB", "system");
   }
 }
 

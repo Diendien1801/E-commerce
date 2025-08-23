@@ -37,7 +37,7 @@ app.use("/api/categories", categoriesRoutes); // categories
 app.use("/api/userManagement", userManagementRoutes); // user management
 app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
-app.use("/api/crawl",crawlRoute);
+app.use("/api/crawl",crawlRoute.router);
 
 app.use('/api', require('./routes/order.route'));
 app.use(authFBRoute);
