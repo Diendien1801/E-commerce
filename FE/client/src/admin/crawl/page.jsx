@@ -1,4 +1,4 @@
-import React, { useState, useEffect,useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './crawl.css';
 
 const CrawlerPage = () => {
@@ -24,7 +24,7 @@ const CrawlerPage = () => {
     avgPrice: 0,
     todayProducts: 0
   });
-  
+  const statusInterval = useRef(null);
 
   // Log filtering states
   const [logFilter, setLogFilter] = useState({
@@ -67,9 +67,9 @@ const fetchLogs = useCallback(async () => {
 
   // Stop polling (bọc useCallback)
   const stopStatusPolling = useCallback(() => {
-    if (window.statusInterval) {
-      clearInterval(window.statusInterval);
-      window.statusInterval = null;
+    if (statusInterval.current) {
+      clearInterval(statusInterval.current);
+      statusInterval.current = null;
     }
   }, []);
   // Fetch categories
@@ -157,15 +157,15 @@ const fetchLogs = useCallback(async () => {
     }
   };
 
-  // Status polling
-  let statusInterval = null;
+  
 
   const startStatusPolling = () => {
-    statusInterval = setInterval(() => {
-      fetchStatus();
-      fetchLogs(); // Also fetch logs for real-time updates
-    }, 2000);
-  };
+  if (statusInterval.current) clearInterval(statusInterval.current);
+  statusInterval.current = setInterval(() => {
+    fetchStatus();
+    fetchLogs();
+  }, 2000);
+};
 
   
 
