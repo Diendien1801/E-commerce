@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useCallback } from 'react';
 import './crawl.css';
 
 const CrawlerPage = () => {
@@ -24,12 +24,7 @@ const CrawlerPage = () => {
     avgPrice: 0,
     todayProducts: 0
   });
-  useEffect(() => {
-  const interval = setInterval(() => {
-    fetchLogs();
-  }, 3000);
-  return () => clearInterval(interval);
-}, []);
+  
 
   // Log filtering states
   const [logFilter, setLogFilter] = useState({
@@ -53,7 +48,30 @@ const CrawlerPage = () => {
       console.error('Error fetching status:', error);
     }
   };
+const fetchLogs = useCallback(async () => {
+    try {
+      const params = new URLSearchParams();
+      if (logFilter.level) params.append('level', logFilter.level);
+      if (logFilter.type) params.append('type', logFilter.type);
+      if (logFilter.limit) params.append('limit', logFilter.limit);
 
+      const response = await fetch(`${API_BASE}/logs?${params.toString()}`);
+      const data = await response.json();
+      if (data.success) {
+        setLogs(data.data.logs);
+      }
+    } catch (error) {
+      console.error('Error fetching logs:', error);
+    }
+  }, [logFilter]);
+
+  // Stop polling (bọc useCallback)
+  const stopStatusPolling = useCallback(() => {
+    if (window.statusInterval) {
+      clearInterval(window.statusInterval);
+      window.statusInterval = null;
+    }
+  }, []);
   // Fetch categories
   const fetchCategories = async () => {
     try {
@@ -80,23 +98,7 @@ const CrawlerPage = () => {
     }
   };
 
-  // Fetch logs with filtering
-  const fetchLogs = async () => {
-    try {
-      const params = new URLSearchParams();
-      if (logFilter.level) params.append('level', logFilter.level);
-      if (logFilter.type) params.append('type', logFilter.type);
-      if (logFilter.limit) params.append('limit', logFilter.limit);
-
-      const response = await fetch(`${API_BASE}/logs?${params.toString()}`);
-      const data = await response.json();
-      if (data.success) {
-        setLogs(data.data.logs);
-      }
-    } catch (error) {
-      console.error('Error fetching logs:', error);
-    }
-  };
+  
 
   // Start crawler
   const startCrawler = async () => {
@@ -165,12 +167,7 @@ const CrawlerPage = () => {
     }, 2000);
   };
 
-  const stopStatusPolling = () => {
-    if (statusInterval) {
-      clearInterval(statusInterval);
-      statusInterval = null;
-    }
-  };
+  
 
   // Format date
   const formatDate = (dateString) => {
@@ -243,23 +240,27 @@ const CrawlerPage = () => {
       [field]: value
     }));
   };
-
+useEffect(() => {
+  const interval = setInterval(() => {
+    fetchLogs();
+  }, 3000);
+  return () => clearInterval(interval);
+}, [fetchLogs]);
   // Initialize data
   useEffect(() => {
-    fetchStatus();
-    fetchCategories();
-    fetchProductStats();
-    fetchLogs();
-    
-    return () => {
-      stopStatusPolling();
-    };
-  }, []);
+  fetchStatus();
+  fetchCategories();
+  fetchProductStats();
+  fetchLogs();
 
-  // Fetch logs when filter changes
-  useEffect(() => {
-    fetchLogs();
-  }, [logFilter]);
+  return () => {
+    stopStatusPolling();
+  };
+}, [fetchLogs, stopStatusPolling]);
+
+useEffect(() => {
+  fetchLogs();
+}, [logFilter, fetchLogs]);
 
   return (
     <div className="container">
