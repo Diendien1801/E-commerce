@@ -27,7 +27,7 @@ export default function AdminDashboard() {
     const fetchUserRole = async () => {
       if (!userId) return;
       try {
-        const res = await fetch(`http://localhost:5000/api/users/${userId}`);
+        const res = await fetch(`https://e-commerce-mf45.onrender.com/api/users/${userId}`);
         if (!res.ok) throw new Error('Failed to fetch user');
         const data = await res.json();
         setUserRole(data.data.role);
