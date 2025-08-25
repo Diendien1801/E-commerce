@@ -34,6 +34,14 @@ import Payment from './payment/page';
 import PaymentResult from './paymentResult/payment-result'; 
 import { CartProvider } from './components/cart/CartContext';
 
+// Text pages
+import ContactText from './text/contact';
+import PaymentGuide from './text/payment-guide';
+import PaymentPolicy from './text/payment-policy';
+import ShippingPolicy from './text/shipping-policy';
+import PrivacyPolicy from './text/privacy-policy';
+import FAQ from './text/faq';
+
 
 
 
@@ -58,11 +66,35 @@ function App() {
     {
       path: "/payment",
       element: <Payment />
-    }
-    ,
+    },
     {
       path: "/payment-result",
       element: <PaymentResult />
+    },
+    // Text/info pages
+    {
+      path: "/contact",
+      element: <ContactText />
+    },
+    {
+      path: "/payment-guide",
+      element: <PaymentGuide />
+    },
+    {
+      path: "/payment-policy",
+      element: <PaymentPolicy />
+    },
+    {
+      path: "/shipping-policy",
+      element: <ShippingPolicy />
+    },
+    {
+      path: "/privacy-policy",
+      element: <PrivacyPolicy />
+    },
+    {
+      path: "/faq",
+      element: <FAQ />
     },
     // Admin routes (nested)
     {

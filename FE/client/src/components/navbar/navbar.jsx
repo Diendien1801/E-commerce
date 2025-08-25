@@ -16,6 +16,7 @@ const Navbar = () => {
     const [error, setError] = useState(null);
     const [showDropdown, setShowDropdown] = useState(false);
     const [userRole, setUserRole] = useState(null);
+    const [fullName, setFullName] = useState("");
     const { cartCount, setCartCount } = useCart(); 
     const navigate = useNavigate();
 
@@ -30,6 +31,7 @@ const Navbar = () => {
                 const response = await fetch(`http://localhost:5000/api/users/${userId}`);
                 if (!response.ok) throw new Error('Failed to fetch user data');
                 const data = await response.json();
+                setFullName(data.data.name);
                 setUserRole(data.data.role);  
             } catch (err) {
                 console.error('Error fetching user role:', err);
@@ -100,23 +102,8 @@ const Navbar = () => {
                          <div style={{ position: 'relative', display: 'inline-block' }}>
             <button className="login-btn" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
                 onClick={() => setShowDropdown(v => !v)}>
-                {/* Avatar và tên người dùng */}
-                {user?.avatar && (
-                    <img
-                        src={user.avatar}
-                        alt="avatar"
-                        style={{
-                            width: 32,
-                            height: 32,
-                            borderRadius: '50%',
-                            objectFit: 'cover',
-                            marginRight: 8,
-                            border: '1px solid #eee'
-                        }}
-                    />
-                )}
                 <span style={{ fontWeight: 500, marginRight: 4 }}>
-                    {user?.name  || 'Hoang Dien Tran'}
+                    {fullName}
                 </span>
                
                 
@@ -235,7 +222,7 @@ const Navbar = () => {
                             <span style={{
                                 position: 'absolute',
                                 top: '0px',
-                                right: '70px',
+                                right: i18n.language === 'vi' ? '70px' : '40px',
                                 background: 'red',
                                 color: 'white',
                                 borderRadius: '50%',

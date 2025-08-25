@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import './crawl.css';
 
 const CrawlerPage = () => {
+  const { t } = useTranslation();
   const [crawlerStatus, setCrawlerStatus] = useState({
     isRunning: false,
     startTime: null,
@@ -204,9 +206,9 @@ const fetchLogs = useCallback(async () => {
 
   // Get status text
   const getStatusText = () => {
-    if (crawlerStatus.isRunning) return 'Đang chạy';
-    if (crawlerStatus.startTime && !crawlerStatus.endTime) return 'Đang xử lý';
-    return 'Đã dừng';
+    if (crawlerStatus.isRunning) return t('crawl.running', 'Running');
+    if (crawlerStatus.startTime && !crawlerStatus.endTime) return t('crawl.processing', 'Processing...');
+    return t('crawl.stopped', 'Stopped');
   };
 
   // Get log level class
@@ -266,36 +268,36 @@ useEffect(() => {
     <div className="container">
       {/* Product Statistics */}
       <div className="stats-section">
-        <h2>Thống kê Sản phẩm</h2>
+        <h2>{t('crawl.productStats', 'Product Statistics')}</h2>
         
         <div className="stats-grid">
           <div className="stat-card">
             <div className="stat-value">{productStats.totalProducts.toLocaleString()}</div>
-            <div className="stat-label">Tổng sản phẩm</div>
+            <div className="stat-label">{t('crawl.totalProducts', 'Total Products')}</div>
           </div>
           
         
           
           <div className="stat-card">
             <div className="stat-value">{formatPrice(productStats.avgPrice)}</div>
-            <div className="stat-label">Giá trung bình</div>
+            <div className="stat-label">{t('crawl.avgPrice', 'Average Price')}</div>
           </div>
           
           <div className="stat-card">
             <div className="stat-value">{productStats.todayProducts.toLocaleString()}</div>
-            <div className="stat-label">Thêm hôm nay</div>
+            <div className="stat-label">{t('crawl.todayProducts', 'Added Today')}</div>
           </div>
           
           <div className="stat-card">
             <div className="stat-value">{formatDate(productStats.lastUpdated)}</div>
-            <div className="stat-label">Cập nhật lần cuối</div>
+            <div className="stat-label">{t('crawl.lastUpdated', 'Last Updated')}</div>
           </div>
         </div>
       </div>
 
       {/* Control Panel */}
       <div className="control-section">
-        <h2>Điều khiển Crawler</h2>
+        <h2>{t('crawl.controlPanel', 'Crawler Control')}</h2>
         
         {message && (
           <div className={`message ${message.includes('thành công') ? 'success' : 'error'}`}>
@@ -309,7 +311,7 @@ useEffect(() => {
             onClick={startCrawler}
             disabled={crawlerStatus.isRunning || loading}
           >
-            {loading ? 'Đang xử lý...' : 'Bắt đầu Crawl'}
+            {loading ? t('crawl.processing', 'Processing...') : t('crawl.start', 'Start Crawl')}
           </button>
           
           <button
@@ -317,7 +319,7 @@ useEffect(() => {
             onClick={stopCrawler}
             disabled={!crawlerStatus.isRunning || loading}
           >
-            {loading ? 'Đang xử lý...' : 'Dừng Crawl'}
+            {loading ? t('crawl.processing', 'Processing...') : t('crawl.stop', 'Stop Crawl')}
           </button>
         </div>
 
@@ -330,21 +332,21 @@ useEffect(() => {
 
       {/* Crawler Status */}
       <div className="status-section">
-        <h2>Trạng thái Crawler</h2>
+        <h2>{t('crawl.status', 'Crawler Status')}</h2>
         
         <div className="status-grid">
           <div className="status-item">
-            <div className="status-label">Thời gian bắt đầu</div>
+            <div className="status-label">{t('crawl.startTime', 'Start Time')}</div>
             <div className="status-value">{formatDate(crawlerStatus.startTime)}</div>
           </div>
           
           <div className="status-item">
-            <div className="status-label">Thời gian kết thúc</div>
+            <div className="status-label">{t('crawl.endTime', 'End Time')}</div>
             <div className="status-value">{formatDate(crawlerStatus.endTime)}</div>
           </div>
           
           <div className="status-item">
-            <div className="status-label">Thời gian chạy</div>
+            <div className="status-label">{t('crawl.duration', 'Duration')}</div>
             <div className="status-value">
               {formatDuration(crawlerStatus.startTime, crawlerStatus.endTime)}
             </div>
@@ -355,7 +357,7 @@ useEffect(() => {
           
           
           <div className="status-item">
-            <div className="status-label">Lỗi</div>
+            <div className="status-label">{t('crawl.errors', 'Errors')}</div>
             <div className="status-value">
               {crawlerStatus.errors.length}
             </div>
@@ -367,7 +369,7 @@ useEffect(() => {
 
       {/* Categories */}
       <div className="categories-section">
-        <h2>Danh mục sản phẩm</h2>
+        <h2>{t('crawl.categories', 'Product Categories')}</h2>
         
         <div className="categories-grid">
           {categories.map((category) => (
@@ -377,9 +379,9 @@ useEffect(() => {
                 <span className="category-count">{category.count.toLocaleString()}</span>
               </div>
               <div className="category-details">
-                <span className="category-id">ID: {category.id}</span>
+                <span className="category-id">{t('crawl.categoryId', 'ID')}: {category.id}</span>
                 {category.parentId && (
-                  <span className="category-parent">Parent: {category.parentId}</span>
+                  <span className="category-parent">{t('crawl.parentId', 'Parent')}: {category.parentId}</span>
                 )}
               </div>
             </div>
@@ -389,42 +391,42 @@ useEffect(() => {
 
       {/* Logs Section */}
       <div className="logs-section">
-        <h2>Log hoạt động Crawler</h2>
+        <h2>{t('crawl.logs', 'Crawler Logs')}</h2>
         
         {/* Log Filters */}
         <div className="log-filters">
           <div className="filter-group">
-            <label>Level:</label>
+            <label>{t('crawl.level', 'Level')}:</label>
             <select 
               value={logFilter.level} 
               onChange={(e) => handleLogFilterChange('level', e.target.value)}
             >
-              <option value="">Tất cả</option>
-              <option value="success">Success</option>
-              <option value="info">Info</option>
-              <option value="warning">Warning</option>
-              <option value="error">Error</option>
+              <option value="">{t('crawl.all', 'All')}</option>
+              <option value="success">{t('crawl.success', 'Success')}</option>
+              <option value="info">{t('crawl.info', 'Info')}</option>
+              <option value="warning">{t('crawl.warning', 'Warning')}</option>
+              <option value="error">{t('crawl.error', 'Error')}</option>
             </select>
           </div>
           
           <div className="filter-group">
-            <label>Type:</label>
+            <label>{t('crawl.type', 'Type')}:</label>
             <select 
               value={logFilter.type} 
               onChange={(e) => handleLogFilterChange('type', e.target.value)}
             >
-              <option value="">Tất cả</option>
-              <option value="product">Product</option>
-              <option value="category">Category</option>
-              <option value="page">Page</option>
-              <option value="inventory">Inventory</option>
-              <option value="system">System</option>
-              <option value="summary">Summary</option>
+              <option value="">{t('crawl.all', 'All')}</option>
+              <option value="product">{t('crawl.product', 'Product')}</option>
+              <option value="category">{t('crawl.category', 'Category')}</option>
+              <option value="page">{t('crawl.page', 'Page')}</option>
+              <option value="inventory">{t('crawl.inventory', 'Inventory')}</option>
+              <option value="system">{t('crawl.system', 'System')}</option>
+              <option value="summary">{t('crawl.summary', 'Summary')}</option>
             </select>
           </div>
           
           <div className="filter-group">
-            <label>Limit:</label>
+            <label>{t('crawl.limit', 'Limit')}:</label>
             <select 
               value={logFilter.limit} 
               onChange={(e) => handleLogFilterChange('limit', e.target.value)}
@@ -442,14 +444,14 @@ useEffect(() => {
               setLogFilter({ level: '', type: '', limit: 100 });
             }}
           >
-            Reset
+            {t('crawl.reset', 'Reset')}
           </button>
         </div>
 
         {/* Logs Display */}
         {logs.length === 0 ? (
           <div className="empty-logs">
-            Chưa có log hoạt động
+            {t('crawl.noLogs', 'No logs yet')}
           </div>
         ) : (
           <div className="logs-list">
@@ -470,7 +472,7 @@ useEffect(() => {
                 {log.data && (
                   <div className="log-data">
                     <details>
-                      <summary>Chi tiết</summary>
+                      <summary>{t('crawl.details', 'Details')}</summary>
                       <pre>{JSON.stringify(log.data, null, 2)}</pre>
                     </details>
                   </div>
@@ -481,12 +483,12 @@ useEffect(() => {
         )}
         
         <div className="logs-footer">
-          <span>Hiển thị {logs.length} log gần nhất</span>
+          <span>{t('crawl.showLogs', 'Showing')} {logs.length} {t('crawl.latestLogs', 'latest logs')}</span>
           <button 
             className="btn btn-primary btn-sm"
             onClick={fetchLogs}
           >
-            Làm mới
+            {t('crawl.refresh', 'Refresh')}
           </button>
         </div>
       </div>

@@ -86,7 +86,6 @@ const Shop = () => {
         if (!selectedCategory) return;
         let url = `http://localhost:5000/api/products/category/${selectedCategory}?page=${page}&limit=${products_per_page}`;
 
-        // Nếu muốn sort trong category, có thể thêm sort param nếu API hỗ trợ
         if (sortOrder === 'price_low') url += '&sort=price_asc';
         else if (sortOrder === 'price_high') url += '&sort=price_desc';
         else if (sortOrder === 'newest') url += '&sort=newest';
@@ -238,7 +237,7 @@ const Shop = () => {
 
     }}>
         
-    Đang thịnh hành
+    {t('trending')}
     </div>
     <hr style={{ margin: "8px 0 16px 0" }} />
     <iframe
@@ -264,9 +263,9 @@ const Shop = () => {
                             setPage(1); 
                         }}
                     >
-                        <option value="newest">Mới nhất</option>
-                        <option value="price_low">Giá, thấp đến cao</option>
-                        <option value="price_high">Giá, cao đến thấp</option>
+                        <option value="newest">{t('sortNewest')}</option>
+                        <option value="price_low">{t('sortPriceLow')}</option>
+                        <option value="price_high">{t('sortPriceHigh')}</option>
                     </select>
                 </div>
                 <div className="shop-product-list">

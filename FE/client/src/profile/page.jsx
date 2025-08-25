@@ -33,7 +33,7 @@ const Profile = () => {
                 const data = await res.json();
                 if (res.ok && data.success && data.data) {
                     setUser(data.data);
-                    console.log('address', data.data)
+                    console.log('data: ', data.data)
                     console.log(user)
                 } else {
                     setUser(null);
