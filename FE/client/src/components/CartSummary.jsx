@@ -1,19 +1,20 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const CartSummary = ({ total, itemCount, note }) => {
+  const navigate = useNavigate();
   const formatPrice = (price) => {
     return new Intl.NumberFormat('vi-VN').format(price) + 'đ';
   };
 
   const handleCheckout = () => {
-    // Navigate to checkout or handle checkout logic
     console.log('Proceeding to checkout with:', { total, itemCount, note });
-    // You can use navigate here: navigate('/checkout')
+    navigate('/payment');
   };
 
   const handleUpdate = () => {
     // Handle cart update logic
-    window.location.reload(); // Simple refresh for now
+    window.location.reload(); 
   };
 
   return (

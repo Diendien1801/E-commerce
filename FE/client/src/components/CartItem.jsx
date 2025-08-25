@@ -25,8 +25,7 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
         </div>
         <div className="product-info">
           <h3>{productId.title}</h3>
-          <p className="product-category">LTD BOXSET</p>
-          <p className="product-label">Hãng Đĩa Thời Đại</p>
+          <p className="product-label">Hãng Đĩa RungRing</p>
           <button 
             className="remove-button"
             onClick={() => onRemove(productId._id)}
@@ -50,6 +49,7 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
           </button>
           <input 
             type="number" 
+            style={{ textAlign: 'center'}}
             value={quantity}
             onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 0)}
             min="0"
