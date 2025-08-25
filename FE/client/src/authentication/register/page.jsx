@@ -165,7 +165,7 @@ function Register() {
                   <label className="remember-checkbox">
                     <input type="checkbox" required />
                     <span className="checkmark"></span>
-                    Tôi đồng ý với <Link to="/terms" className="terms-link">Điều khoản dịch vụ</Link>
+                    Tôi đồng ý với- <Link to="/terms" className="terms-link">Điều khoản dịch vụ</Link>
                   </label>
                 </div>
 

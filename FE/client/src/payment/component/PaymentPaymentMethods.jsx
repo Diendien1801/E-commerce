@@ -42,7 +42,7 @@ export default function PaymentPaymentMethods({ paymentMethods, selectedPaymentM
       {selectedPaymentMethod === 'momo' && (
         <div className="payment-extra-info">
           <div className="momo-info">
-            <p>Quét mã QR hoặc mở ứng dụng VNPAY để thanh toán</p>
+            <p>Quét mã QR hoặc mở ứng dụng Momo để thanh toán</p>
           </div>
         </div>
       )}

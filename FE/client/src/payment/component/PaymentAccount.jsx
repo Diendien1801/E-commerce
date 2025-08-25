@@ -23,7 +23,19 @@ export default function PaymentAccount({ loading, error, userInfo, getInitials, 
         </div>
       ) : userInfo ? (
         <div className="account-info">
-          <div className="avatar">{getInitials(userInfo.name || userInfo.fullName)}</div>
+          <div className="avatar">
+            <img
+              src={userInfo.avatar}
+              alt="Avatar"
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: "50%",
+                objectFit: "cover",
+                display: "block"
+              }}
+            />
+          </div>
           <div>
             <p className="name">{userInfo.name || userInfo.fullName || 'Người dùng'}</p>
             <p className="small">

@@ -389,10 +389,10 @@ const removeFromCart = async (itemId) => {
       icon: 'https://seeklogo.com/images/P/paypal-logo-6ED6A5924E-seeklogo.com.png',
     },
     {
-      id: 'vnpay',
-      name: 'VNPAY',
-      description: 'Thanh toán nhanh chóng qua ví điện tử VnPay',
-      icon: 'https://vinadesign.vn/uploads/images/2023/05/vnpay-logo-vinadesign-25-12-57-55.jpg',
+      id: 'momo',
+      name: 'Momo',
+      description: 'Thanh toán nhanh chóng qua ví điện tử Momo',
+      icon: 'https://momo.vn/favicon.ico',
     }
   ];
 
