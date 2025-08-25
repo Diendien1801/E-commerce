@@ -5,7 +5,7 @@ const TopStock = () => {
   const chartRef = useRef();
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/analysis/products/top-stock?limit=10")
+    fetch(`${process.env.REACT_APP_BACKEND_URL}/api/analysis/products/top-stock?limit=10`)
       .then((res) => res.json())
       .then((result) => {
         if (result.success && result.data.products.length) {

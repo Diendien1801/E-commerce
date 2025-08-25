@@ -29,9 +29,9 @@ export default function AdminDashboard() {
       if (!userId) return;
       try {
 
-        const res = await fetch(`http://localhost:5000/api/users/${userId}`);
+        const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/users/${userId}`);
 
-        // const res = await fetch(`http://localhost:5000/api/users/${userId}`);
+        // const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/users/${userId}`);
       
 
         if (!res.ok) throw new Error('Failed to fetch user');

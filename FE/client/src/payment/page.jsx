@@ -28,7 +28,7 @@ export default function Payment() {
   const [promoError, setPromoError] = useState('');
   const [promoDiscount, setPromoDiscount] = useState(0);
   useEffect(() => {
-  fetch('http://localhost:5000/api/promotions')
+  fetch(`${process.env.REACT_APP_BACKEND_URL}/api/promotions`)
     .then(res => res.json())
     .then(data => setPromotions(data.data || []));
 }, []);
@@ -37,7 +37,7 @@ const handleApplyPromo = async () => {
   setPromoDiscount(0);
   if (!promoCode) return setPromoError('Vui lòng nhập mã khuyến mãi');
   const orderValue = calculateCartTotal() + getSelectedShippingPrice();
-  const res = await fetch('http://localhost:5000/api/promotions/validate', {
+  const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/promotions/validate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ code: promoCode, orderValue })
@@ -111,7 +111,7 @@ const handleApplyPromo = async () => {
         throw new Error('Vui lòng đăng nhập để tiếp tục');
       }
 
-      const response = await fetch(`http://localhost:5000/api/users/${userId}`);
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/users/${userId}`);
       
       if (!response.ok) {
         throw new Error('Không thể lấy thông tin người dùng');
@@ -164,7 +164,7 @@ const handleApplyPromo = async () => {
       throw new Error('Vui lòng đăng nhập để xem giỏ hàng');
     }
 
-    const response = await fetch(`http://localhost:5000/api/cart/user/${userId}`);
+    const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/cart/user/${userId}`);
 
     if (!response.ok) {
       throw new Error('Không thể lấy thông tin giỏ hàng');
@@ -224,7 +224,7 @@ const updateQuantity = async (itemId, newQuantity) => {
       // Tăng quantity - gọi API add
       const addCount = newQuantity - currentQuantity;
       for (let i = 0; i < addCount; i++) {
-        await fetch(`http://localhost:5000/api/cart/${getCurrentUserId()}/add`, {
+        await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/cart/${getCurrentUserId()}/add`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -239,7 +239,7 @@ const updateQuantity = async (itemId, newQuantity) => {
       // Giảm quantity - gọi API remove
       const removeCount = currentQuantity - newQuantity;
       for (let i = 0; i < removeCount; i++) {
-        await fetch(`http://localhost:5000/api/cart/${getCurrentUserId()}/remove/${itemId}`, {
+        await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/cart/${getCurrentUserId()}/remove/${itemId}`, {
           method: 'DELETE'
         });
       }
@@ -301,7 +301,7 @@ const removeFromCart = async (itemId) => {
   try {
     // Gọi API remove cho đến khi quantity = 0
     for (let i = 0; i < itemToRemove.quantity; i++) {
-      await fetch(`http://localhost:5000/api/cart/${getCurrentUserId()}/remove/${itemId}`, {
+      await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/cart/${getCurrentUserId()}/remove/${itemId}`, {
         method: 'DELETE'
       });
     }
@@ -507,8 +507,8 @@ const handlePlaceOrder = async () => {
     }
 
     // Tạo order
-    console.log('Sending request to:', 'http://localhost:5000/api/orders');
-    const orderResponse = await fetch('http://localhost:5000/api/orders', {
+    console.log('Sending request to:', `${process.env.REACT_APP_BACKEND_URL}/api/orders`);
+    const orderResponse = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/orders`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -555,7 +555,7 @@ const handlePlaceOrder = async () => {
         status: "pending"
       };
 
-      const paymentResponse = await fetch('http://localhost:5000/api/payments', {
+      const paymentResponse = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/payments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -592,7 +592,7 @@ const clearCart = async () => {
 
     console.log('Clearing cart for user:', userId);
     
-    const response = await fetch(`http://localhost:5000/api/cart/${userId}/clear`, {
+    const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/cart/${userId}/clear`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -614,7 +614,7 @@ const clearCart = async () => {
 // // Hàm lấy thông tin order (sử dụng endpoint có sẵn)
 const getOrderInfo = async (orderId) => {
   try {
-    const response = await fetch(`http://localhost:5000/api/orders/orders/id/${orderId}`);
+    const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/orders/orders/id/${orderId}`);
     
     if (!response.ok) {
       throw new Error('Không thể lấy thông tin đơn hàng');
@@ -640,7 +640,7 @@ const handleMoMoPayment = async (totalAmount, orderId) => {
       language: 'vn'
     };
 
-    const response = await fetch('http://localhost:5000/api/vnpay/create-payment-url', {
+    const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/vnpay/create-payment-url`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -675,7 +675,7 @@ const handleMoMoPayment = async (totalAmount, orderId) => {
       amount: totalAmount
     };
 
-    const response = await fetch('http://localhost:5000/api/payments', {
+    const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/payments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(paymentData)

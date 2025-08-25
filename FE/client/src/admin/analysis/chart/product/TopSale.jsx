@@ -5,7 +5,7 @@ const TopSelling = () => {
   const chartRef = useRef();
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/analysis/products/top-selling")
+    fetch(`${process.env.REACT_APP_BACKEND_URL}/api/analysis/products/top-selling`)
       .then((res) => res.json())
       .then((result) => {
         if (result.success && result.data.products.length) {

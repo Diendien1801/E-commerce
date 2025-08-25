@@ -136,7 +136,7 @@ export default function CategoryManagement() {
       try {
         setLoading(true);
         const res = await fetch(
-          "http://localhost:5000/api/categories/hierarchy"
+          `${process.env.REACT_APP_BACKEND_URL}/api/categories/hierarchy`
         );
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Failed to fetch");
@@ -154,7 +154,7 @@ export default function CategoryManagement() {
 
   const handleAddCategory = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/categoriesManagement", {
+      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/categoriesManagement`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -179,7 +179,7 @@ export default function CategoryManagement() {
 
   const handleUpdateCategory = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/categoriesManagement/${editingCategory.idCategory}`, {
+      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/categoriesManagement/${editingCategory.idCategory}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

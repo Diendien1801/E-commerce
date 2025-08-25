@@ -28,7 +28,7 @@ const Navbar = () => {
         const fetchUserRole = async () => {
             if (!userId) return;
             try {
-                const response = await fetch(`http://localhost:5000/api/users/${userId}`);
+                const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/users/${userId}`);
                 if (!response.ok) throw new Error('Failed to fetch user data');
                 const data = await response.json();
                 setFullName(data.data.name);
@@ -45,7 +45,7 @@ const Navbar = () => {
     //     const fetchCartCount = async () => {
     //         if (!userId) return;
     //         try {
-    //             const res = await fetch(`http://localhost:5000/api/cart/user/${userId}`);
+    //             const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/cart/user/${userId}`);
     //             if (!res.ok) throw new Error("Failed to fetch cart");
     //             const data = await res.json();
     //             console.log(data);
@@ -69,7 +69,7 @@ const Navbar = () => {
         }
         setLoading(true);
         try {
-            const res = await fetch(`http://localhost:5000/api/products/search?q=${encodeURIComponent(value)}`);
+            const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/products/search?q=${encodeURIComponent(value)}`);
             const data = await res.json();
             setSearchResults(Array.isArray(data.data) ? data.data: []);
             console.log(data);

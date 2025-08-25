@@ -29,7 +29,7 @@ const Profile = () => {
         async function fetchUser() {
             setLoading(true);
             try {
-                const res = await fetch(`http://localhost:5000/api/users/${id}`);
+                const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/users/${id}`);
                 const data = await res.json();
                 if (res.ok && data.success && data.data) {
                     setUser(data.data);
@@ -77,7 +77,7 @@ const Profile = () => {
             const avatarUrl = cloudData.secure_url;
             console.log('Cloudinary avatar URL:', avatarUrl);
 
-            const uploadRes = await fetch('http://localhost:5000/api/users/uploadAvatar', {
+            const uploadRes = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/users/uploadAvatar`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -87,7 +87,7 @@ const Profile = () => {
             const uploadData = await uploadRes.json();
             if (!uploadData.success) throw new Error(uploadData.message);
 
-            const changeRes = await fetch('http://localhost:5000/api/users/changeavt', {
+            const changeRes = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/users/changeavt`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
@@ -107,7 +107,7 @@ const Profile = () => {
     const handleUpdateProfile = async () => {
     const userId = loggedInUser?._id || loggedInUser?.userId || loggedInUser?.id;
     try {
-        const res = await fetch(`http://localhost:5000/api/users/update`, {
+        const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/users/update`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'

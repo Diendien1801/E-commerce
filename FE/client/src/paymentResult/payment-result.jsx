@@ -53,7 +53,7 @@ const PaymentResult = () => {
           // Gọi API xác nhận thanh toán nếu cần
           if (orderId) {
             try {
-              const response = await fetch(`http://localhost:5000/api/orders/orders/id/${orderId}`);
+              const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/orders/orders/id/${orderId}`);
               if (response.ok) {
                 const orderData = await response.json();
                 console.log('✅ Order verified:', orderData);

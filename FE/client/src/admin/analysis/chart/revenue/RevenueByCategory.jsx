@@ -12,7 +12,7 @@ const RevenueByCategory = () => {
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
-				const res = await fetch(`http://localhost:5000/api/analysis/revenue/by-category?year=${year}`);
+				const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/analysis/revenue/by-category?year=${year}`);
 				const result = await res.json();
 				if (result.success && Array.isArray(result.data) && result.data.length > 0) {
 					setRawData(result.data[0].parents || []);

@@ -12,7 +12,7 @@ export const CartProvider = ({ children }) => {
     const fetchCart = async () => {
       if (!user) return; 
       try {
-        const res = await fetch(`http://localhost:5000/api/cart/user/${user._id}`);
+        const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/cart/user/${user._id}`);
         const result = await res.json();
         if (result.success) {
           setCartItems(result.data.cartItems);
@@ -29,7 +29,7 @@ export const CartProvider = ({ children }) => {
 
   const addToCart = async (productId, quantity = 1) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/cart/${user._id}/add`, {
+      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/cart/${user._id}/add`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ productId, quantity }),

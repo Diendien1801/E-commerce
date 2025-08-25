@@ -57,7 +57,7 @@ export default function UserManagement() {
     setLoading(true);
     try {
       const res = await fetch(
-        `http://localhost:5000/api/userManagement?page=${pageNumber}&limit=${PAGE_SIZE}`
+        `${process.env.REACT_APP_BACKEND_URL}/api/userManagement?page=${pageNumber}&limit=${PAGE_SIZE}`
       );
       const data = await res.json();
       if (Array.isArray(data.data.users)) {
@@ -83,7 +83,7 @@ export default function UserManagement() {
     setLoading(true);
     try {
       const res = await fetch(
-        `http://localhost:5000/api/userManagement/search?q=${encodeURIComponent(query)}`
+        `${process.env.REACT_APP_BACKEND_URL}/api/userManagement/search?q=${encodeURIComponent(query)}`
       );
       const data = await res.json();
       setFiltered(Array.isArray(data.data.users) ? data.data.users : []);

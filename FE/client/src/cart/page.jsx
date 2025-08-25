@@ -22,7 +22,7 @@ const CartPage = () => {
       setLoading(true);
       const userId = user?._id;
       
-      const response = await fetch(`http://localhost:5000/api/cart/user/${userId}`);
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/cart/user/${userId}`);
       const data = await response.json();
       
       if (data.success) {
@@ -40,7 +40,7 @@ const CartPage = () => {
       const userId = user?._id || '6888ecdffb44b885381dd9e2';
       
       if (newQuantity <= 0) {
-        await fetch(`http://localhost:5000/api/cart/${userId}/remove/${productId}`, {
+        await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/cart/${userId}/remove/${productId}`, {
           method: 'DELETE'
         });
       } else {
@@ -49,7 +49,7 @@ const CartPage = () => {
         
         if (difference > 0) {
           for (let i = 0; i < difference; i++) {
-            await fetch(`http://localhost:5000/api/cart/${userId}/add`, {
+            await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/cart/${userId}/add`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ productId })
@@ -57,7 +57,7 @@ const CartPage = () => {
           }
         } else {
           for (let i = 0; i < Math.abs(difference); i++) {
-            await fetch(`http://localhost:5000/api/cart/${userId}/remove/${productId}`, {
+            await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/cart/${userId}/remove/${productId}`, {
               method: 'DELETE'
             });
           }
@@ -76,7 +76,7 @@ const CartPage = () => {
       const currentItem = cartItems.find(item => item.productId._id === productId);
       
       for (let i = 0; i < currentItem.quantity; i++) {
-        await fetch(`http://localhost:5000/api/cart/${userId}/remove/${productId}`, {
+        await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/cart/${userId}/remove/${productId}`, {
           method: 'DELETE'
         });
       }

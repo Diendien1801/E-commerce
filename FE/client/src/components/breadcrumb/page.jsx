@@ -22,7 +22,7 @@ const Breadcrumb = () => {
             if (pathnames.length === 2 && pathnames[0] === 'view-product') {
                 const productId = pathnames[1];
                 try {
-                    const response = await fetch(`http://localhost:5000/api/products/${productId}`);
+                    const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/products/${productId}`);
                     const data = await response.json();
                     if (data.success !== false && data.data) {
                         setProductName(data.data.title || data.data.name || 'Product');
@@ -37,7 +37,7 @@ const Breadcrumb = () => {
             if (pathnames.length >= 2 && pathnames[0] === 'category') {
                 const categoryId = pathnames[1];
                 try {
-                    const response = await fetch(`http://localhost:5000/api/categories/${categoryId}`);
+                    const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/categories/${categoryId}`);
                     const data = await response.json();
                     if (data.success !== false && data.data) {
                         setCategoryName(data.data.name || 'Category');

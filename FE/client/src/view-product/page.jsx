@@ -26,7 +26,7 @@ const ViewProduct = () => {
       const [showCartPopup, setShowCartPopup] = useState(false);
 
     useEffect(() => {
-    fetch(`http://localhost:5000/api/products/${id}`)
+    fetch(`${process.env.REACT_APP_BACKEND_URL}/api/products/${id}`)
         .then(res => res.json())
         .then(data => setProduct(data.data));
 }, [id]);
@@ -49,7 +49,7 @@ useEffect(() => {
                 
                 // Fetch tất cả related products cùng lúc
                 const relatedPromises = product.related.map(relatedId => 
-                    fetch(`http://localhost:5000/api/products/${relatedId}`)
+                    fetch(`${process.env.REACT_APP_BACKEND_URL}/api/products/${relatedId}`)
                         .then(res => res.json())
                         .then(data => data.data)
                         .catch(error => {
@@ -102,7 +102,7 @@ useEffect(() => {
             return;
         }
         try {
-            const res = await fetch('http://localhost:5000/api/users/favorite', {
+            const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/users/favorite`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

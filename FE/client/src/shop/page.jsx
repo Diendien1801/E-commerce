@@ -32,7 +32,7 @@ const Shop = () => {
     }, []);
 
     useEffect(() => {
-    fetch('http://localhost:5000/api/categories/hierarchy')
+    fetch(`${process.env.REACT_APP_BACKEND_URL}/api/categories/hierarchy`)
         .then(res => res.json())
         .then(data => {
             const categoriesData = data.data || [];
@@ -84,7 +84,7 @@ const Shop = () => {
 
     useEffect(() => {
         if (!selectedCategory) return;
-        let url = `http://localhost:5000/api/products/category/${selectedCategory}?page=${page}&limit=${products_per_page}`;
+        let url = `${process.env.REACT_APP_BACKEND_URL}/api/products/category/${selectedCategory}?page=${page}&limit=${products_per_page}`;
 
         if (sortOrder === 'price_low') url += '&sort=price_asc';
         else if (sortOrder === 'price_high') url += '&sort=price_desc';
@@ -166,8 +166,8 @@ const Shop = () => {
     useEffect(() => {
         if (selectedCategory === null) return;
         let url = selectedCategory
-            ? `http://localhost:5000/api/products/category/${selectedCategory}?page=${page}&limit=${products_per_page}`
-            : `http://localhost:5000/api/products/filter-paginated?page=${page}&limit=${products_per_page}`;
+            ? `${process.env.REACT_APP_BACKEND_URL}/api/products/category/${selectedCategory}?page=${page}&limit=${products_per_page}`
+            : `${process.env.REACT_APP_BACKEND_URL}/api/products/filter-paginated?page=${page}&limit=${products_per_page}`;
 
         if (sortOrder === 'price_low') url += '&sort=price_asc';
         else if (sortOrder === 'price_high') url += '&sort=price_desc';

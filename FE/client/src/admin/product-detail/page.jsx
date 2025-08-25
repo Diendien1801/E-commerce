@@ -19,7 +19,7 @@ const ProductDetailView = () => {
   const { t } = useTranslation();
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/products/admin/${id}`)
+    fetch(`${process.env.REACT_APP_BACKEND_URL}/api/products/admin/${id}`)
       .then(res => res.json())
       .then(data => {
         const prod = data.data;
@@ -41,7 +41,7 @@ const ProductDetailView = () => {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/categories/hierarchy');
+      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/categories/hierarchy`);
       const result = await res.json();
       const flatChildren = [];
       const extractChildren = (nodes) => {
@@ -109,7 +109,7 @@ const ProductDetailView = () => {
       imageUrl: editedImages
     };
     try {
-      const response = await fetch(`http://localhost:5000/api/products/${id}`, {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/products/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedProduct)
@@ -124,7 +124,7 @@ const ProductDetailView = () => {
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/products/${id}`, { method: 'DELETE' });
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/products/${id}`, { method: 'DELETE' });
       const data = await response.json();
       if (data.success) {
         navigate(-1);
@@ -136,7 +136,7 @@ const ProductDetailView = () => {
 
   const handleRestore = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/products/${id}/restore`, { method: 'POST' });
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/products/${id}/restore`, { method: 'POST' });
       const data = await response.json();
       if (data.success) {
         setProduct({ ...product, isDeleted: false });

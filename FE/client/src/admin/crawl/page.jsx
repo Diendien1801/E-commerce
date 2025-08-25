@@ -36,7 +36,7 @@ const CrawlerPage = () => {
   });
 
   // API base URL
-  const API_BASE = 'http://localhost:5000/api/crawl';
+  const API_BASE = `${process.env.REACT_APP_BACKEND_URL}/api/crawl`;
 
   // Fetch crawler status
   const fetchStatus = async () => {

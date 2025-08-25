@@ -5,7 +5,7 @@ const ProductCategory = () => {
   const chartRef = useRef();
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/analysis/products/categories")
+    fetch(`${process.env.REACT_APP_BACKEND_URL}/api/analysis/products/categories`)
       .then((res) => res.json())
       .then((result) => {
         if (result.success) {

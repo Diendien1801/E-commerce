@@ -22,7 +22,7 @@ function Favourite() {
       setLoading(false);
       return;
     }
-    fetch(`http://localhost:5000/api/users/favorite/${userId}`)
+    fetch(`${process.env.REACT_APP_BACKEND_URL}/api/users/favorite/${userId}`)
       .then(res => res.json())
       .then(data => {
         // Keep the whole favorite object for delete
@@ -48,7 +48,7 @@ function Favourite() {
     const productObj = products.find(p => p.favId === favId);
     if (!productObj) return;
     try {
-      const res = await fetch('http://localhost:5000/api/users/favorite', {
+      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/users/favorite`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json'

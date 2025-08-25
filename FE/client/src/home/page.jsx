@@ -23,7 +23,7 @@ const Home = () => {
 useEffect(() => {
   Promise.all(
     posterProductIds.map(id =>
-      fetch(`http://localhost:5000/api/products/${id}`)
+      fetch(`${process.env.REACT_APP_BACKEND_URL}/api/products/${id}`)
         .then(res => res.json())
         .then(data => data.data)
     )
@@ -34,21 +34,21 @@ useEffect(() => {
     }, []);
     useEffect(() => {
         // Fetch products category 104
-        fetch('http://localhost:5000/api/products/category/104') 
+        fetch(`${process.env.REACT_APP_BACKEND_URL}/api/products/category/104`) 
             .then(res => res.json())
             .then(data => {
                 setProducts(data.data.products || []);
             })
             .catch(err => console.error('Failed to fetch products:', err));
  // Fetch products category 305
-        fetch('http://localhost:5000/api/products/category/305') 
+        fetch(`${process.env.REACT_APP_BACKEND_URL}/api/products/category/305`) 
             .then(res => res.json())
             .then(data => {
                 setCassetteProducts(data.data.products || []);
             })
             .catch(err => console.error('Failed to fetch products:', err));
         // Fetch vinyl products category 303
-        fetch('http://localhost:5000/api/products/category/303') 
+        fetch(`${process.env.REACT_APP_BACKEND_URL}/api/products/category/303`) 
             .then(res => res.json())
             .then(data => {
                 setVinylProducts(data.data.products || []);

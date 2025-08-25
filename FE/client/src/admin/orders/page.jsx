@@ -47,7 +47,7 @@ const OrderRow = ({ order, handleStatusChange, t, expanded, toggleExpand }) => {
         const promises = order.items.map(async (item) => {
           const prodId = item.productID || item.productId;
           try {
-            const res = await fetch(`http://localhost:5000/api/products/admin/${prodId}`);
+            const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/products/admin/${prodId}`);
             const data = await res.json();
             const prod = data.data;
             return {
@@ -212,12 +212,12 @@ export default function OrderManagement() {
         setError('');
         let url = '';
         if (searchTerm.trim()) {
-          url = `http://localhost:5000/api/orders/search?query=${encodeURIComponent(searchTerm)}&page=${page}&limit=${LIMIT}`;
+          url = `${process.env.REACT_APP_BACKEND_URL}/api/orders/search?query=${encodeURIComponent(searchTerm)}&page=${page}&limit=${LIMIT}`;
           if (selectedTab !== 'all') {
             url += `&status=${selectedTab}`;
           }
         } else {
-          url = `http://localhost:5000/api/orders${selectedTab !== 'all' ? `/status/${selectedTab}` : ''}?limit=${LIMIT}&page=${page}`;
+          url = `${process.env.REACT_APP_BACKEND_URL}/api/orders${selectedTab !== 'all' ? `/status/${selectedTab}` : ''}?limit=${LIMIT}&page=${page}`;
         }
         const response = await fetch(url);
         const data = await response.json();
@@ -247,7 +247,7 @@ export default function OrderManagement() {
 
   const handleStatusChange = async (orderId, newStatus, apiEndpoint) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/orders/${orderId}/${apiEndpoint}`, { method: 'PATCH' });
+      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/orders/${orderId}/${apiEndpoint}`, { method: 'PATCH' });
       if (!res.ok) {
         const errData = await res.json();
         throw new Error(errData.message || 'Failed to update order');

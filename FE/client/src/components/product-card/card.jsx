@@ -29,7 +29,7 @@ const handleProductClick = () => {
     const token = localStorage.getItem('token');
 
     try {
-      const res = await fetch(`http://localhost:5000/api/cart/${user._id}/add`, {
+      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/cart/${user._id}/add`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -66,7 +66,7 @@ const handleProductClick = () => {
     (async () => {
       try {
         const res = await fetch(
-          `http://localhost:5000/api/users/favorite/${user._id}`,
+          `${process.env.REACT_APP_BACKEND_URL}/api/users/favorite/${user._id}`,
           {
             headers: { Authorization: `Bearer ${token || ''}` },
             signal: ctrl.signal,
@@ -118,7 +118,7 @@ const handleProductClick = () => {
   try {
     if (isFavorite) {
       // --- Remove favorite ---
-      const res = await fetch('http://localhost:5000/api/users/favorite', {
+      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/users/favorite`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -138,7 +138,7 @@ const handleProductClick = () => {
       setIsFavorite(false);
     } else {
       // --- Add favorite ---
-      const res = await fetch('http://localhost:5000/api/users/favorite', {
+      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/users/favorite`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -5,7 +5,7 @@ const TopUser = () => {
   const chartRef = useRef();
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/analysis/top-spenders')
+    fetch(`${process.env.REACT_APP_BACKEND_URL}/api/analysis/top-spenders`)
       .then(res => res.json())
       .then(result => {
         if (result.success && result.data && Array.isArray(result.data)) {

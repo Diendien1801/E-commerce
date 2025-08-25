@@ -22,7 +22,7 @@ export default function DashboardContent() {
 
   useEffect(() => {
     if (activeTab === 'Products') {
-      fetch('http://localhost:5000/api/productManagement')
+      fetch(`${process.env.REACT_APP_BACKEND_URL}/api/productManagement`)
         .then(res => res.json())
         .then(data => {
           if (data.success && data.data && data.data.summary) {
@@ -34,7 +34,7 @@ export default function DashboardContent() {
         .catch(() => setProductSummary(null));
     }
     if (activeTab === 'Users') {
-      fetch('http://localhost:5000/api/userManagement')
+      fetch(`${process.env.REACT_APP_BACKEND_URL}/api/userManagement`)
         .then(res => res.json())
         .then(data => {
           if (data.success && data.data && data.data.summary) {
@@ -46,7 +46,7 @@ export default function DashboardContent() {
         .catch(() => setUserSummary(null));
     }
     if (activeTab === 'Orders') {
-      fetch('http://localhost:5000/api/orders?page=1&limit=1')
+      fetch(`${process.env.REACT_APP_BACKEND_URL}/api/orders?page=1&limit=1`)
         .then(res => res.json())
         .then(data => {
           if (data.success && data.data && data.data.pagination) {
@@ -58,7 +58,7 @@ export default function DashboardContent() {
         .catch(() => setOrderSummary(null));
     }
     if (activeTab === 'Revenue') {
-      fetch('http://localhost:5000/api/analysis/revenue/by-time')
+      fetch(`${process.env.REACT_APP_BACKEND_URL}/api/analysis/revenue/by-time`)
         .then(res => res.json())
         .then(data => {
           if (data.success && data.data && data.data.summary) {

@@ -61,7 +61,7 @@ function UserDetail() {
       try {
         setLoading(true);
         setError('');
-        let url = `http://localhost:5000/api/orders/user/${userId}?limit=5&page=${page}`;
+        let url = `${process.env.REACT_APP_BACKEND_URL}/api/orders/user/${userId}?limit=5&page=${page}`;
         if (selectedTab !== 'all') url += `&status=${selectedTab}`;
         const res = await fetch(url);
         const data = await res.json();
@@ -88,7 +88,7 @@ function UserDetail() {
     async function fetchUserDetail() {
       try {
         const response = await fetch(
-          `http://localhost:5000/api/userManagement/${userId}/details`
+          `${process.env.REACT_APP_BACKEND_URL}/api/userManagement/${userId}/details`
         );
         const data = await response.json();
 
@@ -123,7 +123,7 @@ function UserDetail() {
     if (productDetailsMap[productId]) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/products/admin/${productId}`);
+      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/products/admin/${productId}`);
       const data = await res.json();
       console.log(`Fetched product ${productId}:`, data);
 
@@ -156,7 +156,7 @@ function UserDetail() {
   const fetchSearchPage = async (pageNum) => {
     setSearchLoading(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/o/user/${userId}/search?q=${encodeURIComponent(orderSearch.trim())}&page=${pageNum}&limit=5`);
+      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/o/user/${userId}/search?q=${encodeURIComponent(orderSearch.trim())}&page=${pageNum}&limit=5`);
       const data = await res.json();
       if (!data.success || !Array.isArray(data.data)) throw new Error(data.message || 'Order not found');
       setSearchResults(data.data);
@@ -217,7 +217,7 @@ function UserDetail() {
                   onClick={async () => {
                     try {
                       const response = await fetch(
-                        `http://localhost:5000/api/userManagement/${userId}/restore`,
+                        `${process.env.REACT_APP_BACKEND_URL}/api/userManagement/${userId}/restore`,
                         { method: "PATCH" }
                       );
 
@@ -263,7 +263,7 @@ function UserDetail() {
                   onClick={async () => {
                     try {
                       const response = await fetch(
-                        `http://localhost:5000/api/userManagement/${userId}/soft-delete`,
+                        `${process.env.REACT_APP_BACKEND_URL}/api/userManagement/${userId}/soft-delete`,
                         {
                           method: "DELETE",
                         }
@@ -362,7 +362,7 @@ function UserDetail() {
                   setSearchLoading(true);
                   setSearchTimer(setTimeout(async () => {
                     try {
-                      const res = await fetch(`http://localhost:5000/api/orders/user/${userId}/search?q=${encodeURIComponent(value)}&page=1&limit=5`);
+                      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/orders/user/${userId}/search?q=${encodeURIComponent(value)}&page=1&limit=5`);
                       const data = await res.json();
                       if (!data.success || !Array.isArray(data.data)) throw new Error(data.message || 'Order not found');
                       setSearchResults(data.data);

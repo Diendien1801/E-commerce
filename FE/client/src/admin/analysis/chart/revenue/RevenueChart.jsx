@@ -9,7 +9,7 @@ const RevenueByMonth = () => {
 
   const fetchData = async (selectedYear) => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/analysis/revenue/by-time?year=${selectedYear}`);
+      const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/analysis/revenue/by-time?year=${selectedYear}`);
       setData(res.data.data.revenueData || []);
     } catch (err) {
       console.error('Fetch error:', err);

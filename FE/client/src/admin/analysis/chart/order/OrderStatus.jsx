@@ -3,7 +3,7 @@ import { useEffect } from "react";
 
 const OrderStatus = () => {
   useEffect(() => {
-    fetch("http://localhost:5000/api/analysis/orders/status")
+    fetch(`${process.env.REACT_APP_BACKEND_URL}/api/analysis/orders/status`)
       .then((res) => res.json())
       .then((result) => {
         if (result.success) {

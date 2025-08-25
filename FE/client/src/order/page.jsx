@@ -33,7 +33,7 @@ useEffect(() => {
     await Promise.all(
       orders.map(async (order) => {
         try {
-          const res = await fetch(`http://localhost:5000/api/order/${order.idOrder}`);
+          const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/order/${order.idOrder}`);
           const data = await res.json();
           if (data.success) {
             newPayments[order._id] = data.data;
@@ -57,7 +57,7 @@ useEffect(() => {
     try {
       setLoading(true);
       setError('');
-      const baseUrl = `http://localhost:5000/api/orders/user/${user._id}`;
+      const baseUrl = `${process.env.REACT_APP_BACKEND_URL}/api/orders/user/${user._id}`;
       const statusQuery = selectedTab !== 'all' ? `status=${selectedTab}&` : '';
       const page = 1;
       const limit = 100;
@@ -90,7 +90,7 @@ useEffect(() => {
         ...prev,
         [productId]: { loading: true, data: null, error: null }
       }));
-      fetch(`http://localhost:5000/api/products/${productId}`)
+      fetch(`${process.env.REACT_APP_BACKEND_URL}/api/products/${productId}`)
         .then(res => res.json())
         .then(data => {
           setProductDetails(prev => ({
@@ -114,7 +114,7 @@ useEffect(() => {
     const apiEndpoint = endpointMap[newStatus];
     if (!apiEndpoint) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/orders/${orderId}/${apiEndpoint}`, {
+      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/orders/${orderId}/${apiEndpoint}`, {
         method: 'PATCH'
       });
       if (!res.ok) throw new Error('Failed to update status');

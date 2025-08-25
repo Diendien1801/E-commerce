@@ -9,7 +9,7 @@ const OrderAnnually = () => {
 
   const fetchData = async (selectedYear) => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/analysis/orders/time-stats?period=month&year=${selectedYear}`);
+      const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/analysis/orders/time-stats?period=month&year=${selectedYear}`);
       setData(res.data.data?.ordersByTime || []);
     } catch (err) {
       console.error('Fetch error:', err);

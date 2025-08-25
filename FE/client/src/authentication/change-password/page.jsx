@@ -26,7 +26,7 @@ function ChangePassword() {
     }
     const userId = user?._id || user?.userId || user?.id;
     try {
-      const response = await fetch('http://localhost:5000/api/users/changepass', {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/users/changepass`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'

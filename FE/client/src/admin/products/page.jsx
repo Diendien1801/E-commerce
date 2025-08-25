@@ -22,7 +22,7 @@ export default function ProductManagement() {
   const fetchProducts = async (pageNumber) => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/products/admin?page=${pageNumber}&limit=${PAGE_SIZE}`);
+      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/products/admin?page=${pageNumber}&limit=${PAGE_SIZE}`);
       const data = await res.json();
       if (data.data && Array.isArray(data.data.products)) {
         const { products} = data.data;
@@ -50,7 +50,7 @@ export default function ProductManagement() {
   const fetchSearchedProducts = async (query, pageNumber = 1) => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/products/admin/search?q=${encodeURIComponent(query)}&page=${pageNumber}&limit=${PAGE_SIZE}`);
+      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/products/admin/search?q=${encodeURIComponent(query)}&page=${pageNumber}&limit=${PAGE_SIZE}`);
       const data = await res.json();
       setFiltered(Array.isArray(data.data.products) ? data.data.products : []);
       setSearchTotalPages(Math.ceil(data.data.pagination?.totalPages || 1));
@@ -66,7 +66,7 @@ export default function ProductManagement() {
   const fetchCategoryById = async (id) => {
     if (!id || categoriesMap[id]) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/categories/${id}`);
+      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/categories/${id}`);
       const data = await res.json();
       if (data && data.data) {
         setCategoriesMap((prev) => ({

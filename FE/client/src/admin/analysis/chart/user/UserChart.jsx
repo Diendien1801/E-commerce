@@ -10,7 +10,7 @@ const UserRegistration = () => {
   const fetchData = async (year) => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/analysis/registration-stats?period=month&year=${year}`
+        `${process.env.REACT_APP_BACKEND_URL}/api/analysis/registration-stats?period=month&year=${year}`
       );
       const rawData = res.data.data?.registrations || [];
 
