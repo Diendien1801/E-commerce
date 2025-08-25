@@ -1,17 +1,37 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-app.use(cors({ origin: "https://e-commerce-zeta-lemon.vercel.app/" }));
+
+const allowedOrigins = [
+  "https://e-commerce-zeta-lemon.vercel.app",
+  "http://localhost:3000",
+  "https://localhost:3000",
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Cho phép request không có origin (ví dụ từ Postman)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+  })
+);
+
+//app.use(cors({ origin: "http://localhost:3000" }));
+
+const mongoose = require("mongoose");
 const userRoutes = require("./routes/user.route"); // user
-const crawlRoute = require("./routes/crawl.route");// crawl data
+const crawlRoute = require("./routes/crawl.route"); // crawl data
 const productRoutes = require("./routes/product.route"); // product
 
 const authFBRoute = require("./routes/authenticationFB.route"); // Facebook authentication
 
-
-
-
-const authRoutes = require('./routes/auth.route'); //authentication
+const authRoutes = require("./routes/auth.route"); //authentication
 const analysisRoutes = require("./routes/analysis.route");
 const userManagementRoutes = require("./routes/userManagement.route"); // user management
 const categoriesRoutes = require("./routes/categories.route"); // categories
@@ -30,24 +50,21 @@ app.use("/api/categoriesManagement", categoriesManagementRoutes); // categories 
 
 app.use("/api", paymentRoutes);
 
-
 app.use("/api/cart", cartRoutes); // cart
 
 app.use("/api/categories", categoriesRoutes); // categories
 app.use("/api/userManagement", userManagementRoutes); // user management
 app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
-app.use("/api/crawl",crawlRoute.router);
+app.use("/api/crawl", crawlRoute.router);
 
-app.use('/api', require('./routes/order.route'));
+app.use("/api", require("./routes/order.route"));
 app.use(authFBRoute);
 app.use("/api/analysis", analysisRoutes);
 
-
-app.use('/api/auth', authRoutes); 
+app.use("/api/auth", authRoutes);
 app.use("/api/productManagement", productManagementRoutes); // product management
 app.use("/api/promotions", require("./routes/promotion.route"));
 module.exports = app;
 
 //Product
-
