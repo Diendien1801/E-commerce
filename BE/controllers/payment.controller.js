@@ -75,7 +75,7 @@ exports.createPayment = async (req, res) => {
       method,
       amount: totalVND,
       currency: "VND",
-      status: "pending",
+      status: "completed",
     });
 
     console.log("Payment created:", payment);
