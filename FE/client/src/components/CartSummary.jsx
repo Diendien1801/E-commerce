@@ -1,12 +1,15 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 
 const CartSummary = ({ total, itemCount, note }) => {
   const formatPrice = (price) => {
     return new Intl.NumberFormat('vi-VN').format(price) + 'đ';
   };
 
-  const navigate = useNavigate();
+  const handleCheckout = () => {
+    // Navigate to checkout or handle checkout logic
+    console.log('Proceeding to checkout with:', { total, itemCount, note });
+    // You can use navigate here: navigate('/checkout')
+  };
 
   const handleUpdate = () => {
     // Handle cart update logic
@@ -27,7 +30,7 @@ const CartSummary = ({ total, itemCount, note }) => {
         <button className="btn-update" onClick={handleUpdate}>
           CẬP NHẬT
         </button>
-        <button className="btn-checkout" onClick={() => navigate('/payment')}>
+        <button className="btn-checkout" onClick={handleCheckout}>
           THANH TOÁN
         </button>
       </div>

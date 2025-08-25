@@ -310,7 +310,7 @@ async function crawlAllCategories() {
             }
 
             // Nếu không tìm thấy sản phẩm liên quan, lấy 6 sản phẩm bất kỳ
-            if (related.length === 0) {
+            if (related.length < 6) {
               related = await Product.aggregate([
                 { $sample: { size: 6 } },
                 { $project: { _id: 1 } },
