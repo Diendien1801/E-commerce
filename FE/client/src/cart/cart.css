@@ -56,10 +56,9 @@
   display: flex;
   gap: 15px;
   align-items: flex-start;
-
-  margin-left: 20px;
-  width: 430px;
-
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .product-image {
