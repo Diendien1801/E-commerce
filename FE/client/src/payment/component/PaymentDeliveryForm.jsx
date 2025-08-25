@@ -76,9 +76,9 @@ export default function PaymentDeliveryForm({
               id="country"
               value={formData.country}
               className="form-input"
-              readOnly
+              
             />
-            <label htmlFor="country" className="form-label">Quốc gia</label>
+            <label htmlFor="country" className="form-label">Địa chỉ</label>
           </div>
 
           <div className="input-group">

@@ -40,7 +40,7 @@ const OrderRow = ({ order, handleStatusChange, t, expanded, toggleExpand }) => {
   const action = actionByStatus[order.status];
   const canCancel = ['pending', 'picking', 'shipping'].includes(order.status);
   const [productDetails, setProductDetails] = useState([]);
-
+  
   useEffect(() => {
     if (expanded && order.items?.length > 0) {
       const fetchDetails = async () => {

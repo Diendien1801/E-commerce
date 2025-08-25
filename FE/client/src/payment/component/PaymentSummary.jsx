@@ -38,7 +38,7 @@ export default function PaymentSummary({
           </span>
         ) : (
           <span>
-            {selectedPaymentMethod === 'momo' ? 'Thanh toán MoMo' : 
+            {selectedPaymentMethod === 'momo' ? 'Thanh toán VNPAY' : 
              selectedPaymentMethod === 'paypal' ? 'Thanh toán PayPal' : 
              'Đặt hàng'}
           </span>

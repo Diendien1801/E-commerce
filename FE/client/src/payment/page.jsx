@@ -22,7 +22,34 @@ export default function Payment() {
   const [selectedShippingMethod, setSelectedShippingMethod] = useState('');
   const [shippingMethods, setShippingMethods] = useState([]);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cod');
-  
+  // state cho promotion
+  const [promotions, setPromotions] = useState([]);
+  const [promoCode, setPromoCode] = useState('');
+  const [promoError, setPromoError] = useState('');
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  useEffect(() => {
+  fetch('http://localhost:5000/api/promotions')
+    .then(res => res.json())
+    .then(data => setPromotions(data.data || []));
+}, []);
+const handleApplyPromo = async () => {
+  setPromoError('');
+  setPromoDiscount(0);
+  if (!promoCode) return setPromoError('Vui lòng nhập mã khuyến mãi');
+  const orderValue = calculateCartTotal() + getSelectedShippingPrice();
+  const res = await fetch('http://localhost:5000/api/promotions/validate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code: promoCode, orderValue })
+  });
+  const data = await res.json();
+  if (data.success) {
+    setPromoDiscount(data.discount);
+    setPromoError('');
+  } else {
+    setPromoError(data.message || 'Mã không hợp lệ');
+  }
+};
   // State cho user info và cart
   const [userInfo, setUserInfo] = useState(null);
   const [cartItems, setCartItems] = useState([]);
@@ -362,7 +389,7 @@ const removeFromCart = async (itemId) => {
       icon: 'https://seeklogo.com/images/P/paypal-logo-6ED6A5924E-seeklogo.com.png',
     },
     {
-      id: 'momo',
+      id: 'vnpay',
       name: 'VNPAY',
       description: 'Thanh toán nhanh chóng qua ví điện tử VnPay',
       icon: 'https://vinadesign.vn/uploads/images/2023/05/vnpay-logo-vinadesign-25-12-57-55.jpg',
@@ -438,7 +465,8 @@ const handlePlaceOrder = async () => {
     // Tính tổng tiền
     const cartTotal = calculateCartTotal();
     const shippingCost = getSelectedShippingPrice();
-    const totalAmount = cartTotal + shippingCost;
+
+    const totalAmount = cartTotal + shippingCost - promoDiscount;
 
     // Tạo order ID với timestamp và random để tránh trùng
     const timestamp = Date.now();
@@ -447,6 +475,7 @@ const handlePlaceOrder = async () => {
 
     console.log('Generated orderId:', orderId); // Debug log
 
+    
     // Chuẩn bị dữ liệu order
     const orderData = {
       idOrder: orderId,
@@ -511,7 +540,7 @@ const handlePlaceOrder = async () => {
     console.log('Order created successfully:', orderResult);
 
     // Xử lý thanh toán
-    if (selectedPaymentMethod === 'momo') {
+    if (selectedPaymentMethod === 'vnpay') {
       await handleMoMoPayment(totalAmount, orderId);
     } else if (selectedPaymentMethod === 'paypal') {
       await handlePayPalPayment(totalAmount, orderId);
@@ -522,7 +551,7 @@ const handlePlaceOrder = async () => {
         userId: userId,
         orderId: orderId,
         method: "Cash on Delivery",
-        amount: Number(totalAmount),
+        amount: totalAmount,
         status: "pending"
       };
 
@@ -602,7 +631,7 @@ const getOrderInfo = async (orderId) => {
   // Xử lý thanh toán MoMo
 const handleMoMoPayment = async (totalAmount, orderId) => {
   try {
-    console.log('Processing MoMo payment for order:', orderId);
+    console.log('Processing VNPAY payment for order:', orderId);
 
     const paymentData = {
       amount: totalAmount,
@@ -642,7 +671,8 @@ const handleMoMoPayment = async (totalAmount, orderId) => {
     // 1. Gọi API tạo payment PayPal (POST /api/payments)
     const paymentData = {
       orderId,
-      method: "paypal"
+      method: "paypal",
+      amount: totalAmount
     };
 
     const response = await fetch('http://localhost:5000/api/payments', {
@@ -743,15 +773,23 @@ const handleMoMoPayment = async (totalAmount, orderId) => {
 
           <div className="card">
             <h3>Mã khuyến mãi</h3>
-            <input className="promo-code" type="text" placeholder="Nhập mã khuyến mãi" />
-            <button className="apply">Áp dụng</button>
+            <input
+  className="promo-code"
+  type="text"
+  placeholder="Nhập mã khuyến mãi"
+  value={promoCode}
+  onChange={e => setPromoCode(e.target.value)}
+/>
+<button className="apply" onClick={handleApplyPromo}>Áp dụng</button>
+{promoError && <div className="promo-error">{promoError}</div>}
+{promoDiscount > 0 && <div className="promo-success">Đã áp dụng mã, giảm {formatPrice(promoDiscount)}</div>}
           </div>
 
 
           {/* Tóm tắt đơn hàng */}
           <PaymentSummary 
             formatPrice={formatPrice}
-            calculateCartTotal={calculateCartTotal}
+            calculateCartTotal={() => calculateCartTotal() - promoDiscount}
             getSelectedShippingPrice={() => formData.location ? getSelectedShippingPrice() : 0}
             hasLocation={!!formData.location}
             handlePlaceOrder={handlePlaceOrder}

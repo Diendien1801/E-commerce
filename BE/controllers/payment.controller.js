@@ -7,20 +7,35 @@ const { URL } = require("url");
 
 const EXCHANGE_RATE_VND_TO_USD = 0.000038; // 1 VND = 0.000038 USD
 
+exports.getPaymentByOrderId = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const payment = await Payment.findOne({ orderId });
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy payment cho order này",
+      });
+    }
+    res.json({ success: true, data: payment });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi server", error: error.message });
+  }
+};
 exports.createPayment = async (req, res) => {
   try {
     // Không lấy amount từ body nữa
-    const { orderId, method } = req.body;
+    const { orderId, method, amount } = req.body;
 
     // Kiểm tra trường bắt buộc
     if (!orderId || !method) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Missing required fields: orderId or method",
-          data: null,
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields: orderId or method",
+        data: null,
+      });
     }
 
     // Tìm order: ưu tiên tìm theo idOrder, nếu không có thử tìm theo _id
@@ -39,23 +54,14 @@ exports.createPayment = async (req, res) => {
     }
 
     // Tính tổng tiền từ thông tin order (price * quantity)
-    const totalVND =
-      order.items && order.items.length
-        ? order.items.reduce((sum, it) => {
-            const price = Number(it.price || 0);
-            const qty = Number(it.quantity || 0);
-            return sum + price * qty;
-          }, 0)
-        : 0;
+    const totalVND = amount;
 
     if (totalVND <= 0) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Calculated order amount is invalid (<= 0)",
-          data: null,
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Calculated order amount is invalid (<= 0)",
+        data: null,
+      });
     }
 
     // Lấy userId từ order để tránh mismatch (ghi đè userId gửi từ client nếu có)
@@ -72,6 +78,7 @@ exports.createPayment = async (req, res) => {
       status: "pending",
     });
 
+    console.log("Payment created:", payment);
     // Nếu thanh toán bằng PayPal => chuyển sang USD để tạo PayPal order
     if (method === "paypal") {
       try {
@@ -107,13 +114,11 @@ exports.createPayment = async (req, res) => {
         });
       } catch (paypalErr) {
         console.error("PayPal error:", paypalErr);
-        return res
-          .status(500)
-          .json({
-            success: false,
-            message: "Failed to create PayPal order",
-            data: null,
-          });
+        return res.status(500).json({
+          success: false,
+          message: "Failed to create PayPal order",
+          data: null,
+        });
       }
     }
 
@@ -178,12 +183,10 @@ exports.retryPayPalPayment = async (req, res) => {
       });
     }
 
-    return res
-      .status(400)
-      .json({
-        success: false,
-        message: "Unsupported payment method for retry",
-      });
+    return res.status(400).json({
+      success: false,
+      message: "Unsupported payment method for retry",
+    });
   } catch (err) {
     console.error("retryPayment error:", err);
     return res.status(500).json({ success: false, message: "Server error" });
@@ -213,13 +216,11 @@ exports.capturePayPalPayment = async (req, res) => {
   try {
     const { orderID, paymentId } = req.body; // orderID is the PayPal order ID
     if (!orderID || !paymentId) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Missing orderID or paymentId",
-          data: null,
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Missing orderID or paymentId",
+        data: null,
+      });
     }
 
     const request = new paypalSdk.orders.OrdersCaptureRequest(orderID);
@@ -228,13 +229,11 @@ exports.capturePayPalPayment = async (req, res) => {
 
     if (capture.statusCode !== 201) {
       await Payment.findOneAndUpdate({ id: paymentId }, { status: "failed" });
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Payment capture failed",
-          data: null,
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Payment capture failed",
+        data: null,
+      });
     }
 
     const captureId = capture.result.purchase_units[0].payments.captures[0].id; // Capture ID from PayPal response
@@ -253,13 +252,11 @@ exports.capturePayPalPayment = async (req, res) => {
       { status: "picking" }
     );
 
-    return res
-      .status(200)
-      .json({
-        success: true,
-        message: "Payment completed",
-        data: capture.result,
-      });
+    return res.status(200).json({
+      success: true,
+      message: "Payment completed",
+      data: capture.result,
+    });
   } catch (err) {
     console.error("capturePayment error:", err);
     await Payment.findOneAndUpdate(

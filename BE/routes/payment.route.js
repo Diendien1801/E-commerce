@@ -10,4 +10,6 @@ router.post('/capturePP', paymentController.capturePayPalPayment);
 
 // Retry a PayPal payment
 router.post('/retryPP', paymentController.retryPayPalPayment);
+// Lấy payment theo orderId
+router.get('/order/:orderId', paymentController.getPaymentByOrderId);
 module.exports = router;

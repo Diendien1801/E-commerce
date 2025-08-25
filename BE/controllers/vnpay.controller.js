@@ -270,7 +270,7 @@ class VNPayController {
             `https://localhost:3000/payment-result?` +
             `status=success&` +
             `orderId=${orderId}&` +
-            `amount=${amount}&` +
+            `amount=${amount / 100}&` +
             `transactionId=${transactionNo}&` +
             `message=payment_success`;
 

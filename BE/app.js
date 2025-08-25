@@ -46,7 +46,7 @@ app.use("/api/analysis", analysisRoutes);
 
 app.use('/api/auth', authRoutes); 
 app.use("/api/productManagement", productManagementRoutes); // product management
-
+app.use("/api/promotions", require("./routes/promotion.route"));
 module.exports = app;
 
 //Product

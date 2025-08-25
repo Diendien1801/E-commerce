@@ -25,7 +25,26 @@ function OrderPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [productDetails, setProductDetails] = useState({}); // { [productId]: { loading, data, error } }
-
+const [payments, setPayments] = useState({});
+useEffect(() => {
+  if (!orders.length) return;
+  const fetchPayments = async () => {
+    const newPayments = {};
+    await Promise.all(
+      orders.map(async (order) => {
+        try {
+          const res = await fetch(`http://localhost:5000/api/order/${order.idOrder}`);
+          const data = await res.json();
+          if (data.success) {
+            newPayments[order._id] = data.data;
+          }
+        } catch (e) {}
+      })
+    );
+    setPayments(newPayments);
+  };
+  fetchPayments();
+}, [orders]);
   const handleProductClick = (productId) => {
     navigate(`/product/${productId}`);
   };
@@ -171,6 +190,13 @@ function OrderPage() {
                   <div className="order-card-title">
                     {t('orderId', 'Order')}: {order._id}
                   </div>
+                  <div>
+  {t('amount', 'Amount')}: <span style={{ fontWeight: 500 }}>
+    {payments[order._id]?.amount
+      ? payments[order._id].amount.toLocaleString() + ' VND'
+      : 'N/A'}
+  </span>
+</div>
                   <div>{t('status1', 'Status')}: <span style={{ fontWeight: 500 }}>{order.status}</span></div>
                   <div>{t('payment', 'Payment')}: <span style={{ fontWeight: 500 }}>{order.paymentMethod}</span></div>
                   <div>{t('shippingAddress', 'Shipping Address')}: <span style={{ fontWeight: 500 }}>{order.shippingAddress}</span></div>
