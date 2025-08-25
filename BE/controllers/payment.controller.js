@@ -71,11 +71,11 @@ exports.createPayment = async (req, res) => {
     const payment = await Payment.create({
       id: uuidv4(),
       userId,
-      orderId, // giữ nguyên giá trị orderId client truyền (có thể là idOrder hoặc _id)
+      orderId,
       method,
       amount: totalVND,
       currency: "VND",
-      status: "completed",
+      status: method === "paypal" ? "completed" : "pending",
     });
 
     console.log("Payment created:", payment);
