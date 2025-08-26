@@ -15,7 +15,7 @@ const categorySchema = new mongoose.Schema(
     },
     parentID: {
       type: Number,
-      required: true,
+      required: false,
       index: true,
     },
     image: {
