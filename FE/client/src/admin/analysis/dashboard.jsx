@@ -134,10 +134,6 @@ export default function DashboardContent() {
                   <div className="label-style">{t('deletedProducts')}</div>
                   <div className="number-style">{productSummary.totalDeletedProducts}</div>
                 </div>
-                <div className="card-block-style">
-                  <div className="label-style">{t('totalStockQuantity')}</div>
-                  <div className="number-style">{productSummary.totalStockQuantity}</div>
-                </div>
               </div>
             </div>
         </div>
