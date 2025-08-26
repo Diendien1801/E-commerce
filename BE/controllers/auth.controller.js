@@ -18,13 +18,19 @@ exports.register = async (req, res) => {
         .json({ success: false, message: "Email already in use", data: null });
     }
 
+    // Tạo token xác thực email
+    const verificationToken = require("crypto").randomBytes(32).toString("hex");
+
     const user = new User({
       name,
       email,
       password,
       avatar:
         "https://cellphones.com.vn/sforum/wp-content/uploads/2023/10/avatar-trang-4.jpg",
+      verificationToken,
+      isVerified: false,
     });
+
     await user.save();
     await sendVerificationEmail(user);
 
@@ -45,25 +51,30 @@ exports.verifyEmail = async (req, res) => {
   try {
     const { token } = req.query;
     const user = await User.findOne({ verificationToken: token });
+
     if (!user) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid token", data: null });
+      return res.redirect(
+        `https://localhost:3000/login?status=error&message=${encodeURIComponent(
+          "Invalid or expired verification link"
+        )}`
+      );
     }
 
     user.isVerified = true;
     user.verificationToken = null;
     await user.save();
 
-    res.status(200).json({
-      success: true,
-      message: "Email verified successfully. You can now log in.",
-      data: null,
-    });
+    return res.redirect(
+      `https://localhost:3000/login?status=success&message=${encodeURIComponent(
+        "Email verified successfully. You can now log in."
+      )}`
+    );
   } catch (err) {
-    res
-      .status(500)
-      .json({ success: false, message: "Server error", data: err.message });
+    return res.redirect(
+      `https://localhost:3000/login?status=error&message=${encodeURIComponent(
+        "Server error, please try again later"
+      )}`
+    );
   }
 };
 
