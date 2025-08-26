@@ -225,7 +225,7 @@ function UserDetail() {
                         throw new Error("Failed to restore user.");
                       }
 
-                      alert("User restored successfully.");
+                      // alert("User restored successfully.");
 
                       setUserDetail((prev) => ({
                         ...prev,
@@ -273,7 +273,7 @@ function UserDetail() {
                         throw new Error("Failed to delete user.");
                       }
 
-                      alert("User soft-deleted successfully.");
+                      // alert("User soft-deleted successfully.");
 
                       setUserDetail((prev) => ({
                         ...prev,

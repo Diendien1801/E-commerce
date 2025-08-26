@@ -14,9 +14,9 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
   };
 
   return (
-    <div className="cart-item">
+    <div className="cart-item cart-item-column">
       {/* Cột 1: Sản phẩm */}
-      <div className="cart-item-product">
+      <div className="cart-item-product" style={{ flex: 2 }}>
         <div className="product-image">
           <img 
             src={productId.imageUrl?.[0] || '/default-image.jpg'} 
@@ -35,11 +35,11 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
         </div>
       </div>
       {/* Cột 2: Giá */}
-      <div className="cart-item-price">
+      <div className="cart-item-price" style={{ flex: 1 }}>
         {formatPrice(priceAtTime)}
       </div>
       {/* Cột 3: Số lượng */}
-      <div className="cart-item-quantity">
+      <div className="cart-item-quantity" style={{ flex: 1 }}>
         <div className="quantity-controls">
           <button 
             className="quantity-btn minus"
@@ -63,7 +63,7 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
         </div>
       </div>
       {/* Cột 4: Tổng tiền */}
-      <div className="cart-item-total">
+      <div className="cart-item-total" style={{ flex: 1 }}>
         {formatPrice(quantity * priceAtTime)}
       </div>
     </div>
