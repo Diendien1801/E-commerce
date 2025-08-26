@@ -1,5 +1,3 @@
-
-
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 
@@ -29,18 +27,28 @@ const RevenueByCategory = () => {
 	useEffect(() => {
 		if (!rawData.length) return;
 
-		// Prepare stacked data
-		const parentNames = rawData.map(p => p.parentName || 'Unknown');
-		const allCategories = Array.from(new Set(rawData.flatMap(p => p.children.map(c => c.categoryName || 'Unknown'))));
+		// Prepare stacked data, filter out 'Unknown' categories
+		const parentNames = rawData
+			.map(p => p.parentName || 'unknown')
+			.filter(name => name.toLowerCase() !== 'unknown');
+		const allCategories = Array.from(
+			new Set(
+				rawData
+					.flatMap(p => p.children.map(c => c.categoryName))
+					.filter(cat => cat && cat !== 'unknown')
+			)
+		);
 
-		const stackedData = rawData.map(parent => {
-			const row = { parentName: parent.parentName || 'Unknown' };
-			allCategories.forEach(cat => {
-				const found = parent.children.find(c => c.categoryName === cat);
-				row[cat] = found ? found.totalRevenue : 0;
+		const stackedData = rawData
+			.filter(parent => (parent.parentName || 'unknown').toLowerCase() !== 'unknown')
+			.map(parent => {
+				const row = { parentName: parent.parentName || 'unknown' };
+				allCategories.forEach(cat => {
+					const found = parent.children.find(c => c.categoryName === cat);
+					row[cat] = found ? found.totalRevenue : 0;
+				});
+				return row;
 			});
-			return row;
-		});
 
 		// Chart dimensions
 		const svgWidth = 450;
