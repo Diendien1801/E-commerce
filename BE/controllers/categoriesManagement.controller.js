@@ -5,43 +5,43 @@ exports.createCategory = async (req, res) => {
   try {
     const { idCategory, nameCategory, parentID, image, description } = req.body;
 
-    // Validate required fields
     if (!idCategory || !nameCategory) {
       return res.status(400).json({
         success: false,
-        message: "idCategory and nameCategory are required",
+        message: "idCategory và nameCategory là bắt buộc",
         data: null,
       });
     }
 
-    // Kiểm tra idCategory đã tồn tại chưa
+    // Kiểm tra idCategory có tồn tại chưa
     const existingCategory = await Category.findOne({ idCategory });
     if (existingCategory) {
       return res.status(400).json({
         success: false,
-        message: "Category ID already exists",
+        message: "Category ID đã tồn tại",
         data: null,
       });
     }
 
-    // Nếu có parentID, kiểm tra parent category có tồn tại không
+    // Nếu có parentID, kiểm tra parent category
     if (parentID) {
       const parentCategory = await Category.findOne({ idCategory: parentID });
       if (!parentCategory) {
         return res.status(400).json({
           success: false,
-          message: "Parent category not found",
+          message: "Parent category không tồn tại",
           data: null,
         });
       }
     }
 
-    // Tạo category mới
     const newCategory = new Category({
       idCategory,
       nameCategory,
-      parentID: parentID || null,
-      image: image || null,
+      parentID: parentID || null, // root nếu null
+      image:
+        image ||
+        "https://media.istockphoto.com/id/931643150/vector/picture-icon.jpg?s=612x612&w=0&k=20&c=St-gpRn58eIa8EDAHpn_yO4CZZAnGD6wKpln9l3Z3Ok=",
       description: description || null,
       isDeleted: false,
     });
@@ -50,14 +50,14 @@ exports.createCategory = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Category created successfully",
+      message: "Tạo category thành công",
       data: newCategory,
     });
   } catch (error) {
     console.error("createCategory error:", error);
     res.status(500).json({
       success: false,
-      message: "Server error while creating category",
+      message: "Lỗi server khi tạo category",
       data: null,
     });
   }
@@ -69,64 +69,73 @@ exports.updateCategory = async (req, res) => {
     const { id } = req.params;
     const { nameCategory, parentID, image, description } = req.body;
 
-    // Tìm category
+    // Tìm category cần update
     const category = await Category.findOne({ idCategory: id });
     if (!category) {
       return res.status(404).json({
         success: false,
-        message: "Category not found",
+        message: "Category không tồn tại",
         data: null,
       });
     }
 
-    // Kiểm tra category đã bị xóa chưa
     if (category.isDeleted) {
       return res.status(400).json({
         success: false,
-        message: "Cannot update deleted category",
+        message: "Không thể cập nhật category đã bị xóa",
         data: null,
       });
     }
 
-    // Nếu có parentID, kiểm tra parent category
-    if (parentID && parentID !== category.parentID) {
-      // Không được set parent thành chính nó
-      if (parentID === category.idCategory) {
-        return res.status(400).json({
-          success: false,
-          message: "Category cannot be parent of itself",
-          data: null,
-        });
-      }
+    // Xử lý parentID
+    if (parentID !== undefined) {
+      if (!parentID) {
+        // Nếu null hoặc không truyền -> category root
+        category.parentID = null;
+      } else {
+        // Không được set parent là chính nó
+        if (parentID === category.idCategory) {
+          return res.status(400).json({
+            success: false,
+            message: "Category không thể là parent của chính nó",
+            data: null,
+          });
+        }
 
-      const parentCategory = await Category.findOne({ idCategory: parentID });
-      if (!parentCategory) {
-        return res.status(400).json({
-          success: false,
-          message: "Parent category not found",
-          data: null,
-        });
+        const parentCategory = await Category.findOne({ idCategory: parentID });
+        if (!parentCategory) {
+          return res.status(400).json({
+            success: false,
+            message: "Parent category không tồn tại",
+            data: null,
+          });
+        }
+
+        category.parentID = parentID;
       }
     }
 
-    // Update fields
-    if (nameCategory) category.nameCategory = nameCategory;
-    if (parentID !== undefined) category.parentID = parentID || null;
-    if (image !== undefined) category.image = image;
+    // Update các field khác
+    if (nameCategory !== undefined) category.nameCategory = nameCategory;
+    if (image !== undefined) {
+      category.image =
+        image ||
+        "https://media.istockphoto.com/id/931643150/vector/picture-icon.jpg?s=612x612&w=0&k=20&c=St-gpRn58eIa8EDAHpn_yO4CZZAnGD6wKpln9l3Z3Ok=";
+    }
     if (description !== undefined) category.description = description;
 
     await category.save();
 
     res.status(200).json({
       success: true,
-      message: "Category updated successfully",
+      message: "Cập nhật category thành công",
       data: category,
     });
   } catch (error) {
     console.error("updateCategory error:", error);
     res.status(500).json({
       success: false,
-      message: "Server error while updating category",
+      message: "Lỗi server khi cập nhật category",
       data: null,
     });
   }
