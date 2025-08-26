@@ -7,16 +7,17 @@ const CategoryRow = ({ category, expanded, toggleExpand, t, setCurrentParentId, 
     <>
       <tr>
         <td>
-          {category.children?.length > 0 && (
+          {/* Luôn hiện dropdown cho parent category */}
+          {category.parentID == null && (
             <button
-                className="dropdown-btn"
-                style={{
+              className="dropdown-btn"
+              style={{
                 background: "none",
                 border: "none",
                 cursor: "pointer",
                 fontSize: "1rem",
                 color: "#444"
-                }}
+              }}
               onClick={() => toggleExpand(category.idCategory)}
             >
               {expanded ? t("collapse", "▼") : t("expand", "▶")}
@@ -42,7 +43,7 @@ const CategoryRow = ({ category, expanded, toggleExpand, t, setCurrentParentId, 
         </td>
       </tr>
 
-      {expanded && category.children?.length > 0 && (
+      {expanded && (
         <tr className="child-row">
           <td colSpan="4" style={{ padding: 0 }}>
             <table className="child-table-category">
@@ -61,7 +62,7 @@ const CategoryRow = ({ category, expanded, toggleExpand, t, setCurrentParentId, 
                 </tr>
               </thead>
               <tbody>
-                {category.children.map((child) => (
+                {(category.children && category.children.length > 0) ? category.children.map((child) => (
                   <tr key={child.idCategory}>
                     <td style={{padding: "0 0 0 40px"}}>{child.idCategory}</td>
                     <td>{child.name}</td>
@@ -85,7 +86,13 @@ const CategoryRow = ({ category, expanded, toggleExpand, t, setCurrentParentId, 
                       </button>
                     </td>
                   </tr>
-                ))}
+                )) : (
+                  <tr>
+                    <td colSpan="4" style={{ textAlign: 'center', color: '#aaa', fontStyle: 'italic', padding: '16px 0' }}>
+                      {t("noChildCategories", "No child categories yet")}
+                    </td>
+                  </tr>
+                )}
 
                 <tr
                   className="add-category-row"
