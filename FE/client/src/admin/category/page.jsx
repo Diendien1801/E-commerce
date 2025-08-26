@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import "./category.css";
 
@@ -114,12 +114,16 @@ export default function CategoryManagement() {
   const [error, setError] = useState("");
   const [expandedCategories, setExpandedCategories] = useState([]);
   const [showForm, setShowForm] = useState(false);
-  const [newName, setNewName] = useState("");
+  const [newNameCategory, setNewNameCategory] = useState("");
   const [newImage, setNewImage] = useState("");
   const [currentParentId, setCurrentParentId] = useState(null);
   const [editingCategory, setEditingCategory] = useState(null);
-  const [editName, setEditName] = useState("");
+  const [editNameCategory, setEditNameCategory] = useState("");
   const [editImage, setEditImage] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [newId, setNewId] = useState("");
+  const fileInputRef = useRef();
+  const editFileInputRef = useRef();
 
   const { t } = useTranslation();
 
@@ -153,12 +157,22 @@ export default function CategoryManagement() {
   }, []);
 
   const handleAddCategory = async () => {
+    if (uploading) {
+      alert("Please wait until the image is uploaded");
+      return;
+    }
+    if (!newImage) {
+      alert("Please upload an image first");
+      return;
+    }
+    console.log("Image URL being sent:", newImage);
     try {
       const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/categoriesManagement`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          nameCategory: newName, 
+          idCategory: newId,
+          nameCategory: newNameCategory, 
           image: newImage,
           parentID: currentParentId 
         })
@@ -167,9 +181,27 @@ export default function CategoryManagement() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to create category");
 
-      setCategories((prev) => [...prev, data.data]); 
+      setCategories((prev) => {
+        if (!currentParentId) {
+          // Add new parent category to root
+          return [...prev, data.data];
+        } else {
+          // Add child category to parent's children
+          return prev.map((cat) => {
+            if (cat.idCategory === currentParentId) {
+              return {
+                ...cat,
+                children: [...(cat.children || []), data.data]
+              };
+            }
+            return cat;
+          });
+        }
+      });
+
       setShowForm(false);
-      setNewName("");
+      setNewId("");
+      setNewNameCategory("");
       setNewImage("");
       setCurrentParentId(null);
     } catch (err) {
@@ -183,7 +215,7 @@ export default function CategoryManagement() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          nameCategory: editName,
+          nameCategory: editNameCategory,
           image: editImage
         })
       });
@@ -194,7 +226,7 @@ export default function CategoryManagement() {
       setCategories((prev) =>
         prev.map((cat) =>
           cat.idCategory === editingCategory.idCategory
-            ? { ...cat, name: editName, image: editImage }
+            ? { ...cat, nameCategory: editNameCategory, image: editImage }
             : cat
         )
       );
@@ -246,7 +278,7 @@ export default function CategoryManagement() {
                   setShowForm={setShowForm}
                   onEdit={(cat) => {
                     setEditingCategory(cat);
-                    setEditName(cat.name);
+                    setEditNameCategory(cat.nameCategory);
                     setEditImage(cat.image);
                   }}
                 />
@@ -256,14 +288,31 @@ export default function CategoryManagement() {
                 className="add-category-row"
                 style={{ cursor: "pointer", textAlign: "center" }}
                 onClick={() => {
+                  // Tìm max id của các category cha
+                  const parentCategories = categories.filter(cat => !cat.parentID);
+                  const maxId = parentCategories.length > 0 ? Math.max(...parentCategories.map(cat => Number(cat.idCategory) || 0)) : 0;
+                  setNewId(String(maxId + 1));
                   setCurrentParentId(null);
                   setShowForm(true);
+                  setNewNameCategory("");
+                  setNewImage("");
                 }}
               >
                 <td colSpan="4" style={{ fontSize: "16px", color: "#4CAF50", textAlign: "center" }}>
                   {t("addParentCategory", "+ Add new parent category")}
                 </td>
               </tr>
+
+              {/* Handle child category modal id auto-increment */}
+              {expandedCategories.map((parentId) => {
+                const parentCat = categories.find(cat => cat.idCategory === parentId);
+                if (!parentCat || !showForm || currentParentId !== parentId) return null;
+                // Find max id among children
+                const children = parentCat.children || [];
+                const maxChildId = children.length > 0 ? Math.max(...children.map(child => Number(child.idCategory) || 0)) : Number(parentId);
+                if (newId !== String(maxChildId + 1)) setNewId(String(maxChildId + 1));
+                return null;
+              })}
 
               {showForm && (
                 <div className="modal-overlay">
@@ -275,12 +324,20 @@ export default function CategoryManagement() {
                           : t("addNewParentCategory", "Add New Parent Category")}
                       </strong>
                     </h3>
+                    <label htmlFor="category-id-input" style={{ fontWeight: 500, marginBottom: 8 }}>{t("categoryId", "Category ID")}</label>
+                    <input
+                      id="category-id-input"
+                      type="text"
+                      value={newId}
+                      readOnly
+                      style={{ marginBottom: 8, background: '#f5f5f5' }}
+                    />
                     <label htmlFor="category-image-upload" style={{ fontWeight: 500, marginBottom: 8 }}>{t("addName", "Add Name")}</label>
                     <input
                       type="text"
                       placeholder={t("categoryName", "Category Name")}
-                      value={newName}
-                      onChange={(e) => setNewName(e.target.value)}
+                      value={newNameCategory}
+                      onChange={(e) => setNewNameCategory(e.target.value)}
                     />
                     <div className="image-upload-section">
                       <label htmlFor="category-image-upload" style={{ fontWeight: 500, marginBottom: 8 }}>{t("addImage", "Add Image")}</label>
@@ -304,18 +361,50 @@ export default function CategoryManagement() {
                           </div>
                           <div className="upload-text">
                             <span>{t("dropImageHere", "Drop your image here, or ")}</span>
-                            <label htmlFor="category-image-upload" className="browse-link">{t("browse", "Browse")}</label>
+                              <span 
+                                className="browse-link" 
+                                style={{ cursor: 'pointer' }} 
+                                onClick={() => fileInputRef.current?.click()}
+                              >
+                                {t("browse", "Browse")}
+                              </span>
                           </div>
                         </div>
-                        <input
-                          type="file"
-                          id="category-image-upload"
-                          accept="image/*"
-                          style={{ display: 'none' }}
-                          onChange={e => {
-                            alert('Browse upload for category image is not implemented yet.');
-                          }}
-                        />
+                          <input
+                            type="file"
+                            id="category-image-upload"
+                            accept="image/*"
+                            style={{ display: 'none' }}
+                            ref={fileInputRef}
+                            onChange={async e => {
+                              const file = e.target.files[0];
+                              if (!file) return;
+                              setUploading(true);
+                              const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dumv5xryl/image/upload';
+                              const UPLOAD_PRESET = 'RungRing';
+                              const formData = new FormData();
+                              formData.append('file', file);
+                              formData.append('upload_preset', UPLOAD_PRESET);
+                              try {
+                                const cloudRes = await fetch(CLOUDINARY_URL, {
+                                  method: 'POST',
+                                  body: formData,
+                                });
+                                const cloudData = await cloudRes.json();
+                                if (!cloudData.secure_url) throw new Error('Upload to Cloudinary failed');
+                                setNewImage(cloudData.secure_url);
+                              } catch (error) {
+                                alert('Upload failed: ' + error.message);
+                              } finally {
+                                setUploading(false);
+                              }
+                            }}
+                          />
+                          {newImage && (
+                            <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                              <img src={newImage} alt="Preview" style={{ maxWidth: '120px', maxHeight: '120px', borderRadius: 8, boxShadow: '0 2px 8px #ccc', margin: '0 auto' }} />
+                            </div>
+                          )}
                       </div>
                     </div>
                     <div className="modal-buttons">
@@ -334,8 +423,8 @@ export default function CategoryManagement() {
                     <input
                       type="text"
                       placeholder={t("categoryName", "Category Name")}
-                      value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
+                      value={editNameCategory}
+                      onChange={(e) => setEditNameCategory(e.target.value)}
                     />
                     <div className="image-upload-section">
                       <label htmlFor="edit-category-image-upload" style={{ fontWeight: 500, marginBottom: 8 }}>{t("editImage", "Edit Image")}</label>
@@ -359,18 +448,44 @@ export default function CategoryManagement() {
                           </div>
                           <div className="upload-text">
                             <span>{t("dropImageHere", "Drop your image here, or ")}</span>
-                            <label htmlFor="edit-category-image-upload" className="browse-link">{t("browse", "Browse")}</label>
+                              <label htmlFor="edit-category-image-upload" className="browse-link" style={{ cursor: 'pointer' }} onClick={() => editFileInputRef.current?.click()}>{t("browse", "Browse")}</label>
                           </div>
                         </div>
-                        <input
-                          type="file"
-                          id="edit-category-image-upload"
-                          accept="image/*"
-                          style={{ display: 'none' }}
-                          onChange={e => {
-                            alert('Browse upload for category image is not implemented yet.');
-                          }}
-                        />
+                          <input
+                            type="file"
+                            id="edit-category-image-upload"
+                            accept="image/*"
+                            style={{ display: 'none' }}
+                            ref={editFileInputRef}
+                            onChange={async e => {
+                              const file = e.target.files[0];
+                              if (!file) return;
+                              setUploading(true);
+                              const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dumv5xryl/image/upload';
+                              const UPLOAD_PRESET = 'RungRing';
+                              const formData = new FormData();
+                              formData.append('file', file);
+                              formData.append('upload_preset', UPLOAD_PRESET);
+                              try {
+                                const cloudRes = await fetch(CLOUDINARY_URL, {
+                                  method: 'POST',
+                                  body: formData,
+                                });
+                                const cloudData = await cloudRes.json();
+                                if (!cloudData.secure_url) throw new Error('Upload to Cloudinary failed');
+                                setEditImage(cloudData.secure_url);
+                              } catch (error) {
+                                alert('Upload failed: ' + error.message);
+                              } finally {
+                                setUploading(false);
+                              }
+                            }}
+                          />
+                          {editImage && (
+                            <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                              <img src={editImage} alt="Preview" style={{ maxWidth: '120px', maxHeight: '120px', borderRadius: 8, boxShadow: '0 2px 8px #ccc', margin: '0 auto' }} />
+                            </div>
+                          )}
                       </div>
                     </div>
                     <div className="modal-buttons">

@@ -83,9 +83,15 @@ const Login = () => {
                 }
                 login(token, userInfo);
                 navigate('/');
-            } else {
-                setError(data.message || t('loginFailed'));
-            }
+                } else {
+                    // Đưa logic mapping lỗi vào đây
+                    const msg = data.message ? data.message.toLowerCase() : '';
+                    if (msg.includes('incorrect password') || msg.includes('invalid credential')) {
+                        setError('Incorrect password');
+                    } else {
+                        setError(data.message || t('loginFailed'));
+                    }
+                }
         } catch (err) {
             setError(t('serverErrorTryAgain'));
         }

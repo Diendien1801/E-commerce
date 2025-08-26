@@ -65,7 +65,6 @@ function UserDetail() {
         if (selectedTab !== 'all') url += `&status=${selectedTab}`;
         const res = await fetch(url);
         const data = await res.json();
-        console.log("Fetched orders:", data);
 
         if (!data.success || !data.data) throw new Error(data.message || 'Failed to fetch filtered orders');
 
@@ -97,7 +96,6 @@ function UserDetail() {
         }
 
         setUserDetail(data.data);
-        console.log("User detail fetched:", data.data.userInfo);
       } catch (err) {
         console.error(err);
         setError(err.message || "Error fetching user data");
@@ -125,7 +123,6 @@ function UserDetail() {
     try {
       const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/products/admin/${productId}`);
       const data = await res.json();
-      console.log(`Fetched product ${productId}:`, data);
 
       if (data.success && data.data) {
         setProductDetailsMap(prev => ({
@@ -156,7 +153,7 @@ function UserDetail() {
   const fetchSearchPage = async (pageNum) => {
     setSearchLoading(true);
     try {
-      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/o/user/${userId}/search?q=${encodeURIComponent(orderSearch.trim())}&page=${pageNum}&limit=5`);
+      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/orders/user/${userId}/search?q=${encodeURIComponent(orderSearch.trim())}&page=${pageNum}&limit=5`);
       const data = await res.json();
       if (!data.success || !Array.isArray(data.data)) throw new Error(data.message || 'Order not found');
       setSearchResults(data.data);
@@ -381,6 +378,9 @@ function UserDetail() {
               />
               {searchLoading && <span style={{ marginLeft: 8 }}>Searching...</span>}
               {searchError && <span style={{ color: '#d8000c', marginLeft: 8 }}>{searchError}</span>}
+              {(!searchLoading && !searchError && orderSearch.trim() && searchResults.length === 0) && (
+                <div style={{ color: '#d8000c', marginTop: 8 }}>{t('orderNotFound', 'Order not found')}</div>
+              )}
             </div>
 
             <div className="order-tabs" style={{ marginBottom: "1rem" }}>
@@ -479,6 +479,7 @@ function UserDetail() {
                     </tbody>
                   </table>
                 </div>
+                {/* Move search pagination to bottom of search results */}
                 {searchTotalPages > 1 && (
                   <div className="orders-pagination" style={{ display: 'flex', justifyContent: 'center', gap: 12, margin: '16px 0' }}>
                     <button onClick={() => {
