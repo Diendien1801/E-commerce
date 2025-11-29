@@ -551,13 +551,27 @@ Caller buộc phải xử lý đầy đủ qua `when`.
 ## 7. Xử lý Bitwise & Byte 
 
 ### 7.1 Byte là signed trong Kotlin (-128..127)
-
-Luôn mask khi convert sang Int:
-
+Khác với Uint8Array trong TypeScript (0..255), kiểu Byte trong Kotlin là có dấu (Signed) (-128..127).
+**Vấn đề**: Khi một byte có giá trị lớn hơn 127 (ví dụ 0xFF), bit đầu tiên là 1. Khi convert sang Int (32-bit), máy tính sẽ tự động lấp đầy các bit còn thiếu bằng số 1 để giữ nguyên giá trị âm. Đây gọi là Sign Extension.
+**Giải pháp**: Dùng phép and 0xFF để xóa sạch các bit thừa phía trước, trả về giá trị dương đúng.
+Input Byte (0xFF):  1111 1111             (Kotlin hiểu là -1)
+                        |
+[GỌI .toInt()]          v
+Sign Extension:     1111 1111 ... 1111 1111 (Vẫn là -1, nhưng ở dạng 32-bit)
+                        |
+[MASK and 0xFF]         v
+Mask (0xFF):        0000 0000 ... 1111 1111 (Mặt nạ lọc)
+                        |
+[KẾT QUẢ]               v
+Result (255):       0000 0000 ... 1111 1111 (Đây là 255 - Đúng ý đồ OBD2)
 ```kotlin
-val b: Byte = 0xFF.toByte()
-val lenBad = b.toInt()        // -1 (sai)
-val lenGood = b.toInt() and 0xFF  // 255 (đúng)
+val b: Byte = 0xFF.toByte() // Kotlin hiểu là -1
+
+// ❌ Bad: Sai giá trị, hỏng logic độ dài/checksum
+val lenBad = b.toInt()      // Kết quả: -1
+
+// ✅ Good: Luôn mask để lấy giá trị dương (Unsigned int)
+val lenGood = b.toInt() and 0xFF // Kết quả: 255
 ```
 
 ### 7.2 Bảng quy đổi thao tác bitwise (TS vs Kotlin)
