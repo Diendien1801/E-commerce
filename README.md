@@ -419,7 +419,7 @@ actual class PlatformHttpClient {
 
 Khác với TypeScript (Single-thread Event Loop), Kotlin là Multi-thread. Việc chọn sai luồng sẽ gây treo UI hoặc nghẽn cổ chai khi giao tiếp phần cứng.
 
-### 🎯 Quy tắc 5.1: Chọn đúng Dispatcher
+###  Quy tắc 5.1: Chọn đúng Dispatcher
 Phân biệt rõ ràng giữa việc "Chờ đợi" (IO) và "Tính toán" (CPU).
 
 * **`Dispatchers.Main`**: Chỉ dùng cho **UI updates**. Cấm xử lý logic tại đây.
@@ -452,7 +452,7 @@ Phân biệt rõ ràng giữa việc "Chờ đợi" (IO) và "Tính toán" (CPU)
     }
     ```
 
-### 🎯 Quy tắc 5.2: Non-blocking (Không chặn luồng)
+###  Quy tắc 5.2: Non-blocking (Không chặn luồng)
 Tuyệt đối không dùng `Thread.sleep()` trong Coroutine. Nó sẽ "khóa chết" Thread đó, không ai khác sử dụng được.
 
 * **❌ Sai (Blocking):**
@@ -471,7 +471,7 @@ Tuyệt đối không dùng `Thread.sleep()` trong Coroutine. Nó sẽ "khóa ch
     }
     ```
 
-### 🎯 Quy tắc 5.3: Structured Concurrency (Vòng đời Coroutine)
+###  Quy tắc 5.3: Structured Concurrency (Vòng đời Coroutine)
 Tránh "Fire-and-forget" (Bắn xong quên). Mọi Coroutine phải gắn liền với một vòng đời (Lifecycle) cụ thể để tránh Memory Leak khi người dùng thoát màn hình.
 
 * **❌ Sai (GlobalScope - Nguy hiểm):**
@@ -496,7 +496,7 @@ Tránh "Fire-and-forget" (Bắn xong quên). Mọi Coroutine phải gắn liền
     }
     ```
 
-### 💡 Bảng tóm tắt chuyển đổi (TS -> Kotlin)
+###  Bảng tóm tắt chuyển đổi (TS -> Kotlin)
 
 | Tác vụ trong TypeScript | Tương đương trong Kotlin | Ghi chú |
 | :--- | :--- | :--- |
