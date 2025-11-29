@@ -561,10 +561,10 @@ Input Byte (0xFF):  1111 1111             (Kotlin hiểu là -1)
 Sign Extension:     1111 1111 ... 1111 1111 (Vẫn là -1, nhưng ở dạng 32-bit)
                         |
 [MASK and 0xFF]         v
-Mask (0xFF):        0000 0000 ... 1111 1111 (Mặt nạ lọc)
+Mask (0xFF):        0000 0000 ... 1111 1111 
                         |
 [KẾT QUẢ]               v
-Result (255):       0000 0000 ... 1111 1111 (Đây là 255 - Đúng ý đồ OBD2)
+Result (255):       0000 0000 ... 1111 1111 (Đây là 255)
 ```
 ```kotlin
 val b: Byte = 0xFF.toByte() // Kotlin hiểu là -1
