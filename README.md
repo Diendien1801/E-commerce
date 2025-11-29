@@ -1,8 +1,5 @@
 # Quy ước Coding cho Kotlin SDK
 
-Ngữ cảnh team: dự án này là một Kotlin Multiplatform (KMP) SDK, được xây dựng bởi team có background TypeScript. Tài liệu này đặt ra quy ước để code SDK **an toàn**, **idiomatic Kotlin** và **hiệu năng tốt** trên mọi target (Android, iOS, JVM, Native).
-
-
 ---
 
 ## 1. Ưu tiên An Toàn (Safety First)
