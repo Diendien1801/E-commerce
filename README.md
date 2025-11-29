@@ -608,7 +608,7 @@ val lenGood = b.toInt() and 0xFF  // 255 (đúng)
 * [ ] Dùng `Result<T>` cho lỗi có thể dự đoán.
 * [ ] Dùng sealed class cho state phức tạp.
 
-### **7. Bitwise & Byte (OBD2/VCI)**
+### **7. Bitwise & Byte **
 
 * [ ] Luôn mask byte: `b.toInt() and 0xFF`.
 * [ ] Dùng các toán tử Kotlin: `and`, `or`, `inv`, `shl`, `ushr`.
